@@ -16,10 +16,10 @@ import logist.topology.Topology.City;
 
 public class ReactiveTemplate implements ReactiveBehavior {
 
-	private Random random;
-	private double pPickup;
 	private int numActions;
+	private Topology topology;
 	private Agent myAgent;
+	private HashMap<State, Integer> policy;
 
 	@Override
 	public void setup(Topology topology, TaskDistribution td, Agent agent) {
@@ -30,30 +30,38 @@ public class ReactiveTemplate implements ReactiveBehavior {
 				0.95);
 		double epsilon = 1e-6;
 
-		this.random = new Random();
-		this.pPickup = discount;
 		this.numActions = 0;
+		this.topology = topology;
 		this.myAgent = agent;
 		
 		int costPerKm = agent.vehicles().get(0).costPerKm();
 		
 		ReactiveTraining training = new ReactiveTraining(topology, td, costPerKm);
-		HashMap<State, Integer> policy = training.trainMdpInfiniteHorizon(discount, epsilon);
+		policy = training.trainMdpInfiniteHorizon(discount, epsilon);
 		
-		for(State s: training.getStateSet())
-			System.out.println(s + " " + policy.get(s));
+//		for(State s: training.getStateSet())
+//			System.out.println(s + " " + policy.get(s));
 	}
 
 	@Override
 	public Action act(Vehicle vehicle, Task availableTask) {
 		Action action;
-
-		if (availableTask == null || random.nextDouble() > pPickup) {
-			City currentCity = vehicle.getCurrentCity();
-			action = new Move(currentCity.randomNeighbor(random));
-		} else {
+		
+		City currentCity = vehicle.getCurrentCity();
+		State currentState;
+		
+		if (availableTask != null)
+			currentState = new State(currentCity, availableTask.deliveryCity);
+		
+		else
+			currentState = new State(currentCity, null);
+		
+		int intAction = this.policy.get(currentState);
+		
+		if (intAction < this.topology.size())
+			action = new Move(topology.cities().get(intAction));
+		else
 			action = new Pickup(availableTask);
-		}
 		
 		if (numActions >= 1) {
 			System.out.println("The total profit after "+numActions+" actions is "+myAgent.getTotalProfit()+" (average profit: "+(myAgent.getTotalProfit() / (double)numActions)+")");

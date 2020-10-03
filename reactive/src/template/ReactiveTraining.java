@@ -1,9 +1,7 @@
 package template;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collections;
-import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 
@@ -46,8 +44,7 @@ public class ReactiveTraining {
 		for (City location: this.cities) {
 				for (City taskDestination: this.cities)
 				{
-//					if(taskDestination != location)
-						this.stateSet.add(new State(location, taskDestination));
+					this.stateSet.add(new State(location, taskDestination));
 				}
 			this.stateSet.add(new State(location, null));
 		}
@@ -63,7 +60,7 @@ public class ReactiveTraining {
 	
 	public void generateRewardTable()
 	{
-		int numStates = this.stateSet.size(), numActions = this.actionSet.length;
+		int numActions = this.actionSet.length;
 		this.rewardsMap = new HashMap<RewardTableKey, Double>();
 		
 		for(State s: this.stateSet)
@@ -81,8 +78,7 @@ public class ReactiveTraining {
 						this.rewardsMap.put(key, this.taskDistribution.reward(sLocation, sTaskDestination)
 								- this.costPerKm * sLocation.distanceTo(sTaskDestination));
 				}
-//					
-//				// Cost from just moving
+				// Cost from just moving
 				else {
 					City moveChoice = this.cities.get(action);
 					if(sLocation.hasNeighbor(moveChoice))
@@ -93,34 +89,10 @@ public class ReactiveTraining {
 				
 			}
 		}
-		
-//		for(int i=0;i<numStates;i++)
-//		{
-//			State s = this.stateSet.get(i);
-//			for(int j=0;j<numActions;j++)
-//			{
-//				City sLocation = s.getLocation(), sTaskDestination = s.getTaskDestination();
-//				int action = this.actionSet[j];
-//				
-//				// Profit from delivering a task
-//				if (action==numActions-1)
-//				{
-//					if(s.getTaskDestination() != null)
-//						this.rewardsMap[i][j] = this.taskDistribution.reward(sLocation, sTaskDestination) - costPerKm * sLocation.distanceTo(sTaskDestination);
-//				}
-//					
-//				// Cost from just moving
-//				else {
-//					City moveChoise = this.cities.get(action);
-//					if(sLocation.hasNeighbor(moveChoise))
-//						this.rewardsMap[i][j] = -costPerKm * sLocation.distanceTo(moveChoise);
-//				}
-//			}
-//		}
 	}
 	
 	public void generateTransitionTable() {
-		int numStates = this.stateSet.size(), numActions = this.actionSet.length;
+		int numActions = this.actionSet.length;
 		this.transitionProbabilityMap = new HashMap<TransitionProbabilityTableKey, Double>();
 		
 		for(State s: this.stateSet)
@@ -151,40 +123,6 @@ public class ReactiveTraining {
 				}
 			}
 		}
-		
-//		for(int i=0;i<numStates;i++)
-//		{
-//			State s = this.stateSet.get(i);
-//			for(int j=0;j<numActions;j++)
-//			{
-//				int action = this.actionSet[j];
-//				for(int k=0;k<numStates;k++)
-//				{
-//					State sPrime = this.stateSet.get(k);
-//					
-//					City sLocation = s.getLocation(), sTaskDestination = s.getTaskDestination(),
-//							sPrimeLocation = sPrime.getLocation(), sPrimeTaskDestination = sPrime.getTaskDestination(); 
-//					
-//					// Probabilities of state transitions due to a task delivery
-//					if(action==numActions-1)
-//					{
-//						if(sTaskDestination != null)
-//						{
-//							List<City> sPathToTaskDestination = sLocation.pathTo(sTaskDestination);
-//							if(sPrimeLocation == sTaskDestination && sPathToTaskDestination != null)
-//								this.transitionProbabilityMap[i][j][k] = this.taskDistribution.probability(sPrimeLocation, sPrimeTaskDestination);
-//						}
-//					}
-//					
-//					// Probabilities of state transitions due to a simple move
-//					else {
-//						City moveChoise = this.cities.get(action);
-//						if(sPrimeLocation == moveChoise && sLocation.hasNeighbor(moveChoise))
-//							this.transitionProbabilityMap[i][j][k] = this.taskDistribution.probability(sPrimeLocation, sPrimeTaskDestination);
-//					}
-//				}
-//			}
-//		}
 	}
 	
 	public HashMap<State, Integer> trainMdpInfiniteHorizon(double discountFactor, double epsilon)
@@ -235,11 +173,6 @@ public class ReactiveTraining {
 				
 				for(int k=0;k<numStates;k++)
 					vVector.set(k, Collections.max(qTable.get(k)));
-//				vVector = Arrays.asList(qTable)
-//							.stream()
-//							.map(x->Arrays.asList(x)
-//									.stream()
-//									.max(Comparator.comparing()));
 			}
 			
 			for(int k=0;k<numStates;k++)

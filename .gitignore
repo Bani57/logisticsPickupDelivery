@@ -1,3 +1,4 @@
 .metadata/
-.classpath
-history.xml
+reactive/.classpath
+reactive/history.xml
+*.class
