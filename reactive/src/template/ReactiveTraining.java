@@ -221,19 +221,20 @@ public class ReactiveTraining {
 					
 					RewardTableKey rewardKey = new RewardTableKey(s, action);
 					double reward = this.rewardsMap.containsKey(rewardKey) ? this.rewardsMap.get(rewardKey) : 0;
+					qTable.get(i).set(j, reward);
 					
 					for(int k=0;k<numStates;k++)
 					{
 						State sPrime = this.stateSet.get(k);
 						TransitionProbabilityTableKey tpKey = new TransitionProbabilityTableKey(s, action, sPrime);
 						double transitionProb = this.transitionProbabilityMap.containsKey(tpKey) ? this.transitionProbabilityMap.get(tpKey) : 0;
-						qTable.get(i).set(j, reward + discountFactor * transitionProb * vVector.get(k));
+						qTable.get(i).set(j, qTable.get(i).get(j) + discountFactor * transitionProb * vVector.get(k));
 					}
 					
 				}
 				
 				for(int k=0;k<numStates;k++)
-					vVector.set(k, Collections.max(qTable.get(i)));
+					vVector.set(k, Collections.max(qTable.get(k)));
 //				vVector = Arrays.asList(qTable)
 //							.stream()
 //							.map(x->Arrays.asList(x)
@@ -249,7 +250,6 @@ public class ReactiveTraining {
 					break;
 				}
 			}
-			System.out.println(vVector.toString());
 			Collections.copy(vVectorPrevious, vVector);
 			
 		} while(!converged);
@@ -258,11 +258,11 @@ public class ReactiveTraining {
 		{
 			State s = this.stateSet.get(i);
 			double bestQ = vVector.get(i);
-			int bestAction = vVector.indexOf(bestQ);
+			int bestAction = qTable.get(i).indexOf(bestQ);
 			policy.put(s, bestAction);
 		}
 		
-		System.out.println(numIterations);
+		System.out.println("Converged in " + numIterations + " iterations");
 		return policy;
 	}
 
