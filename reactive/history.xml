@@ -1,6 +1,0 @@
-<?xml version="1.0" encoding="ISO-8859-1"?>
-
-<history configuration="config\reactive.xml">
-	<agents>
-		<agent name="reactive-random">
-			<vehicle name="Vehicle 1"/>
