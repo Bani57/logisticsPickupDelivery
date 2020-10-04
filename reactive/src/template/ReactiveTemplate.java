@@ -1,8 +1,6 @@
 package template;
 
 import java.util.HashMap;
-import java.util.Random;
-
 import logist.simulation.Vehicle;
 import logist.agent.Agent;
 import logist.behavior.ReactiveBehavior;
@@ -15,7 +13,7 @@ import logist.topology.Topology;
 import logist.topology.Topology.City;
 
 public class ReactiveTemplate implements ReactiveBehavior {
-
+	
 	private int numActions;
 	private Topology topology;
 	private Agent myAgent;
@@ -23,11 +21,16 @@ public class ReactiveTemplate implements ReactiveBehavior {
 
 	@Override
 	public void setup(Topology topology, TaskDistribution td, Agent agent) {
-
+		
 		// Reads the discount factor from the agents.xml file.
 		// If the property is not present it defaults to 0.95
 		Double discount = agent.readProperty("discount-factor", Double.class,
 				0.95);
+		if(discount > 1 || discount < 0)
+		{
+			System.out.printf("%s: Invalid discount factor %.2f. Valid values are in the range [0, 1].\n", agent.name(), discount);
+			System.exit(0);
+		}
 		double epsilon = 1e-6;
 
 		this.numActions = 0;
@@ -64,7 +67,7 @@ public class ReactiveTemplate implements ReactiveBehavior {
 			action = new Pickup(availableTask);
 		
 		if (numActions >= 1) {
-			System.out.println("The total profit after "+numActions+" actions is "+myAgent.getTotalProfit()+" (average profit: "+(myAgent.getTotalProfit() / (double)numActions)+")");
+			System.out.println(this.myAgent.name() + ": The total profit after "+numActions+" actions is "+myAgent.getTotalProfit()+" (average profit: "+(myAgent.getTotalProfit() / (double)numActions)+")");
 		}
 		numActions++;
 		

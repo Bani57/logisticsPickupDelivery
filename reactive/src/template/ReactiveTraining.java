@@ -84,9 +84,6 @@ public class ReactiveTraining {
 					if(sLocation.hasNeighbor(moveChoice))
 						this.rewardsMap.put(key, - this.costPerKm * sLocation.distanceTo(moveChoice));
 				}
-				
-				//TODO: Check if need to set reward to -Inf is action is not possible
-				
 			}
 		}
 	}
@@ -158,7 +155,7 @@ public class ReactiveTraining {
 					int action = this.actionSet[j];
 					
 					RewardTableKey rewardKey = new RewardTableKey(s, action);
-					double reward = this.rewardsMap.containsKey(rewardKey) ? this.rewardsMap.get(rewardKey) : 0;
+					double reward = this.rewardsMap.containsKey(rewardKey) ? this.rewardsMap.get(rewardKey) : Double.NEGATIVE_INFINITY;
 					qTable.get(i).set(j, reward);
 					
 					for(int k=0;k<numStates;k++)
