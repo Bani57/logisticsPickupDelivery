@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="ISO-8859-1"?>
+
+<topology name="test" >
+	
+	<!-- the list of cities in the topology -->
+	<cities>
+		<city x="50" y="150" name="City A"/>
+		<city x="150" y="150" name="City B"/>
+		<city x="150" y="250" name="City C"/>
+		<city x="50" y="250" name="City D"/>
+		<city x="500" y="500" name="City E"/>
+	</cities>
+
+	<!-- the list of routes in the topology -->
+	<routes>
+		<route distance="100" from="City A" to="City B"/>
+		<route distance="100" from="City B" to="City C"/>
+		<route distance="100" from="City C" to="City D"/>
+		<route distance="100" from="City D" to="City A"/>
+	</routes>
+
+</topology>
