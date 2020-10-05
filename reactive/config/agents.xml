@@ -4,10 +4,40 @@
 	<!-- A list of agents and their behavior classes -->
 	
 	<!-- #### REACTIVE AGENTS ### -->
-	<agent name="reactive-random">
+	<agent name="reactive-rla">
 		<set class-path="bin/"/>
 		<set class-name="template.ReactiveTemplate"/>
-		<set discount-factor=".85"/>
+		<set discount-factor="0.85"/>
+	</agent>
+	<agent name="reactive-random">
+		<set class-path="bin/"/>
+		<set class-name="template.ReactiveRandom"/>
+		<set discount-factor="0.85"/>
+	</agent>
+	<agent name="reactive-always-pickup">
+		<set class-path="bin/"/>
+		<set class-name="template.ReactiveRandom"/>
+		<set discount-factor="1.00"/>
+	</agent>
+	<agent name="reactive-rla-huge-discount">
+		<set class-path="bin/"/>
+		<set class-name="template.ReactiveTemplate"/>
+		<set discount-factor="0.99"/>
+	</agent>
+	<agent name="reactive-rla-medium-discount">
+		<set class-path="bin/"/>
+		<set class-name="template.ReactiveTemplate"/>
+		<set discount-factor="0.50"/>
+	</agent>
+	<agent name="reactive-rla-tiny-discount">
+		<set class-path="bin/"/>
+		<set class-name="template.ReactiveTemplate"/>
+		<set discount-factor="0.01"/>
+	</agent>
+	<agent name="reactive-rla-error-discount">
+		<set class-path="bin/"/>
+		<set class-name="template.ReactiveTemplate"/>
+		<set discount-factor="-1.00"/>
 	</agent>
 	
 </agents>
