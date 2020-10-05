@@ -121,15 +121,15 @@ public class ReactiveTraining {
 					City sLocation = s.getLocation(), sTaskDestination = s.getTaskDestination();
 					City sPrimeLocation = sPrime.getLocation(), sPrimeTaskDestination = sPrime.getTaskDestination();
 
-					// TODO check again
+					// We cover both cases for the value of c_D' using the same syntax of calling taskDistribution.probability
 
 					// Checks whether the action is a pickup action...
 					if (action == numActions - 1) {
 						// Checks that there is a task to pickup
 						if (sTaskDestination != null) {
-							// Checks that the current destination and s' location are the same city
-							// TODO: See if pathExists needed
-							if (sPrimeLocation.equals(sTaskDestination))
+							// Checks that the current destination and s' location are the same city and that there is a path to the delivery city
+							List<City> pathToDelivery = sLocation.pathTo(sTaskDestination);
+							if (sPrimeLocation.equals(sTaskDestination) && pathToDelivery.size() > 0)
 								// The corresponding table entry is the probability that some task from
 								// s'.location to s'.destination exists
 								this.transitionProbabilityMap.put(key,
@@ -156,9 +156,7 @@ public class ReactiveTraining {
 	 * Method that trains the agent in order to find the optimal policy
 	 * 
 	 * @param discountFactor factor to discount future rewards
-	 * @param epsilon        maximum value of the difference between two consecutive
-	 *                       values of a state in order to establish that
-	 *                       convergence is reached
+	 * @param epsilon        precision value of the convergence test
 	 * @return the optimal found policy
 	 */
 	public HashMap<State, Integer> trainMdpInfiniteHorizon(double discountFactor, double epsilon) {

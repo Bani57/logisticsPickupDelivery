@@ -41,7 +41,7 @@ public class ReactiveTemplate implements ReactiveBehavior {
 			System.exit(0);
 		}
 
-		// If V(s)-old(V(s)) < epsilon for each s, convergence is obtained
+		// Default precision value of the convergence test
 		double epsilon = 1e-6;
 
 		this.numActions = 0;
