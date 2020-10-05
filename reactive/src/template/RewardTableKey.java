@@ -1,5 +1,12 @@
 package template;
 
+/**
+ * Class used in the reward table as key
+ * 
+ * @author Andrej Janchevski
+ * @author Orazio Rillo
+ */
+
 public class RewardTableKey {
 	private State state;
 	private int action;

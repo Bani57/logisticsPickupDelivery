@@ -1,5 +1,12 @@
 package template;
 
+/**
+ * Class used in the transition probability table as key
+ * 
+ * @author Andrej Janchevski
+ * @author Orazio Rillo
+ */
+
 public class TransitionProbabilityTableKey {
 	
 	private State currentState;

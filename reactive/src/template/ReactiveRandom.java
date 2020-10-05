@@ -13,6 +13,10 @@ import logist.task.TaskDistribution;
 import logist.topology.Topology;
 import logist.topology.Topology.City;
 
+/**
+ * Class that implements an agent who performs a random action at each time step
+ *
+ */
 public class ReactiveRandom implements ReactiveBehavior {
 
 	private Random random;
@@ -25,8 +29,7 @@ public class ReactiveRandom implements ReactiveBehavior {
 
 		// Reads the discount factor from the agents.xml file.
 		// If the property is not present it defaults to 0.95
-		Double discount = agent.readProperty("discount-factor", Double.class,
-				0.95);
+		Double discount = agent.readProperty("discount-factor", Double.class, 0.95);
 
 		this.random = new Random();
 		this.pPickup = discount;
@@ -44,12 +47,14 @@ public class ReactiveRandom implements ReactiveBehavior {
 		} else {
 			action = new Pickup(availableTask);
 		}
-		
+
 		if (numActions >= 1) {
-			System.out.println(this.myAgent.name()+": The total profit after "+numActions+" actions is "+myAgent.getTotalProfit()+" (average profit: "+(myAgent.getTotalProfit() / (double)numActions)+")");
+			System.out.println(this.myAgent.name() + ": The total profit after " + numActions + " actions is "
+					+ myAgent.getTotalProfit() + " (average profit: " + (myAgent.getTotalProfit() / (double) numActions)
+					+ ")");
 		}
 		numActions++;
-		
+
 		return action;
 	}
 }
