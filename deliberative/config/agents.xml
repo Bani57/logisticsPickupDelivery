@@ -4,6 +4,11 @@
 	<!-- A list of agents and their behavior classes -->
 	
 	<!-- #### DELIBERATIVE AGENTS ### -->
+	<agent name="deliberative-main">
+		<set class-path="bin/"/>
+		<set class-name="template.DeliberativeAgent"/>
+		<set algorithm="BFS"/>
+	</agent>
 	<agent name="deliberative-random">
 		<set class-path="bin/"/>
 		<set class-name="template.DeliberativeTemplate"/>
