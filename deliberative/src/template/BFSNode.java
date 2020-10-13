@@ -3,25 +3,22 @@ package template;
 import java.util.Stack;
 
 import logist.plan.Action;
-import logist.plan.Action.Move;
-import logist.plan.Action.Pickup;
-import logist.plan.Action.Delivery;
 import logist.plan.Plan;
-import logist.task.Task;
-import logist.task.TaskSet;
 
 public class BFSNode implements Comparable<BFSNode> {
 	
 	private State state;
 	private BFSNode parent;
 	private double gCost;
+	private Action actionPerformed;
 	
 	
-	public BFSNode(State state, BFSNode parent, double gCost) {
+	public BFSNode(State state, BFSNode parent, double gCost, Action actionPerformed) {
 		super();
 		this.state = state;
 		this.parent = parent;
 		this.gCost = gCost;
+		this.actionPerformed = actionPerformed;
 	}
 
 	public State getState() {
@@ -48,7 +45,14 @@ public class BFSNode implements Comparable<BFSNode> {
 		this.gCost = gCost;
 	}
 	
-	
+	public Action getActionPerformed() {
+		return actionPerformed;
+	}
+
+	public void setActionPerformed(Action actionPerformed) {
+		this.actionPerformed = actionPerformed;
+	}
+
 	@Override
 	public int hashCode() {
 		final int prime = 31;
@@ -80,6 +84,16 @@ public class BFSNode implements Comparable<BFSNode> {
 		return true;
 	}
 
+	@Override
+	public int compareTo(BFSNode node) {
+		double otherNodegCost = node.getgCost();
+		if(this.gCost < otherNodegCost)
+			return -1;
+		else if (this.gCost > otherNodegCost)
+			return 1;
+		else return 0;
+	}
+	
 	public void inferPlan(Plan plan)
 	{
 		Stack<Action> reversedPlan = new Stack<>();
@@ -89,44 +103,12 @@ public class BFSNode implements Comparable<BFSNode> {
 		{
 			BFSNode tmpParent = tmp.getParent();
 			if(tmpParent != null)
-			{
-				State tmpState = tmp.getState();
-				State tmpParentState = tmpParent.getState();
-				// MOVE 
-				if(!tmpState.getLocation().equals(tmpParentState.getLocation()))
-					reversedPlan.push(new Move(tmpState.getLocation()));
-				else{
-					TaskSet difference = TaskSet.intersectComplement(tmpParentState.getTasksToPickup(), tmpState.getTasksToPickup());
-					// PICKUP
-					if(!difference.isEmpty())
-					{
-						Task pickupTask = difference.iterator().next();
-						reversedPlan.push(new Pickup(pickupTask));
-					}
-					// DELIVERY
-					else {
-						difference = TaskSet.intersectComplement(tmpParentState.getTasksToDeliver(), tmpState.getTasksToDeliver());
-						Task deliverTask = difference.iterator().next();
-						reversedPlan.push(new Delivery(deliverTask));
-					}
-				}
-			}
-			
+				reversedPlan.push(tmp.getActionPerformed());
 			tmp = tmpParent;
 		}
 		
 		while(!reversedPlan.empty())
 			plan.append(reversedPlan.pop());
-	}
-
-	@Override
-	public int compareTo(BFSNode node) {
-		double otherNodegCost = node.getgCost();
-		if(this.gCost < otherNodegCost)
-			return -1;
-		else if (this.gCost > otherNodegCost)
-			return 1;
-		else return 0;
 	}
 	
 	

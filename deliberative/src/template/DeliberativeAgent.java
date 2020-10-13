@@ -10,6 +10,9 @@ import java.util.Stack;
 
 import logist.agent.Agent;
 import logist.behavior.DeliberativeBehavior;
+import logist.plan.Action.Move;
+import logist.plan.Action.Pickup;
+import logist.plan.Action.Delivery;
 import logist.plan.Plan;
 import logist.task.Task;
 import logist.task.TaskDistribution;
@@ -32,7 +35,7 @@ public class DeliberativeAgent implements DeliberativeBehavior {
 	/* the properties of the agent */
 	Agent agent;
 	int capacity;
-	int numCities;
+	int costPerKm;
 
 	/* the planning class */
 	Algorithm algorithm;
@@ -45,6 +48,7 @@ public class DeliberativeAgent implements DeliberativeBehavior {
 		
 		// initialize the planner
 		this.capacity = agent.vehicles().get(0).capacity();
+		this.costPerKm = agent.vehicles().get(0).costPerKm();
 		String algorithmName = agent.readProperty("algorithm", String.class, "ASTAR");
 		
 		// Throws IllegalArgumentException if algorithm is unknown
@@ -96,32 +100,25 @@ public class DeliberativeAgent implements DeliberativeBehavior {
 	}
 	
 	private Plan bfsPlan(Vehicle vehicle, TaskSet tasks)
-	{
-		int costPerKm = vehicle.costPerKm();
-		
+	{		
 		City vehicleStartCity = vehicle.getCurrentCity();
 		Plan plan = new Plan(vehicleStartCity);
 		
 		LinkedList<BFSNode> queue = new LinkedList<>();
 		State initialState = new State(vehicleStartCity, tasks);
-		BFSNode root = new BFSNode(initialState, null, 0);
+		BFSNode root = new BFSNode(initialState, null, 0, null);
 		queue.add(root);
 		
 		HashSet<State> visitedStates = new HashSet<>();
 		visitedStates.add(initialState);
-//		HashSet<BFSNode> visitedNodes = new HashSet<>();
-//		visitedNodes.add(root);
 		
 		PriorityQueue<BFSNode> goalNodes = new PriorityQueue<>();
-		
+				
 		while(!queue.isEmpty())
 		{
-			
-			System.out.println(visitedStates.size());
-			
+						
 			BFSNode currentNode = queue.poll();
 			State currentState = currentNode.getState();
-			//System.out.println(currentState.toString());
 			
 			if(currentState.isGoalState())
 				goalNodes.add(currentNode);
@@ -132,16 +129,14 @@ public class DeliberativeAgent implements DeliberativeBehavior {
 			
 			State nextState;
 			BFSNode childNode;
-			
-			// TODO: Check for possible optimizations in action choice
-			
+						
 			// All possible MOVE actions
 			for(City neighborCity: currentLocation.neighbors())
 			{
 				nextState = new State(neighborCity, currentTasksToPickup, currentTasksToDeliver);
 				double updatedCost = currentNode.getgCost()
-						+ costPerKm * currentLocation.distanceTo(neighborCity);
-				childNode = new BFSNode(nextState, currentNode, updatedCost);
+						+ this.costPerKm * currentLocation.distanceTo(neighborCity);
+				childNode = new BFSNode(nextState, currentNode, updatedCost, new Move(neighborCity));
 				if(!visitedStates.contains(nextState))
 				{
 					queue.add(childNode);
@@ -161,7 +156,7 @@ public class DeliberativeAgent implements DeliberativeBehavior {
 					newTasksToDeliver.add(t);
 					nextState = new State(currentLocation, leftTasksToPickup, newTasksToDeliver);
 					double updatedCost = currentNode.getgCost();
-					childNode = new BFSNode(nextState, currentNode, updatedCost);
+					childNode = new BFSNode(nextState, currentNode, updatedCost, new Pickup(t));
 					if(!visitedStates.contains(nextState))
 					{
 						queue.add(childNode);
@@ -180,7 +175,7 @@ public class DeliberativeAgent implements DeliberativeBehavior {
 					leftTasksToDeliver.remove(t);
 					nextState = new State(currentLocation, currentTasksToPickup, leftTasksToDeliver);
 					double updatedCost = currentNode.getgCost() - t.reward;
-					childNode = new BFSNode(nextState, currentNode, updatedCost);
+					childNode = new BFSNode(nextState, currentNode, updatedCost, new Delivery(t));
 					if(!visitedStates.contains(nextState))
 					{
 						queue.add(childNode);
@@ -191,6 +186,8 @@ public class DeliberativeAgent implements DeliberativeBehavior {
 			
 		}
 		
+		System.out.println("Total number of states considered: " + visitedStates.size());
+				
 		goalNodes.peek().inferPlan(plan);
 		
 		return plan;

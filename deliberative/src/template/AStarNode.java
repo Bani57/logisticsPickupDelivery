@@ -1,13 +1,19 @@
 package template;
 
+import java.util.Stack;
+
+import logist.plan.Action;
+import logist.plan.Plan;
+
 public class AStarNode implements Comparable<AStarNode> {
 	
 	private State state;
 	private AStarNode parent;
 	private double gCost;
 	private double hCost;
+	private Action actionPerformed;
 	
-	public AStarNode(State state, AStarNode parent, double gCost, double hCost) {
+	public AStarNode(State state, AStarNode parent, double gCost, double hCost, Action actionPerformed) {
 		super();
 		this.state = state;
 		this.parent = parent;
@@ -47,10 +53,17 @@ public class AStarNode implements Comparable<AStarNode> {
 		this.hCost = hCost;
 	}
 	
+	public Action getActionPerformed() {
+		return actionPerformed;
+	}
+
+	public void setActionPerformed(Action actionPerformed) {
+		this.actionPerformed = actionPerformed;
+	}
+
 	public double getfCost() {
 		return this.gCost + this.hCost;
 	}
-	
 	
 
 	@Override
@@ -95,5 +108,20 @@ public class AStarNode implements Comparable<AStarNode> {
 		else return 0;
 	}
 	
-	
+	public void inferPlan(Plan plan)
+	{
+		Stack<Action> reversedPlan = new Stack<>();
+		AStarNode tmp = this;
+		
+		while(tmp != null)
+		{
+			AStarNode tmpParent = tmp.getParent();
+			if(tmpParent != null)
+				reversedPlan.push(tmp.getActionPerformed());
+			tmp = tmpParent;
+		}
+		
+		while(!reversedPlan.empty())
+			plan.append(reversedPlan.pop());
+	}
 }
