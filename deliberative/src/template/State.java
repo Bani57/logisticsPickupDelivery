@@ -1,5 +1,6 @@
 package template;
 
+import logist.task.Task;
 import logist.task.TaskSet;
 import logist.topology.Topology.City;
 
@@ -23,6 +24,82 @@ public class State {
 		this.tasksToDeliver = tasksToDeliver;
 	}
 
+	public boolean isGoalState()
+	{
+		return this.tasksToPickup.isEmpty() && this.tasksToDeliver.isEmpty();
+	}
+	
+	public double getHCost(int costPerKm) {
+		//TODO read parameter from config file in order to know which H cost function to use
+		return getHCostMinDistTaskCity(costPerKm);
+	}
+
+	public double getHCostMinDistNeighbor(int costPerKm){
+		//h(n) = K * min([distance(s.c_L, n) for n in c_L.neighbors()]) - (T_p U T_d).rewardSum (Probably very bad)
+		double minCost = Double.POSITIVE_INFINITY;
+		double cost;
+		for (City c: location.neighbors()) {
+			cost = location.distanceTo(c);
+			if (cost < minCost) {
+				minCost = cost;
+			}
+		}
+		return costPerKm * minCost - tasksToPickup.rewardSum() - tasksToDeliver.rewardSum();
+	}
+	
+	public double getHCostMinDistTaskCity(int costPerKm){
+		//h(n) = K * min(min([distance(s.c_L, t.c_D) for t in T_d)], min([distance(s.c_L, t.c_P) for t in T_p)])) - (T_p U T_d).rewardSum
+		double minCostPickup = Double.POSITIVE_INFINITY;
+		double minCostDeliver = Double.POSITIVE_INFINITY;
+		double cost;
+		
+		if (tasksToPickup.isEmpty() && tasksToDeliver.isEmpty())
+			return 0;
+		
+		for (Task t: tasksToPickup){
+			cost = location.distanceTo(t.pickupCity);
+			if (cost < minCostPickup) {
+				minCostPickup = cost;
+			}
+		}
+		for (Task t: tasksToDeliver){
+			cost = location.distanceTo(t.deliveryCity);
+			if (cost < minCostDeliver) {
+				minCostDeliver = cost;
+			}
+		}
+		return costPerKm * Math.min(minCostPickup, minCostDeliver) - tasksToPickup.rewardSum() - tasksToDeliver.rewardSum();
+	}
+
+	public double getHCostTotalDistEstimate(int costPerKm){
+		//h(n) = K * (T_d.size() * min([distance(s.c_L, t.c_D) for t in T_d)] + T_p.size() * min([distance(s.c_L, t.c_P) for t in T_p)])) - 
+		//	(T_p U T_d).rewardSum
+		
+		double minCostPickup = Double.POSITIVE_INFINITY;
+		double minCostDeliver = Double.POSITIVE_INFINITY;
+		double cost;
+		
+		if (tasksToPickup.isEmpty())
+			minCostPickup = 0;
+		if (tasksToDeliver.isEmpty())
+			minCostDeliver = 0;
+		
+		for (Task t: tasksToPickup){
+			cost = location.distanceTo(t.pickupCity);
+			if (cost < minCostPickup) {
+				minCostPickup = cost;
+			}
+		}
+		for (Task t: tasksToDeliver){
+			cost = location.distanceTo(t.deliveryCity);
+			if (cost < minCostDeliver) {
+				minCostDeliver = cost;
+			}
+		}
+		return costPerKm * (tasksToPickup.size() * minCostPickup + tasksToDeliver.size() * minCostDeliver) 
+				- tasksToPickup.rewardSum() - tasksToDeliver.rewardSum();
+	}
+	
 	public City getLocation() {
 		return location;
 	}
@@ -45,11 +122,6 @@ public class State {
 
 	public void setTasksToDeliver(TaskSet tasksToDeliver) {
 		this.tasksToDeliver = tasksToDeliver;
-	}
-	
-	public boolean isGoalState()
-	{
-		return this.tasksToPickup.isEmpty() && this.tasksToDeliver.isEmpty();
 	}
 
 	@Override

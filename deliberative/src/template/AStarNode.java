@@ -19,6 +19,7 @@ public class AStarNode implements Comparable<AStarNode> {
 		this.parent = parent;
 		this.gCost = gCost;
 		this.hCost = hCost;
+		this.actionPerformed = actionPerformed;
 	}
 
 	public State getState() {

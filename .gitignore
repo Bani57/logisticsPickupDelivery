@@ -5,3 +5,5 @@
 **.project
 **/.settings/
 /logist/doc/
+**/definitions.txt
+**/bin/
