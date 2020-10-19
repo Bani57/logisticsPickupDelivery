@@ -5,13 +5,20 @@ import java.util.Stack;
 import logist.plan.Action;
 import logist.plan.Plan;
 
+
+/**
+ * Class used as a node representation for the A* algorithm.
+ * 
+ * @author Andrej Janchevski
+ * @author Orazio Rillo
+ */
 public class AStarNode implements Comparable<AStarNode> {
 	
-	private State state;
-	private AStarNode parent;
-	private double gCost;
-	private double hCost;
-	private Action actionPerformed;
+	private State state; // Current state
+	private AStarNode parent; // Pointer to parent node
+	private double gCost; // Current g(n)
+	private double hCost; // Current h(n)
+	private Action actionPerformed; // Action responsible for creating the node
 	
 	public AStarNode(State state, AStarNode parent, double gCost, double hCost, Action actionPerformed) {
 		super();
@@ -98,6 +105,9 @@ public class AStarNode implements Comparable<AStarNode> {
 		return true;
 	}
 
+	/**
+	 * Two nodes created during the A* algorithm are comparable with respect to their f(n) costs, where f(n) = g(n) + h(n).
+	 * */
 	@Override
 	public int compareTo(AStarNode node) {
 		double nodefCost = this.getfCost();
@@ -109,6 +119,9 @@ public class AStarNode implements Comparable<AStarNode> {
 		else return 0;
 	}
 	
+	/**
+	 * Helper function to build the plan using the reversed sequence of Action objects inferred by traversing the node's ancestors up until the root.
+	 * */
 	public void inferPlan(Plan plan)
 	{
 		Stack<Action> reversedPlan = new Stack<>();

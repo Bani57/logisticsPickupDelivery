@@ -5,12 +5,19 @@ import java.util.Stack;
 import logist.plan.Action;
 import logist.plan.Plan;
 
+
+/**
+ * Class used as a node representation for the BFS algorithm.
+ * 
+ * @author Andrej Janchevski
+ * @author Orazio Rillo
+ */
 public class BFSNode implements Comparable<BFSNode> {
 	
-	private State state;
-	private BFSNode parent;
-	private double gCost;
-	private Action actionPerformed;
+	private State state; // Current state
+	private BFSNode parent; // Pointer to parent node
+	private double gCost; // Current g(n)
+	private Action actionPerformed; // Action responsible for creating the node
 	
 	
 	public BFSNode(State state, BFSNode parent, double gCost, Action actionPerformed) {
@@ -83,7 +90,10 @@ public class BFSNode implements Comparable<BFSNode> {
 			return false;
 		return true;
 	}
-
+	
+	/**
+	 * Two nodes created during the BFS algorithm are comparable with respect to their g(n) costs.
+	 * */
 	@Override
 	public int compareTo(BFSNode node) {
 		double otherNodegCost = node.getgCost();
@@ -94,6 +104,9 @@ public class BFSNode implements Comparable<BFSNode> {
 		else return 0;
 	}
 	
+	/**
+	 * Helper function to build the plan using the reversed sequence of Action objects inferred by traversing the node's ancestors up until the root.
+	 * */
 	public void inferPlan(Plan plan)
 	{
 		Stack<Action> reversedPlan = new Stack<>();

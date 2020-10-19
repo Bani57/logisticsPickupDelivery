@@ -12,7 +12,9 @@ import logist.topology.Topology;
 import logist.topology.Topology.City;
 
 /**
- * An optimal planner for one vehicle.
+ * Class that implements an agent who builds the plan in a naive fashion.
+ * Given by default with the skeleton code.
+ *
  */
 @SuppressWarnings("unused")
 public class DeliberativeTemplate implements DeliberativeBehavior {
