@@ -10,6 +10,8 @@ public class State {
 	private TaskSet tasksToPickup;
 	private TaskSet tasksToDeliver;
 	
+	private static int heuristicId;
+	
 	public State(City location, TaskSet tasksToPickup) {
 		super();
 		this.location = location;
@@ -29,13 +31,22 @@ public class State {
 		return this.tasksToPickup.isEmpty() && this.tasksToDeliver.isEmpty();
 	}
 	
-	public double getHCost(int costPerKm) {
-		//TODO read parameter from config file in order to know which H cost function to use
-		return getHCostMinDistTaskCity(costPerKm);
+	public double getHCost(int costPerKm) {		
+		switch(State.heuristicId)
+		{
+		case 0:
+			return this.getHCostMinDistNeighbor(costPerKm);
+		case 1:
+			return this.getHCostMinDistTaskCity(costPerKm);
+		case 2:
+			return this.getHCostTotalDistEstimate(costPerKm);
+		default:
+			throw new AssertionError("Invalid heuristic id. Can be only equal to 0, 1 or 2.");
+		}
+		
 	}
 
 	public double getHCostMinDistNeighbor(int costPerKm){
-		//h(n) = K * min([distance(s.c_L, n) for n in c_L.neighbors()]) - (T_p U T_d).rewardSum (Probably very bad)
 		double minCost = Double.POSITIVE_INFINITY;
 		double cost;
 		for (City c: location.neighbors()) {
@@ -48,7 +59,6 @@ public class State {
 	}
 	
 	public double getHCostMinDistTaskCity(int costPerKm){
-		//h(n) = K * min(min([distance(s.c_L, t.c_D) for t in T_d)], min([distance(s.c_L, t.c_P) for t in T_p)])) - (T_p U T_d).rewardSum
 		double minCostPickup = Double.POSITIVE_INFINITY;
 		double minCostDeliver = Double.POSITIVE_INFINITY;
 		double cost;
@@ -68,13 +78,11 @@ public class State {
 				minCostDeliver = cost;
 			}
 		}
+		
 		return costPerKm * Math.min(minCostPickup, minCostDeliver) - tasksToPickup.rewardSum() - tasksToDeliver.rewardSum();
 	}
 
-	public double getHCostTotalDistEstimate(int costPerKm){
-		//h(n) = K * (T_d.size() * min([distance(s.c_L, t.c_D) for t in T_d)] + T_p.size() * min([distance(s.c_L, t.c_P) for t in T_p)])) - 
-		//	(T_p U T_d).rewardSum
-		
+	public double getHCostTotalDistEstimate(int costPerKm){		
 		double minCostPickup = Double.POSITIVE_INFINITY;
 		double minCostDeliver = Double.POSITIVE_INFINITY;
 		double cost;
@@ -96,6 +104,7 @@ public class State {
 				minCostDeliver = cost;
 			}
 		}
+		
 		return costPerKm * (tasksToPickup.size() * minCostPickup + tasksToDeliver.size() * minCostDeliver) 
 				- tasksToPickup.rewardSum() - tasksToDeliver.rewardSum();
 	}
@@ -122,6 +131,14 @@ public class State {
 
 	public void setTasksToDeliver(TaskSet tasksToDeliver) {
 		this.tasksToDeliver = tasksToDeliver;
+	}
+
+	public static int getHeuristicId() {
+		return heuristicId;
+	}
+
+	public static void setHeuristicId(int heuristicId) {
+		State.heuristicId = heuristicId;
 	}
 
 	@Override

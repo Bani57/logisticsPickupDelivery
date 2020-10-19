@@ -8,6 +8,19 @@
 		<set class-path="bin/"/>
 		<set class-name="template.DeliberativeAgent"/>
 		<set algorithm="ASTAR"/>
+		<set heuristic-id="1"/>
+	</agent>
+	<agent name="deliberative-astar-h0">
+		<set class-path="bin/"/>
+		<set class-name="template.DeliberativeAgent"/>
+		<set algorithm="ASTAR"/>
+		<set heuristic-id="0"/>
+	</agent>
+	<agent name="deliberative-astar-h2">
+		<set class-path="bin/"/>
+		<set class-name="template.DeliberativeAgent"/>
+		<set algorithm="ASTAR"/>
+		<set heuristic-id="2"/>
 	</agent>
 	<agent name="deliberative-bfs">
 		<set class-path="bin/"/>

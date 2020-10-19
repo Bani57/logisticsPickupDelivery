@@ -4,6 +4,8 @@ package template;
 import logist.simulation.Vehicle;
 
 import java.awt.Desktop.Action;
+import java.time.Duration;
+import java.time.Instant;
 import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.PriorityQueue;
@@ -37,6 +39,7 @@ public class DeliberativeAgent implements DeliberativeBehavior {
 	Agent agent;
 	int capacity;
 	int costPerKm;
+	int heuristicId;
 	TaskSet initCarriedTasks;
 
 	/* the planning class */
@@ -52,6 +55,7 @@ public class DeliberativeAgent implements DeliberativeBehavior {
 		this.capacity = agent.vehicles().get(0).capacity();
 		this.costPerKm = agent.vehicles().get(0).costPerKm();
 		String algorithmName = agent.readProperty("algorithm", String.class, "ASTAR");
+		this.heuristicId = agent.readProperty("heuristic-id", Integer.class, 1);
 		
 		// Throws IllegalArgumentException if algorithm is unknown
 		algorithm = Algorithm.valueOf(algorithmName.toUpperCase());
@@ -80,7 +84,10 @@ public class DeliberativeAgent implements DeliberativeBehavior {
 
 	
 	private Plan bfsPlan(Vehicle vehicle, TaskSet tasks)
-	{		
+	{
+		
+		Instant start = Instant.now();
+
 		City vehicleStartCity = vehicle.getCurrentCity();
 		Plan plan = new Plan(vehicleStartCity);
 		
@@ -90,7 +97,7 @@ public class DeliberativeAgent implements DeliberativeBehavior {
 		if (this.initCarriedTasks == null)
 			initialState = new State(vehicleStartCity, tasks);
 		else 
-			initialState = new State(vehicleStartCity, tasks, this.initCarriedTasks);
+			initialState = new State(vehicleStartCity, tasks, TaskSet.intersect(this.initCarriedTasks, vehicle.getCurrentTasks()));
 		BFSNode root = new BFSNode(initialState, null, 0, null);
 		
 		queue.add(root);
@@ -102,6 +109,12 @@ public class DeliberativeAgent implements DeliberativeBehavior {
 				
 		while(!queue.isEmpty())
 		{
+			Instant end = Instant.now();
+			Duration timeElapsed = Duration.between(start, end);
+			if(timeElapsed.getSeconds() >= 60) {
+				System.out.println("Timed out when building plan.");
+				System.exit(1);
+			}
 						
 			BFSNode currentNode = queue.poll();
 			State currentState = currentNode.getState();
@@ -182,7 +195,12 @@ public class DeliberativeAgent implements DeliberativeBehavior {
 	}
 	
 	private Plan aStarPlan(Vehicle vehicle, TaskSet tasks)
-	{				
+	{	
+		
+		Instant start = Instant.now();
+		
+		State.setHeuristicId(this.heuristicId);
+		
 		City vehicleStartCity = vehicle.getCurrentCity();
 		Plan plan = new Plan(vehicleStartCity);
 		
@@ -191,8 +209,8 @@ public class DeliberativeAgent implements DeliberativeBehavior {
 		State initialState;
 		if (this.initCarriedTasks == null)
 			initialState = new State(vehicleStartCity, tasks);
-		else 
-			initialState = new State(vehicleStartCity, tasks, this.initCarriedTasks);
+		else
+			initialState = new State(vehicleStartCity, tasks, TaskSet.intersect(this.initCarriedTasks, vehicle.getCurrentTasks()));
 		
 		AStarNode root = new AStarNode(initialState, null, 0, initialState.getHCost(costPerKm), null);
 		queue.add(root);
@@ -202,6 +220,13 @@ public class DeliberativeAgent implements DeliberativeBehavior {
 				
 		while(!queue.isEmpty())
 		{
+			
+			Instant end = Instant.now();
+			Duration timeElapsed = Duration.between(start, end);
+			if(timeElapsed.getSeconds() >= 60) {
+				System.out.println("Timed out when building plan.");
+				System.exit(1);
+			}
 						
 			AStarNode currentNode = queue.poll();
 			State currentState = currentNode.getState();
@@ -210,16 +235,6 @@ public class DeliberativeAgent implements DeliberativeBehavior {
 			{ 
 				System.out.println("Total number of states considered: " + visitedStates.size());
 				currentNode.inferPlan(plan);
-				
-				int counter = 0;
-				for (logist.plan.Action a : plan) {
-					if (a != null)
-						System.out.println(counter + " --> " + a.toString());
-					else 
-						System.out.println(counter + " --> null");
-					counter++;
-				}
-				
 				return plan;
 			}
 			
@@ -296,6 +311,7 @@ public class DeliberativeAgent implements DeliberativeBehavior {
 			// This cannot happen for this simple agent, but typically
 			// you will need to consider the carriedTasks when the next
 			// plan is computed.
+			
 			this.initCarriedTasks = carriedTasks;
 		}
 	}
