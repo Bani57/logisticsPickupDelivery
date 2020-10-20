@@ -51,6 +51,9 @@ public class State {
 	/**
 	 * Method returning the heuristic value of the state. Calls one of three
 	 * possible heuristic implementations depending on the chosen heuristic id.
+	 * 
+	 * @param costPerKm constant representing the cost to pay per km traveled
+	 * @return heuristic estimate of the state
 	 */
 	public double getHCost(int costPerKm) {
 		switch (State.heuristicId) {
@@ -70,6 +73,9 @@ public class State {
 	 * Method implementing the procedure for computing the heuristic using the first
 	 * definition. Heuristic value is based on the distance to the closest neighbor
 	 * city and the total reward possible.
+	 * 
+	 * @param costPerKm constant representing the cost to pay per km traveled
+	 * @return heuristic estimate of the state
 	 */
 	public double getHCostMinDistNeighbor(int costPerKm) {
 		double minCost = Double.POSITIVE_INFINITY;
@@ -95,6 +101,9 @@ public class State {
 	 * Method implementing the procedure for computing the heuristic using the
 	 * second definition. Heuristic value is based on the distance to the closest
 	 * pickup OR delivery city of the remaining tasks and the total reward possible.
+	 * 
+	 * @param costPerKm constant representing the cost to pay per km traveled
+	 * @return heuristic estimate of the state
 	 */
 	public double getHCostMinDistTaskCity(int costPerKm) {
 		double minCostPickup = Double.POSITIVE_INFINITY;
@@ -129,6 +138,9 @@ public class State {
 	 * definition. Heuristic value is based on a weighted sum of the distance to the
 	 * closest pickup city AND the distance to the closest delivery city of the
 	 * remaining tasks and the total reward possible.
+	 * 
+	 * @param costPerKm constant representing the cost to pay per km traveled
+	 * @return heuristic estimate of the state
 	 */
 	public double getHCostTotalDistEstimate(int costPerKm) {
 		double minCostPickup = Double.POSITIVE_INFINITY;

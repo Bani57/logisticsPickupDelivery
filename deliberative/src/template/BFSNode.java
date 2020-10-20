@@ -92,6 +92,11 @@ public class BFSNode implements Comparable<BFSNode> {
 	/**
 	 * Two nodes created during the BFS algorithm are comparable with respect to
 	 * their g(n) costs.
+	 * 
+	 * @param node node to compare to
+	 * @return 0 if this' cost is equal to node's cost
+	 * 		   1 if this' cost is greater then node's cost
+	 * 		  -1 if this' cost is less than node's cost
 	 */
 	@Override
 	public int compareTo(BFSNode node) {
@@ -107,6 +112,8 @@ public class BFSNode implements Comparable<BFSNode> {
 	/**
 	 * Helper function to build the plan using the reversed sequence of Action
 	 * objects inferred by traversing the node's ancestors up until the root.
+	 * 
+	 * @param plan plan to which action have to be added 
 	 */
 	public void inferPlan(Plan plan) {
 		Stack<Action> reversedPlan = new Stack<>();

@@ -91,8 +91,10 @@ public class DeliberativeAgent implements DeliberativeBehavior {
 	}
 
 	/**
-	 * Method that computes the plan using the BFS algorithm.
+	 * Method that computes a plan using the BFS algorithm.
 	 * 
+	 * @param vehicle agent for which the plan is computed
+	 * @param tasks   set of the available tasks to be picked up
 	 * @return a Plan object.
 	 */
 	private Plan bfsPlan(Vehicle vehicle, TaskSet tasks) {
@@ -122,7 +124,8 @@ public class DeliberativeAgent implements DeliberativeBehavior {
 		BFSNode root = new BFSNode(initialState, null, 0, null);
 		queue.add(root);
 
-		// Create a map for storing visited states and their corresponding nodes in order to detect loops
+		// Create a map for storing visited states and their corresponding nodes in
+		// order to detect loops
 		HashMap<State, BFSNode> visitedStates = new HashMap<>();
 		visitedStates.put(initialState, root);
 
@@ -170,7 +173,8 @@ public class DeliberativeAgent implements DeliberativeBehavior {
 					queue.add(childNode);
 					visitedStates.put(nextState, childNode);
 				} else {
-					// If loop detected, only substitute the node if its cost is less than the one with the same state in the queue
+					// If loop detected, only substitute the node if its cost is less than the one
+					// with the same state in the queue
 					BFSNode n = visitedStates.get(nextState);
 					if (childNode.getgCost() < n.getgCost()) {
 						n.setParent(childNode.getParent());
@@ -200,7 +204,8 @@ public class DeliberativeAgent implements DeliberativeBehavior {
 						queue.add(childNode);
 						visitedStates.put(nextState, childNode);
 					} else {
-						// If loop detected, only substitute the node if its cost is less than the one with the same state in the queue
+						// If loop detected, only substitute the node if its cost is less than the one
+						// with the same state in the queue
 						BFSNode n = visitedStates.get(nextState);
 						if (childNode.getgCost() < n.getgCost()) {
 							n.setParent(childNode.getParent());
@@ -227,7 +232,8 @@ public class DeliberativeAgent implements DeliberativeBehavior {
 						queue.add(childNode);
 						visitedStates.put(nextState, childNode);
 					} else {
-						// If loop detected, only substitute the node if its cost is less than the one with the same state in the queue
+						// If loop detected, only substitute the node if its cost is less than the one
+						// with the same state in the queue
 						BFSNode n = visitedStates.get(nextState);
 						if (childNode.getgCost() < n.getgCost()) {
 							n.setParent(childNode.getParent());
@@ -252,8 +258,11 @@ public class DeliberativeAgent implements DeliberativeBehavior {
 	}
 
 	/**
-	 * Function that computes the plan using the A* algorithm. Returns a Plan
-	 * object.
+	 * Method that computes the plan using the A* algorithm.
+	 * 
+	 * @param vehicle agent for which the plan is computed
+	 * @param tasks   set of the available tasks to be picked up
+	 * @return a Plan object.
 	 */
 	private Plan aStarPlan(Vehicle vehicle, TaskSet tasks) {
 
@@ -286,7 +295,8 @@ public class DeliberativeAgent implements DeliberativeBehavior {
 		AStarNode root = new AStarNode(initialState, null, 0, initialState.getHCost(costPerKm), null);
 		queue.add(root);
 
-		// Create a map for storing visited states and their corresponding nodes in order to detect loops
+		// Create a map for storing visited states and their corresponding nodes in
+		// order to detect loops
 		HashMap<State, AStarNode> visitedStates = new HashMap<>();
 		visitedStates.put(initialState, root);
 
@@ -333,7 +343,8 @@ public class DeliberativeAgent implements DeliberativeBehavior {
 					queue.add(childNode);
 					visitedStates.put(nextState, childNode);
 				} else {
-					// If loop detected, only substitute the node if its cost is less than the one with the same state in the queue
+					// If loop detected, only substitute the node if its cost is less than the one
+					// with the same state in the queue
 					AStarNode n = visitedStates.get(nextState);
 					if (childNode.getfCost() < n.getfCost()) {
 						n.setParent(childNode.getParent());
@@ -365,7 +376,8 @@ public class DeliberativeAgent implements DeliberativeBehavior {
 						queue.add(childNode);
 						visitedStates.put(nextState, childNode);
 					} else {
-						// If loop detected, only substitute the node if its cost is less than the one with the same state in the queue
+						// If loop detected, only substitute the node if its cost is less than the one
+						// with the same state in the queue
 						AStarNode n = visitedStates.get(nextState);
 						if (childNode.getfCost() < n.getfCost()) {
 							n.setParent(childNode.getParent());
@@ -394,7 +406,8 @@ public class DeliberativeAgent implements DeliberativeBehavior {
 						queue.add(childNode);
 						visitedStates.put(nextState, childNode);
 					} else {
-						// If loop detected, only substitute the node if its cost is less than the one with the same state in the queue
+						// If loop detected, only substitute the node if its cost is less than the one
+						// with the same state in the queue
 						AStarNode n = visitedStates.get(nextState);
 						if (childNode.getfCost() < n.getfCost()) {
 							n.setParent(childNode.getParent());
@@ -405,11 +418,8 @@ public class DeliberativeAgent implements DeliberativeBehavior {
 					}
 				}
 			}
-			
 		}
-		
 		return plan;
-
 	}
 
 	@Override
