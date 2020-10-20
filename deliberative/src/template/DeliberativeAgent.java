@@ -157,8 +157,8 @@ public class DeliberativeAgent implements DeliberativeBehavior {
 			TaskSet currentTasksToPickup = currentState.getTasksToPickup();
 			TaskSet currentTasksToDeliver = currentState.getTasksToDeliver();
 
-			State nextState;
-			BFSNode childNode;
+			State nextState = null;
+			BFSNode childNode = null;
 
 			// Enqueue all new unique states created by possible MOVE actions
 			// Can only MOVE to a neighbor node
@@ -215,33 +215,40 @@ public class DeliberativeAgent implements DeliberativeBehavior {
 					}
 				}
 			}
-
-			// Enqueue all new unique states created by possible DELIVER actions
+			
+			TaskSet tmpTasksToDeliver = TaskSet.copyOf(currentTasksToDeliver);
+			boolean deliveryPossible = false; // true iff there is something to deliver in currentLocation
+			
+			// Add all new unique states created by possible DELIVER actions to the tree
 			// Can only DELIVER a task if currently located in its delivery city
 			for (Task t : currentTasksToDeliver) {
 				if (t.deliveryCity.equals(currentLocation)) {
+					deliveryPossible = true;
 					// Compute the new state, new node and the new g(n)
-					TaskSet leftTasksToDeliver = TaskSet.copyOf(currentTasksToDeliver);
-					leftTasksToDeliver.remove(t);
-					nextState = new State(currentLocation, currentTasksToPickup, leftTasksToDeliver);
+					tmpTasksToDeliver.remove(t);
+					nextState = new State(currentLocation, currentTasksToPickup, tmpTasksToDeliver);
 					double updatedCost = currentNode.getgCost() - t.reward;
 					childNode = new BFSNode(nextState, currentNode, updatedCost, new Delivery(t));
-
-					// Loop detection
-					if (!visitedStates.containsKey(nextState)) {
-						queue.add(childNode);
-						visitedStates.put(nextState, childNode);
-					} else {
-						// If loop detected, only substitute the node if its cost is less than the one
-						// with the same state in the queue
-						BFSNode n = visitedStates.get(nextState);
-						if (childNode.getgCost() < n.getgCost()) {
-							n.setParent(childNode.getParent());
-							n.setgCost(childNode.getgCost());
-							n.setActionPerformed(childNode.getActionPerformed());
-						}
-					}
+					currentNode = childNode;
 				}
+			}
+			
+			// Add only the deepest node to the queue of the nodes that still have to be explored 
+			if (deliveryPossible) {
+				// Loop detection
+				if (!visitedStates.containsKey(nextState)) {
+					queue.add(childNode);
+					visitedStates.put(nextState, childNode);
+				} else {
+					// If loop detected, only substitute the node if its cost is less than the one
+					// with the same state in the queue
+					BFSNode n = visitedStates.get(nextState);
+					if (childNode.getgCost() < n.getgCost()) {
+						n.setParent(childNode.getParent());
+						n.setgCost(childNode.getgCost());
+						n.setActionPerformed(childNode.getActionPerformed());
+					}
+				} 
 			}
 
 		}
@@ -325,8 +332,8 @@ public class DeliberativeAgent implements DeliberativeBehavior {
 			TaskSet currentTasksToPickup = currentState.getTasksToPickup();
 			TaskSet currentTasksToDeliver = currentState.getTasksToDeliver();
 
-			State nextState;
-			AStarNode childNode;
+			State nextState = null;
+			AStarNode childNode = null;
 
 			// Enqueue all new unique states created by possible MOVE actions
 			// Can only MOVE to a neighbor node
@@ -389,34 +396,41 @@ public class DeliberativeAgent implements DeliberativeBehavior {
 				}
 			}
 
-			// Enqueue all new unique states created by possible DELIVER actions
+			TaskSet tmpTasksToDeliver = TaskSet.copyOf(currentTasksToDeliver);
+			boolean deliveryPossible = false; // true iff there is something to deliver in currentLocation
+			
+			// Add all new unique states created by possible DELIVER actions to the tree
 			// Can only DELIVER a task if currently located in its delivery city
 			for (Task t : currentTasksToDeliver) {
 				if (t.deliveryCity.equals(currentLocation)) {
+					deliveryPossible = true;
 					// Compute the new state, new node and the new g(n) and h(n)
-					TaskSet leftTasksToDeliver = TaskSet.copyOf(currentTasksToDeliver);
-					leftTasksToDeliver.remove(t);
-					nextState = new State(currentLocation, currentTasksToPickup, leftTasksToDeliver);
+					tmpTasksToDeliver.remove(t);
+					nextState = new State(currentLocation, currentTasksToPickup, tmpTasksToDeliver);
 					double updatedCost = currentNode.getgCost() - t.reward;
 					childNode = new AStarNode(nextState, currentNode, updatedCost, nextState.getHCost(costPerKm),
 							new Delivery(t));
-
-					// Loop detection
-					if (!visitedStates.containsKey(nextState)) {
-						queue.add(childNode);
-						visitedStates.put(nextState, childNode);
-					} else {
-						// If loop detected, only substitute the node if its cost is less than the one
-						// with the same state in the queue
-						AStarNode n = visitedStates.get(nextState);
-						if (childNode.getfCost() < n.getfCost()) {
-							n.setParent(childNode.getParent());
-							n.setgCost(childNode.getgCost());
-							n.sethCost(childNode.gethCost());
-							n.setActionPerformed(childNode.getActionPerformed());
-						}
-					}
+					currentNode = childNode;
 				}
+			}
+			
+			// Add only the deepest node to the queue of the nodes that still have to be explored 
+			if (deliveryPossible) {
+				// Loop detection
+				if (!visitedStates.containsKey(nextState)) {
+					queue.add(childNode);
+					visitedStates.put(nextState, childNode);
+				} else {
+					// If loop detected, only substitute the node if its cost is less than the one
+					// with the same state in the queue
+					AStarNode n = visitedStates.get(nextState);
+					if (childNode.getfCost() < n.getfCost()) {
+						n.setParent(childNode.getParent());
+						n.setgCost(childNode.getgCost());
+						n.sethCost(childNode.gethCost());
+						n.setActionPerformed(childNode.getActionPerformed());
+					}
+				} 
 			}
 		}
 		return plan;
