@@ -5,7 +5,6 @@ import java.util.Stack;
 import logist.plan.Action;
 import logist.plan.Plan;
 
-
 /**
  * Class used as a node representation for the BFS algorithm.
  * 
@@ -13,13 +12,12 @@ import logist.plan.Plan;
  * @author Orazio Rillo
  */
 public class BFSNode implements Comparable<BFSNode> {
-	
+
 	private State state; // Current state
 	private BFSNode parent; // Pointer to parent node
 	private double gCost; // Current g(n)
 	private Action actionPerformed; // Action responsible for creating the node
-	
-	
+
 	public BFSNode(State state, BFSNode parent, double gCost, Action actionPerformed) {
 		super();
 		this.state = state;
@@ -51,7 +49,7 @@ public class BFSNode implements Comparable<BFSNode> {
 	public void setgCost(double gCost) {
 		this.gCost = gCost;
 	}
-	
+
 	public Action getActionPerformed() {
 		return actionPerformed;
 	}
@@ -90,39 +88,39 @@ public class BFSNode implements Comparable<BFSNode> {
 			return false;
 		return true;
 	}
-	
+
 	/**
-	 * Two nodes created during the BFS algorithm are comparable with respect to their g(n) costs.
-	 * */
+	 * Two nodes created during the BFS algorithm are comparable with respect to
+	 * their g(n) costs.
+	 */
 	@Override
 	public int compareTo(BFSNode node) {
 		double otherNodegCost = node.getgCost();
-		if(this.gCost < otherNodegCost)
+		if (this.gCost < otherNodegCost)
 			return -1;
 		else if (this.gCost > otherNodegCost)
 			return 1;
-		else return 0;
+		else
+			return 0;
 	}
-	
+
 	/**
-	 * Helper function to build the plan using the reversed sequence of Action objects inferred by traversing the node's ancestors up until the root.
-	 * */
-	public void inferPlan(Plan plan)
-	{
+	 * Helper function to build the plan using the reversed sequence of Action
+	 * objects inferred by traversing the node's ancestors up until the root.
+	 */
+	public void inferPlan(Plan plan) {
 		Stack<Action> reversedPlan = new Stack<>();
 		BFSNode tmp = this;
-		
-		while(tmp != null)
-		{
+
+		while (tmp != null) {
 			BFSNode tmpParent = tmp.getParent();
-			if(tmpParent != null)
+			if (tmpParent != null)
 				reversedPlan.push(tmp.getActionPerformed());
 			tmp = tmpParent;
 		}
-		
-		while(!reversedPlan.empty())
+
+		while (!reversedPlan.empty())
 			plan.append(reversedPlan.pop());
 	}
-	
-	
+
 }

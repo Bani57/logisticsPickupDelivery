@@ -5,7 +5,6 @@ import java.util.Stack;
 import logist.plan.Action;
 import logist.plan.Plan;
 
-
 /**
  * Class used as a node representation for the A* algorithm.
  * 
@@ -13,13 +12,13 @@ import logist.plan.Plan;
  * @author Orazio Rillo
  */
 public class AStarNode implements Comparable<AStarNode> {
-	
+
 	private State state; // Current state
 	private AStarNode parent; // Pointer to parent node
 	private double gCost; // Current g(n)
 	private double hCost; // Current h(n)
 	private Action actionPerformed; // Action responsible for creating the node
-	
+
 	public AStarNode(State state, AStarNode parent, double gCost, double hCost, Action actionPerformed) {
 		super();
 		this.state = state;
@@ -60,7 +59,7 @@ public class AStarNode implements Comparable<AStarNode> {
 	public void sethCost(double hCost) {
 		this.hCost = hCost;
 	}
-	
+
 	public Action getActionPerformed() {
 		return actionPerformed;
 	}
@@ -72,7 +71,6 @@ public class AStarNode implements Comparable<AStarNode> {
 	public double getfCost() {
 		return this.gCost + this.hCost;
 	}
-	
 
 	@Override
 	public int hashCode() {
@@ -106,36 +104,37 @@ public class AStarNode implements Comparable<AStarNode> {
 	}
 
 	/**
-	 * Two nodes created during the A* algorithm are comparable with respect to their f(n) costs, where f(n) = g(n) + h(n).
-	 * */
+	 * Two nodes created during the A* algorithm are comparable with respect to
+	 * their f(n) costs, where f(n) = g(n) + h(n).
+	 */
 	@Override
 	public int compareTo(AStarNode node) {
 		double nodefCost = this.getfCost();
 		double otherNodefCost = node.getfCost();
-		if(nodefCost < otherNodefCost)
+		if (nodefCost < otherNodefCost)
 			return -1;
 		else if (nodefCost > otherNodefCost)
 			return 1;
-		else return 0;
+		else
+			return 0;
 	}
-	
+
 	/**
-	 * Helper function to build the plan using the reversed sequence of Action objects inferred by traversing the node's ancestors up until the root.
-	 * */
-	public void inferPlan(Plan plan)
-	{
+	 * Helper function to build the plan using the reversed sequence of Action
+	 * objects inferred by traversing the node's ancestors up until the root.
+	 */
+	public void inferPlan(Plan plan) {
 		Stack<Action> reversedPlan = new Stack<>();
 		AStarNode tmp = this;
-		
-		while(tmp != null)
-		{
+
+		while (tmp != null) {
 			AStarNode tmpParent = tmp.getParent();
-			if(tmpParent != null)
+			if (tmpParent != null)
 				reversedPlan.push(tmp.getActionPerformed());
 			tmp = tmpParent;
 		}
-		
-		while(!reversedPlan.empty())
+
+		while (!reversedPlan.empty())
 			plan.append(reversedPlan.pop());
 	}
 }

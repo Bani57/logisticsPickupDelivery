@@ -4,25 +4,24 @@ import logist.task.Task;
 import logist.task.TaskSet;
 import logist.topology.Topology.City;
 
-
 /**
- * Class implementing the state representation in our model.
- * Contains also methods for extracting useful information from the state.
+ * Class implementing the state representation in our model. Contains also
+ * methods for extracting useful information from the state.
  * 
  * @author Andrej Janchevski
  * @author Orazio Rillo
  */
 public class State {
-	
+
 	private City location; // Current city of the vehicle
 	private TaskSet tasksToPickup; // Set of tasks still waiting to be picked up
 	private TaskSet tasksToDeliver; // Set of tasks currently carried by the vehicle, still waiting to be delivered
-	
+
 	private static int heuristicId; // Id of the chosen heuristic function for the A* algorithm
-	
-	
-	/** 
-	 * Constructor for initial states when there are still no tasks carried by the vehicle.
+
+	/**
+	 * Constructor for initial states when there are still no tasks carried by the
+	 * vehicle.
 	 */
 	public State(City location, TaskSet tasksToPickup) {
 		super();
@@ -30,8 +29,8 @@ public class State {
 		this.tasksToPickup = tasksToPickup;
 		this.tasksToDeliver = TaskSet.noneOf(tasksToPickup);
 	}
-	
-	/** 
+
+	/**
 	 * Constructor for the general case.
 	 */
 	public State(City location, TaskSet tasksToPickup, TaskSet tasksToDeliver) {
@@ -40,23 +39,21 @@ public class State {
 		this.tasksToPickup = tasksToPickup;
 		this.tasksToDeliver = tasksToDeliver;
 	}
-	
-	/** 
-	 * Method implementing goal state detection.
-	 * We are in a goal state if there are no more tasks to pickup or deliver.
-	 * */
-	public boolean isGoalState()
-	{
+
+	/**
+	 * Method implementing goal state detection. We are in a goal state if there are
+	 * no more tasks to pickup or deliver.
+	 */
+	public boolean isGoalState() {
 		return this.tasksToPickup.isEmpty() && this.tasksToDeliver.isEmpty();
 	}
-	
-	/** 
-	 * Method returning the heuristic value of the state.
-	 * Calls one of three possible heuristic implementations depending on the chosen heuristic id.
-	 * */
-	public double getHCost(int costPerKm) {		
-		switch(State.heuristicId)
-		{
+
+	/**
+	 * Method returning the heuristic value of the state. Calls one of three
+	 * possible heuristic implementations depending on the chosen heuristic id.
+	 */
+	public double getHCost(int costPerKm) {
+		switch (State.heuristicId) {
 		case 0:
 			return this.getHCostMinDistNeighbor(costPerKm);
 		case 1:
@@ -66,103 +63,110 @@ public class State {
 		default:
 			throw new AssertionError("Invalid heuristic id. Can only be equal to 0, 1 or 2.");
 		}
-		
+
 	}
-	
-	/** 
-	 * Method implementing the procedure for computing the heuristic using the first definition.
-	 * Heuristic value is based on the distance to the closest neighbor city and the total reward possible.
-	 * */
-	public double getHCostMinDistNeighbor(int costPerKm){
+
+	/**
+	 * Method implementing the procedure for computing the heuristic using the first
+	 * definition. Heuristic value is based on the distance to the closest neighbor
+	 * city and the total reward possible.
+	 */
+	public double getHCostMinDistNeighbor(int costPerKm) {
 		double minCost = Double.POSITIVE_INFINITY;
-		
+
 		// If there are no tasks left we should not move to a neighbor anymore
 		if (tasksToPickup.isEmpty() && tasksToDeliver.isEmpty())
 			return 0;
 		else {
 			// Compute the minimum
 			double cost;
-			for (City c: location.neighbors()) {
+			for (City c : location.neighbors()) {
 				cost = location.distanceTo(c);
 				if (cost < minCost) {
 					minCost = cost;
 				}
 			}
 		}
-		
+
 		return costPerKm * minCost - tasksToPickup.rewardSum() - tasksToDeliver.rewardSum();
 	}
-	
-	/** 
-	 * Method implementing the procedure for computing the heuristic using the second definition.
-	 * Heuristic value is based on the distance to the closest pickup OR delivery city of the remaining tasks and the total reward possible.
-	 * */
-	public double getHCostMinDistTaskCity(int costPerKm){
+
+	/**
+	 * Method implementing the procedure for computing the heuristic using the
+	 * second definition. Heuristic value is based on the distance to the closest
+	 * pickup OR delivery city of the remaining tasks and the total reward possible.
+	 */
+	public double getHCostMinDistTaskCity(int costPerKm) {
 		double minCostPickup = Double.POSITIVE_INFINITY;
 		double minCostDeliver = Double.POSITIVE_INFINITY;
-		
+
 		// If there are no tasks left the minimum distance to all tasks should be 0
 		if (tasksToPickup.isEmpty() && tasksToDeliver.isEmpty())
 			return 0;
 		else {
 			// Compute the two minima
 			double cost;
-			for (Task t: tasksToPickup){
+			for (Task t : tasksToPickup) {
 				cost = location.distanceTo(t.pickupCity);
 				if (cost < minCostPickup) {
 					minCostPickup = cost;
 				}
 			}
-			for (Task t: tasksToDeliver){
+			for (Task t : tasksToDeliver) {
 				cost = location.distanceTo(t.deliveryCity);
 				if (cost < minCostDeliver) {
 					minCostDeliver = cost;
 				}
 			}
 		}
-		
-		return costPerKm * Math.min(minCostPickup, minCostDeliver) - tasksToPickup.rewardSum() - tasksToDeliver.rewardSum();
+
+		return costPerKm * Math.min(minCostPickup, minCostDeliver) - tasksToPickup.rewardSum()
+				- tasksToDeliver.rewardSum();
 	}
-	
-	/** 
-	 * Method implementing the procedure for computing the heuristic using the third definition.
-	 * Heuristic value is based on a weighted sum of the distance to the closest pickup city AND the distance to the closest delivery city of the remaining tasks and the total reward possible.
-	 * */
-	public double getHCostTotalDistEstimate(int costPerKm){		
+
+	/**
+	 * Method implementing the procedure for computing the heuristic using the third
+	 * definition. Heuristic value is based on a weighted sum of the distance to the
+	 * closest pickup city AND the distance to the closest delivery city of the
+	 * remaining tasks and the total reward possible.
+	 */
+	public double getHCostTotalDistEstimate(int costPerKm) {
 		double minCostPickup = Double.POSITIVE_INFINITY;
 		double minCostDeliver = Double.POSITIVE_INFINITY;
 		double cost;
-		
-		// If there are no tasks left to pickup the minimum distance to all pickup tasks should be 0
+
+		// If there are no tasks left to pickup the minimum distance to all pickup tasks
+		// should be 0
 		if (tasksToPickup.isEmpty())
 			minCostPickup = 0;
 		else {
 			// Compute the minimum
-			for (Task t: tasksToPickup){
+			for (Task t : tasksToPickup) {
 				cost = location.distanceTo(t.pickupCity);
 				if (cost < minCostPickup) {
 					minCostPickup = cost;
 				}
 			}
 		}
-		
-		// If there are no tasks left to deliver the minimum distance to all delivery tasks should be 0
+
+		// If there are no tasks left to deliver the minimum distance to all delivery
+		// tasks should be 0
 		if (tasksToDeliver.isEmpty())
 			minCostDeliver = 0;
 		else {
 			// Compute the minimum
-			for (Task t: tasksToDeliver){
+			for (Task t : tasksToDeliver) {
 				cost = location.distanceTo(t.deliveryCity);
 				if (cost < minCostDeliver) {
 					minCostDeliver = cost;
 				}
 			}
 		}
-		
-		return costPerKm * (tasksToPickup.size() * minCostPickup + tasksToDeliver.size() * minCostDeliver) 
+
+		return costPerKm * (tasksToPickup.size() * minCostPickup + tasksToDeliver.size() * minCostDeliver)
 				- tasksToPickup.rewardSum() - tasksToDeliver.rewardSum();
 	}
-	
+
 	public City getLocation() {
 		return location;
 	}
@@ -231,13 +235,11 @@ public class State {
 			return false;
 		return true;
 	}
-	
+
 	@Override
 	public String toString() {
-		return String.format("In city %s, tasks to pickup: %s, tasks to deliver: %s", this.location, this.tasksToPickup.toString(), this.tasksToDeliver.toString());
+		return String.format("In city %s, tasks to pickup: %s, tasks to deliver: %s", this.location,
+				this.tasksToPickup.toString(), this.tasksToDeliver.toString());
 	}
-	
-	
-	
-	
+
 }
