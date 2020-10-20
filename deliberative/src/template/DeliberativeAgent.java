@@ -6,10 +6,9 @@ import logist.simulation.Vehicle;
 import java.awt.Desktop.Action;
 import java.time.Duration;
 import java.time.Instant;
-import java.util.HashSet;
+import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.PriorityQueue;
-import java.util.Stack;
 
 import logist.agent.Agent;
 import logist.behavior.DeliberativeBehavior;
@@ -123,9 +122,9 @@ public class DeliberativeAgent implements DeliberativeBehavior {
 		BFSNode root = new BFSNode(initialState, null, 0, null);
 		queue.add(root);
 
-		// Create a set for storing visited states in order to detect loops
-		HashSet<State> visitedStates = new HashSet<>();
-		visitedStates.add(initialState);
+		// Create a map for storing visited states and their corresponding nodes in order to detect loops
+		HashMap<State, BFSNode> visitedStates = new HashMap<>();
+		visitedStates.put(initialState, root);
 
 		// Create a priority queue (min heap) for storing all goal nodes => they will be
 		// automatically ordered by g(n) as compareTo is implemented
@@ -167,9 +166,17 @@ public class DeliberativeAgent implements DeliberativeBehavior {
 				childNode = new BFSNode(nextState, currentNode, updatedCost, new Move(neighborCity));
 
 				// Loop detection
-				if (!visitedStates.contains(nextState)) {
+				if (!visitedStates.containsKey(nextState)) {
 					queue.add(childNode);
-					visitedStates.add(nextState);
+					visitedStates.put(nextState, childNode);
+				} else {
+					// If loop detected, only substitute the node if its cost is less than the one with the same state in the queue
+					BFSNode n = visitedStates.get(nextState);
+					if (childNode.getgCost() < n.getgCost()) {
+						n.setParent(childNode.getParent());
+						n.setgCost(childNode.getgCost());
+						n.setActionPerformed(childNode.getActionPerformed());
+					}
 				}
 			}
 
@@ -189,9 +196,17 @@ public class DeliberativeAgent implements DeliberativeBehavior {
 					childNode = new BFSNode(nextState, currentNode, updatedCost, new Pickup(t));
 
 					// Loop detection
-					if (!visitedStates.contains(nextState)) {
+					if (!visitedStates.containsKey(nextState)) {
 						queue.add(childNode);
-						visitedStates.add(nextState);
+						visitedStates.put(nextState, childNode);
+					} else {
+						// If loop detected, only substitute the node if its cost is less than the one with the same state in the queue
+						BFSNode n = visitedStates.get(nextState);
+						if (childNode.getgCost() < n.getgCost()) {
+							n.setParent(childNode.getParent());
+							n.setgCost(childNode.getgCost());
+							n.setActionPerformed(childNode.getActionPerformed());
+						}
 					}
 				}
 			}
@@ -208,9 +223,17 @@ public class DeliberativeAgent implements DeliberativeBehavior {
 					childNode = new BFSNode(nextState, currentNode, updatedCost, new Delivery(t));
 
 					// Loop detection
-					if (!visitedStates.contains(nextState)) {
+					if (!visitedStates.containsKey(nextState)) {
 						queue.add(childNode);
-						visitedStates.add(nextState);
+						visitedStates.put(nextState, childNode);
+					} else {
+						// If loop detected, only substitute the node if its cost is less than the one with the same state in the queue
+						BFSNode n = visitedStates.get(nextState);
+						if (childNode.getgCost() < n.getgCost()) {
+							n.setParent(childNode.getParent());
+							n.setgCost(childNode.getgCost());
+							n.setActionPerformed(childNode.getActionPerformed());
+						}
 					}
 				}
 			}
@@ -263,9 +286,9 @@ public class DeliberativeAgent implements DeliberativeBehavior {
 		AStarNode root = new AStarNode(initialState, null, 0, initialState.getHCost(costPerKm), null);
 		queue.add(root);
 
-		// Create a set for storing visited states in order to detect loops
-		HashSet<State> visitedStates = new HashSet<>();
-		visitedStates.add(initialState);
+		// Create a map for storing visited states and their corresponding nodes in order to detect loops
+		HashMap<State, AStarNode> visitedStates = new HashMap<>();
+		visitedStates.put(initialState, root);
 
 		while (!queue.isEmpty()) {
 
@@ -306,16 +329,17 @@ public class DeliberativeAgent implements DeliberativeBehavior {
 						new Move(neighborCity));
 
 				// Loop detection
-				if (!visitedStates.contains(nextState)) {
+				if (!visitedStates.containsKey(nextState)) {
 					queue.add(childNode);
-					visitedStates.add(nextState);
+					visitedStates.put(nextState, childNode);
 				} else {
-					for (AStarNode n: queue) {
-						if (n.getState().equals(nextState) && childNode.getfCost() < n.getfCost()) {
-							queue.remove(n);
-							queue.add(childNode);
-							break;
-						}
+					// If loop detected, only substitute the node if its cost is less than the one with the same state in the queue
+					AStarNode n = visitedStates.get(nextState);
+					if (childNode.getfCost() < n.getfCost()) {
+						n.setParent(childNode.getParent());
+						n.setgCost(childNode.getgCost());
+						n.sethCost(childNode.gethCost());
+						n.setActionPerformed(childNode.getActionPerformed());
 					}
 				}
 			}
@@ -337,16 +361,17 @@ public class DeliberativeAgent implements DeliberativeBehavior {
 							new Pickup(t));
 
 					// Loop detection
-					if (!visitedStates.contains(nextState)) {
+					if (!visitedStates.containsKey(nextState)) {
 						queue.add(childNode);
-						visitedStates.add(nextState);
+						visitedStates.put(nextState, childNode);
 					} else {
-						for (AStarNode n: queue) {
-							if (n.getState().equals(nextState) && childNode.getfCost() < n.getfCost()) {
-								queue.remove(n);
-								queue.add(childNode);
-								break;
-							}
+						// If loop detected, only substitute the node if its cost is less than the one with the same state in the queue
+						AStarNode n = visitedStates.get(nextState);
+						if (childNode.getfCost() < n.getfCost()) {
+							n.setParent(childNode.getParent());
+							n.setgCost(childNode.getgCost());
+							n.sethCost(childNode.gethCost());
+							n.setActionPerformed(childNode.getActionPerformed());
 						}
 					}
 				}
@@ -365,22 +390,24 @@ public class DeliberativeAgent implements DeliberativeBehavior {
 							new Delivery(t));
 
 					// Loop detection
-					if (!visitedStates.contains(nextState)) {
+					if (!visitedStates.containsKey(nextState)) {
 						queue.add(childNode);
-						visitedStates.add(nextState);
+						visitedStates.put(nextState, childNode);
 					} else {
-						for (AStarNode n: queue) {
-							if (n.getState().equals(nextState) && childNode.getfCost() < n.getfCost()) {
-								queue.remove(n);
-								queue.add(childNode);
-								break;
-							}
+						// If loop detected, only substitute the node if its cost is less than the one with the same state in the queue
+						AStarNode n = visitedStates.get(nextState);
+						if (childNode.getfCost() < n.getfCost()) {
+							n.setParent(childNode.getParent());
+							n.setgCost(childNode.getgCost());
+							n.sethCost(childNode.gethCost());
+							n.setActionPerformed(childNode.getActionPerformed());
 						}
 					}
 				}
 			}
+			
 		}
-
+		
 		return plan;
 
 	}
