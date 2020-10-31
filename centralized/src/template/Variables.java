@@ -3,11 +3,16 @@ package template;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
+import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
+import java.util.PriorityQueue;
 
 import logist.simulation.Vehicle;
 import logist.task.Task;
 import logist.task.TaskSet;
+import logist.topology.Topology;
+import logist.topology.Topology.City;
 import template.ActionRep.ActionName;
 
 public class Variables {
@@ -29,13 +34,13 @@ public class Variables {
 		this.nextActionAfterDelivery = new ArrayList<>(Collections.nCopies(numTasks, (ActionRep)null));
 	}
 	
-	public void setToInitialSolution(List<Vehicle> vehicles, TaskSet tasks, int initialSolutionId) {
+	public void setToInitialSolution(List<Vehicle> vehicles, TaskSet tasks, Topology topology, int initialSolutionId) {
 		switch(initialSolutionId) {
 		case 1:
 			setToInitialSolutionLargestCapacity(vehicles, tasks);
 			break;
 		case 2:
-			setToInitialSolutionClosestToHome(vehicles, tasks);
+			setToInitialSolutionClosestToHome(vehicles, tasks, topology);
 			break;
 		case 3:
 			setToInitialSolutionCheapestMore(vehicles, tasks);
@@ -72,30 +77,9 @@ public class Variables {
 		}
 	};
 	
-	class VehicleDistanceComparator implements Comparator<Vehicle> {
-		
-		private Task task;
-		
-		public VehicleDistanceComparator(Task task) {
-			super();
-			this.task = task;
-		}
-
-		@Override
-		public int compare(Vehicle v1, Vehicle v2) {
-			double distanceToHome1 = v1.homeCity().distanceTo(task.pickupCity);
-			double distanceToHome2 = v2.homeCity().distanceTo(task.pickupCity);
-
-			if(distanceToHome1 > distanceToHome2)
-				return 1;
-			else if(distanceToHome1 < distanceToHome2)
-				return -1;
-			else
-				return 0;
-		}
-	};
-	
 	public void setToInitialSolutionLargestCapacity(List<Vehicle> vehicles, TaskSet tasks) {
+		
+		// TODO: If there is a task with weight greater than the capacity of all vehicles, return "no solution"
 		
 		ArrayList<Vehicle> sortedVehicles = new ArrayList<>(vehicles);
 		sortedVehicles.sort(new VehicleCapacityComparator());
@@ -210,12 +194,103 @@ public class Variables {
 		
 	}
 	
-	public void setToInitialSolutionClosestToHome(List<Vehicle> vehicles, TaskSet tasks) {
+	class VehicleDistanceComparator implements Comparator<City> {
+		
+		private Task task;
+		
+		public VehicleDistanceComparator(Task task) {
+			super();
+			this.task = task;
+		}
+
+		@Override
+		public int compare(City c1, City c2) {
+			double distanceToHome1 = c1.distanceTo(this.task.pickupCity);
+			double distanceToHome2 = c2.distanceTo(this.task.pickupCity);
+
+			if(distanceToHome1 > distanceToHome2)
+				return 1;
+			else if(distanceToHome1 < distanceToHome2)
+				return -1;
+			else
+				return 0;
+		}
+	};
+	
+	public void setToInitialSolutionClosestToHome(List<Vehicle> vehicles, TaskSet tasks, Topology topology) {
+		
+		// TODO: If there is a task with weight greater than the capacity of all vehicles, return "no solution"
+		
+		ArrayList<Task> sortedTasks = new ArrayList<>(tasks);
+
+		int currentTaskIndex = 0;	
+		HashMap<City, List<Vehicle>> homeCitiesMap = new HashMap<>();
+		for(City c: topology.cities())
+			homeCitiesMap.put(c, new ArrayList<Vehicle>());
+		for(Vehicle v: vehicles)
+			homeCitiesMap.get(v.homeCity()).add(v);
+		
+		while(currentTaskIndex < tasks.size())
+		{
+			Task task = sortedTasks.get(currentTaskIndex);
+			
+			PriorityQueue<City> queue = new PriorityQueue<>(new VehicleDistanceComparator(task));
+			queue.add(task.pickupCity);
+			HashSet<City> visitedCities = new HashSet<>();
+			
+			while(!queue.isEmpty())
+			{
+				City currentCity = queue.poll();
+				
+				List<Vehicle> closestVehicles = homeCitiesMap.get(currentCity);
+				for(Vehicle v: closestVehicles)
+				{
+					// TODO: Figure out how to check that you can assign this task to this closest vehicle
+					// If no vehicle has room, then deliver everything for each vehicle or just for the first
+					
+				}
+				
+				for(City neighborCity: currentCity.neighbors())
+				{
+					if(!visitedCities.contains(neighborCity))
+					{
+						queue.add(neighborCity);
+						visitedCities.add(neighborCity);
+					}
+				}
+			}
+		}
 	}
 	
 	public void setToInitialSolutionCheapestMore(List<Vehicle> vehicles, TaskSet tasks) {
-		
+		// TODO: If there is a task with weight greater than the capacity of all vehicles, return "no solution"
 	}
+	
+	public List<Variables> chooseNeighbors(){
+		// TODO:
+		return null;
+	}
+	
+	public Variables changeVehicleOfTask(Task t, Vehicle v){
+		// TODO:
+		return null;
+	}
+	
+	public Variables changePickupTime(Task t, int newPickupTime){
+		// TODO:
+		return null;
+	}
+	
+	public Variables changeDeliveryTime(Task t, int newDeliveryTime){
+		// TODO:
+		return null;
+	}
+	
+	public Variables localChoice(){
+		// TODO:
+		return null;
+	}
+	
 
 	public ArrayList<Vehicle> getVehicle() {
 		return vehicle;
