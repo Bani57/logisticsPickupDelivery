@@ -237,5 +237,56 @@ public class Variables {
 		this.nextActionAfterDelivery = nextActionAfterDelivery;
 	}
 	
+	@Override
+	public String toString(){
+		StringBuilder str = new StringBuilder(); 
+		
+		// Append vehicle
+		str.append("vehicle : [ t0 -> v").append(vehicle.get(0).id());
+		for (int i=1; i<vehicle.size(); i++) {
+			str.append(", t").append(i).append(" -> ").append(vehicle.get(i).id());
+		}
+		str.append("]\n");
+		
+		// Append pickupTime
+		str.append("pickupTime : [ t0 -> ").append(pickupTime.get(0));
+		for (int i=1; i<pickupTime.size(); i++) {
+			str.append(", t").append(i).append(" -> ").append(pickupTime.get(i));
+		}
+		str.append("]\n");
+		
+		// Append deliveryTime
+		str.append("deliveryTime : [ t0 -> ").append(deliveryTime.get(0));
+		for (int i=1; i<deliveryTime.size(); i++) {
+			str.append(", t").append(i).append(" -> ").append(deliveryTime.get(i));
+		}
+		str.append("]\n");
+		
+		// Append nextAction
+		str.append("nextAction : [ v0 -> ").append(nextAction.get(0).toString());
+		for (int i=1; i<nextAction.size(); i++) {
+			str.append(", t").append(i).append(" -> ").append(nextAction.get(i).toString());
+		}
+		str.append("]\n");
+		
+		// Append nextActionAfterPickup
+		str.append("nextActionAfterPickup : [ t0 -> ").append(nextActionAfterPickup.get(0).toString());
+		for (int i=1; i<nextActionAfterPickup.size(); i++) {
+			str.append(", t").append(i).append(" -> ").append(nextActionAfterPickup.get(1).toString());
+		}
+		str.append("]\n");
+		
+		// Append nextActionAfterDelivery
+		str.append("nextActionAfterDelivery : [ t0 -> ").append(nextActionAfterDelivery.get(0).toString());
+		for (int i=1; i<nextActionAfterDelivery.size(); i++) {
+			str.append(", t").append(i).append(" -> ").append(nextActionAfterDelivery.get(1).toString());
+		}
+		str.append("]\n");
+				
+				
+		return null;
+		
+	}
+	
 	
 }
