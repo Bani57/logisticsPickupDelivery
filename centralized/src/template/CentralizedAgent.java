@@ -64,12 +64,7 @@ public class CentralizedAgent implements CentralizedBehavior {
         Variables initialSolution = new Variables(vehicles.size(), tasks.size());
         initialSolution.setToInitialSolution(vehicles, tasks, 1);
         
-        System.out.println(initialSolution.getVehicle());
-        System.out.println(initialSolution.getPickupTime());
-        System.out.println(initialSolution.getDeliveryTime());
-        System.out.println(initialSolution.getNextAction());
-        System.out.println(initialSolution.getNextActionAfterPickup());
-        System.out.println(initialSolution.getNextActionAfterDelivery());
+        System.out.println(initialSolution.toString());
 
         List<Plan> plans = new ArrayList<Plan>();
         return plans;

@@ -110,79 +110,107 @@ public class Variables {
 		ArrayList<Integer> times = new ArrayList<>(Collections.nCopies(vehicles.size(), 0)); 
 		ActionRep previousAction = null;
 		int currentCapacity = currentVehicle.capacity();
+		ArrayList<Task> currentTasksToDeliver = new ArrayList<>();
+		
 		while(currentTaskIndex < tasks.size()) {
 			
 			Task task = sortedTasks.get(currentTaskIndex);
 			
+			// Check whether the current selected vehicle has enough space to carry one more task
 			if(currentCapacity >= task.weight) {
+				
 				// Assign a task to this vehicle
 				this.vehicle.set(task.id, currentVehicle);
+				
 				int currentVehicleTime = times.get(currentVehicle.id());
+				// Check whether this is the first time assigning an action to this vehicle
 				if(currentVehicleTime == 0)
 				{
+					// The first action is always to pickup
 					this.nextAction.set(currentVehicle.id(), new ActionRep(task, ActionName.PICKUP));
-					this.pickupTime.set(task.id, 0);
-					this.nextActionAfterPickup.set(task.id, new ActionRep(task, ActionName.DELIVER));
-					this.deliveryTime.set(task.id, 1);
-					previousAction = new ActionRep(task, ActionName.DELIVER);
+					this.pickupTime.set(task.id, currentVehicleTime);
+					
+					previousAction = new ActionRep(task, ActionName.PICKUP);
+					currentTasksToDeliver.add(task);
 				}
 				else {
-					this.nextActionAfterDelivery.set(previousAction.getTask().id, new ActionRep(task, ActionName.PICKUP));
+					
+					// Check the type of the previous action done by this vehicle
+					switch(previousAction.getAction()) {
+					case PICKUP:
+						// If it was pickup, update nextActionAfterPickup for the previous task
+						this.nextActionAfterPickup.set(previousAction.getTask().id, new ActionRep(task, ActionName.PICKUP));
+						break;
+					case DELIVER:
+						// If it was deliver, update nextActionAfterDelivery for the previous task
+						this.nextActionAfterDelivery.set(previousAction.getTask().id, new ActionRep(task, ActionName.PICKUP));
+					}
 					this.pickupTime.set(task.id, currentVehicleTime);
-					this.nextActionAfterPickup.set(task.id, new ActionRep(task, ActionName.DELIVER));
-					this.deliveryTime.set(task.id, currentVehicleTime+1);
-					previousAction = new ActionRep(task, ActionName.DELIVER);
+					
+					previousAction = new ActionRep(task, ActionName.PICKUP);
+					currentTasksToDeliver.add(task);
 				}
-				times.set(currentVehicle.id(), times.get(currentVehicle.id())+2);
+				
+				times.set(currentVehicle.id(), currentVehicleTime+1);
+				
+				// Reduce the available capacity for the vehicle by the task weight
 				currentCapacity -= task.weight;
+				
+				
 				currentTaskIndex++;
 			}
+
 			else {
+				
+				// If not, first deliver all picked-up tasks
+				for(int i=0; i<currentTasksToDeliver.size();i++)
+				{
+					Task t = currentTasksToDeliver.get(i);
+					if(i==0)
+						this.nextActionAfterPickup.set(previousAction.getTask().id, new ActionRep(t, ActionName.DELIVER));
+					else
+						this.nextActionAfterDelivery.set(currentTasksToDeliver.get(i-1).id, new ActionRep(t, ActionName.DELIVER));
+					this.deliveryTime.set(t.id, times.get(currentVehicle.id()));
+
+					times.set(currentVehicle.id(), times.get(currentVehicle.id())+1);
+
+				}
+				
 				currentVehicleIndex++;
+				
+				// If total weight of all tasks > total capacity of all vehicles,
+				// reset the whole procedure for the remaining subset of tasks,
+				// as all the vehicles are free again after they have delivered all of their tasks
+				if(currentVehicleIndex == vehicles.size())
+					currentVehicleIndex = 0;
+				
+				// Proceed to the next vehicle and reset all vehicle-related variables
 				currentVehicle = sortedVehicles.get(currentVehicleIndex);
 				currentCapacity = currentVehicle.capacity();
+				currentTasksToDeliver = new ArrayList<>();
+
 			}
+			
+
+		}
+		
+		// Deliver any remaining tasks
+		for(int i=0; i<currentTasksToDeliver.size();i++)
+		{
+			Task t = currentTasksToDeliver.get(i);
+			if(i==0)
+				this.nextActionAfterPickup.set(previousAction.getTask().id, new ActionRep(t, ActionName.DELIVER));
+			else
+				this.nextActionAfterDelivery.set(currentTasksToDeliver.get(i-1).id, new ActionRep(t, ActionName.DELIVER));
+
+			this.deliveryTime.set(t.id, times.get(currentVehicle.id()));
+			times.set(currentVehicle.id(), times.get(currentVehicle.id())+1);
+
 		}
 		
 	}
 	
 	public void setToInitialSolutionClosestToHome(List<Vehicle> vehicles, TaskSet tasks) {
-		
-		ArrayList<Task> sortedTasks = new ArrayList<>(tasks);
-
-		ArrayList<Vehicle> sortedVehicles = new ArrayList<>(vehicles);
-		int currentTaskIndex = 0;
-		ArrayList<Integer> times = new ArrayList<>(Collections.nCopies(vehicles.size(), 0)); 
-		ActionRep previousAction = null;
-		
-		while(currentTaskIndex < tasks.size())
-		{
-			Task task = sortedTasks.get(currentTaskIndex);
-			
-			sortedVehicles.sort(new VehicleDistanceComparator(task));
-			
-			for(Vehicle vehicle: sortedVehicles) {
-				if(vehicle.capacity() > task.weight) {
-					int currentVehicleTime = times.get(vehicle.id());
-					if(currentVehicleTime == 0)
-					{
-						this.nextAction.set(vehicle.id(), new ActionRep(task, ActionName.PICKUP));
-						this.pickupTime.set(task.id, 0);
-						this.nextActionAfterPickup.set(task.id, new ActionRep(task, ActionName.DELIVER));
-						this.deliveryTime.set(task.id, 1);
-						previousAction = new ActionRep(task, ActionName.DELIVER);
-					}
-					else {
-						this.nextActionAfterDelivery.set(previousAction.getTask().id, new ActionRep(task, ActionName.PICKUP));
-						this.pickupTime.set(task.id, currentVehicleTime);
-						this.nextActionAfterPickup.set(task.id, new ActionRep(task, ActionName.DELIVER));
-						this.deliveryTime.set(task.id, currentVehicleTime+1);
-						previousAction = new ActionRep(task, ActionName.DELIVER);
-					}
-					currentTaskIndex++;
-				}
-			}
-		}
 	}
 	
 	public void setToInitialSolutionCheapestMore(List<Vehicle> vehicles, TaskSet tasks) {
@@ -242,49 +270,55 @@ public class Variables {
 		StringBuilder str = new StringBuilder(); 
 		
 		// Append vehicle
-		str.append("vehicle : [ t0 -> v").append(vehicle.get(0).id());
+		str.append("vehicle : [t0 -> v").append(vehicle.get(0).id());
 		for (int i=1; i<vehicle.size(); i++) {
-			str.append(", t").append(i).append(" -> ").append(vehicle.get(i).id());
+			str.append(", t").append(i).append(" -> v").append(vehicle.get(i).id());
 		}
 		str.append("]\n");
 		
 		// Append pickupTime
-		str.append("pickupTime : [ t0 -> ").append(pickupTime.get(0));
+		str.append("pickupTime : [t0 -> ").append(pickupTime.get(0));
 		for (int i=1; i<pickupTime.size(); i++) {
 			str.append(", t").append(i).append(" -> ").append(pickupTime.get(i));
 		}
 		str.append("]\n");
 		
 		// Append deliveryTime
-		str.append("deliveryTime : [ t0 -> ").append(deliveryTime.get(0));
+		str.append("deliveryTime : [t0 -> ").append(deliveryTime.get(0));
 		for (int i=1; i<deliveryTime.size(); i++) {
 			str.append(", t").append(i).append(" -> ").append(deliveryTime.get(i));
 		}
 		str.append("]\n");
 		
 		// Append nextAction
-		str.append("nextAction : [ v0 -> ").append(nextAction.get(0).toString());
+		if(nextAction.get(0) != null)
+			str.append("nextAction : [v0 -> ").append(nextAction.get(0).toString());
 		for (int i=1; i<nextAction.size(); i++) {
-			str.append(", t").append(i).append(" -> ").append(nextAction.get(i).toString());
+			if(nextAction.get(i) != null)
+				str.append(", v").append(i).append(" -> ").append(nextAction.get(i).toString());
 		}
 		str.append("]\n");
 		
 		// Append nextActionAfterPickup
-		str.append("nextActionAfterPickup : [ t0 -> ").append(nextActionAfterPickup.get(0).toString());
+		if(nextActionAfterPickup.get(0)!=null)
+			str.append("nextActionAfterPickup : [t0 -> ").append(nextActionAfterPickup.get(0).toString());
 		for (int i=1; i<nextActionAfterPickup.size(); i++) {
-			str.append(", t").append(i).append(" -> ").append(nextActionAfterPickup.get(1).toString());
+			if(nextActionAfterPickup.get(i) != null)
+				str.append(", t").append(i).append(" -> ").append(nextActionAfterPickup.get(i).toString());
 		}
 		str.append("]\n");
 		
 		// Append nextActionAfterDelivery
-		str.append("nextActionAfterDelivery : [ t0 -> ").append(nextActionAfterDelivery.get(0).toString());
+		if(nextActionAfterDelivery.get(0)!=null)
+			str.append("nextActionAfterDelivery : [t0 -> ").append(nextActionAfterDelivery.get(0).toString());
 		for (int i=1; i<nextActionAfterDelivery.size(); i++) {
-			str.append(", t").append(i).append(" -> ").append(nextActionAfterDelivery.get(1).toString());
+			if(nextActionAfterDelivery.get(i)!=null)
+				str.append(", t").append(i).append(" -> ").append(nextActionAfterDelivery.get(i).toString());
 		}
 		str.append("]\n");
 				
 				
-		return null;
+		return str.toString();
 		
 	}
 	
