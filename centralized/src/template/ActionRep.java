@@ -30,6 +30,13 @@ public class ActionRep {
 	public void setAction(ActionName action) {
 		this.action = action;
 	}
+
+	@Override
+	public String toString() {
+		return "(t" + task.id + ", " + action.toString() + ")";
+	}
+	
+	
 	
 	
 }
