@@ -1,6 +1,7 @@
 package template;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
 
@@ -20,12 +21,12 @@ public class Variables {
 	
 	public Variables(int numVehicles, int numTasks) {
 		super();
-		this.vehicle = new ArrayList<>(numTasks);
-		this.pickupTime = new ArrayList<>(numTasks);
-		this.deliveryTime = new ArrayList<>(numTasks);
-		this.nextAction = new ArrayList<>(numVehicles);
-		this.nextActionAfterPickup = new ArrayList<>(numTasks);
-		this.nextActionAfterDelivery = new ArrayList<>(numTasks);
+		this.vehicle = new ArrayList<>(Collections.nCopies(numTasks, (Vehicle)null));
+		this.pickupTime = new ArrayList<>(Collections.nCopies(numTasks, 0));
+		this.deliveryTime = new ArrayList<>(Collections.nCopies(numTasks, 0));
+		this.nextAction = new ArrayList<>(Collections.nCopies(numVehicles, (ActionRep)null));
+		this.nextActionAfterPickup = new ArrayList<>(Collections.nCopies(numTasks, (ActionRep)null));
+		this.nextActionAfterDelivery = new ArrayList<>(Collections.nCopies(numTasks, (ActionRep)null));
 	}
 	
 	public void setToInitialSolution(List<Vehicle> vehicles, TaskSet tasks, int initialSolutionId) {
@@ -71,6 +72,29 @@ public class Variables {
 		}
 	};
 	
+	class VehicleDistanceComparator implements Comparator<Vehicle> {
+		
+		private Task task;
+		
+		public VehicleDistanceComparator(Task task) {
+			super();
+			this.task = task;
+		}
+
+		@Override
+		public int compare(Vehicle v1, Vehicle v2) {
+			double distanceToHome1 = v1.homeCity().distanceTo(task.pickupCity);
+			double distanceToHome2 = v2.homeCity().distanceTo(task.pickupCity);
+
+			if(distanceToHome1 > distanceToHome2)
+				return 1;
+			else if(distanceToHome1 < distanceToHome2)
+				return -1;
+			else
+				return 0;
+		}
+	};
+	
 	public void setToInitialSolutionLargestCapacity(List<Vehicle> vehicles, TaskSet tasks) {
 		
 		ArrayList<Vehicle> sortedVehicles = new ArrayList<>(vehicles);
@@ -81,13 +105,16 @@ public class Variables {
 		
 		
 		int currentVehicleIndex = 0;
-		Vehicle currentVehicle;
-		ArrayList<Integer> times = new ArrayList<>(vehicles.size()); 
+		int currentTaskIndex = 0;
+		Vehicle currentVehicle = sortedVehicles.get(0);
+		ArrayList<Integer> times = new ArrayList<>(Collections.nCopies(vehicles.size(), 0)); 
 		ActionRep previousAction = null;
-		for(Task task: sortedTasks) {
-			currentVehicle = sortedVehicles.get(currentVehicleIndex);
+		int currentCapacity = currentVehicle.capacity();
+		while(currentTaskIndex < tasks.size()) {
 			
-			if(currentVehicle.capacity() >= task.weight) {
+			Task task = sortedTasks.get(currentTaskIndex);
+			
+			if(currentCapacity >= task.weight) {
 				// Assign a task to this vehicle
 				this.vehicle.set(task.id, currentVehicle);
 				int currentVehicleTime = times.get(currentVehicle.id());
@@ -107,10 +134,13 @@ public class Variables {
 					previousAction = new ActionRep(task, ActionName.DELIVER);
 				}
 				times.set(currentVehicle.id(), times.get(currentVehicle.id())+2);
-
+				currentCapacity -= task.weight;
+				currentTaskIndex++;
 			}
 			else {
 				currentVehicleIndex++;
+				currentVehicle = sortedVehicles.get(currentVehicleIndex);
+				currentCapacity = currentVehicle.capacity();
 			}
 		}
 		
@@ -118,6 +148,41 @@ public class Variables {
 	
 	public void setToInitialSolutionClosestToHome(List<Vehicle> vehicles, TaskSet tasks) {
 		
+		ArrayList<Task> sortedTasks = new ArrayList<>(tasks);
+
+		ArrayList<Vehicle> sortedVehicles = new ArrayList<>(vehicles);
+		int currentTaskIndex = 0;
+		ArrayList<Integer> times = new ArrayList<>(Collections.nCopies(vehicles.size(), 0)); 
+		ActionRep previousAction = null;
+		
+		while(currentTaskIndex < tasks.size())
+		{
+			Task task = sortedTasks.get(currentTaskIndex);
+			
+			sortedVehicles.sort(new VehicleDistanceComparator(task));
+			
+			for(Vehicle vehicle: sortedVehicles) {
+				if(vehicle.capacity() > task.weight) {
+					int currentVehicleTime = times.get(vehicle.id());
+					if(currentVehicleTime == 0)
+					{
+						this.nextAction.set(vehicle.id(), new ActionRep(task, ActionName.PICKUP));
+						this.pickupTime.set(task.id, 0);
+						this.nextActionAfterPickup.set(task.id, new ActionRep(task, ActionName.DELIVER));
+						this.deliveryTime.set(task.id, 1);
+						previousAction = new ActionRep(task, ActionName.DELIVER);
+					}
+					else {
+						this.nextActionAfterDelivery.set(previousAction.getTask().id, new ActionRep(task, ActionName.PICKUP));
+						this.pickupTime.set(task.id, currentVehicleTime);
+						this.nextActionAfterPickup.set(task.id, new ActionRep(task, ActionName.DELIVER));
+						this.deliveryTime.set(task.id, currentVehicleTime+1);
+						previousAction = new ActionRep(task, ActionName.DELIVER);
+					}
+					currentTaskIndex++;
+				}
+			}
+		}
 	}
 	
 	public void setToInitialSolutionCheapestMore(List<Vehicle> vehicles, TaskSet tasks) {
