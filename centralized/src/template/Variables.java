@@ -15,6 +15,7 @@ import logist.task.TaskSet;
 import logist.topology.Topology;
 import logist.topology.Topology.City;
 import template.ActionRep.ActionName;
+import java.util.Random;
 
 public class Variables {
 	
@@ -35,6 +36,20 @@ public class Variables {
 		this.nextActionAfterDelivery = new ArrayList<>(Collections.nCopies(numTasks, (ActionRep)null));
 	}
 	
+	public Variables(ArrayList<Vehicle> vehicle, ArrayList<Integer> pickupTime, ArrayList<Integer> deliveryTime,
+			ArrayList<ActionRep> nextAction, ArrayList<ActionRep> nextActionAfterPickup,
+			ArrayList<ActionRep> nextActionAfterDelivery) {
+		super();
+		this.vehicle = vehicle;
+		this.pickupTime = pickupTime;
+		this.deliveryTime = deliveryTime;
+		this.nextAction = nextAction;
+		this.nextActionAfterPickup = nextActionAfterPickup;
+		this.nextActionAfterDelivery = nextActionAfterDelivery;
+	}
+
+
+
 	public void setToInitialSolution(List<Vehicle> vehicles, TaskSet tasks, Topology topology, int initialSolutionId) {
 		switch(initialSolutionId) {
 		case 1:
@@ -266,8 +281,6 @@ public class Variables {
 				List<Vehicle> closestVehicles = homeCitiesMap.get(currentCity);
 				for(Vehicle v: closestVehicles)
 				{
-					// TODO: Figure out how to check that you can assign this task to this closest vehicle
-					// If no vehicle has room, then deliver everything for each vehicle or just for the first
 					
 					currentVehicleIndex = vehicles.indexOf(v);
 					currentVehicle = v;
@@ -431,8 +444,118 @@ public class Variables {
 	}
 	
 	public Variables changeVehicleOfTask(Task t, Vehicle v){
-		// TODO:
-		return null;
+		
+		Variables newVariables = (Variables) this.clone();
+		
+		Vehicle oldVehicle = this.vehicle.get(t.id);
+		
+		if(oldVehicle.id() == v.id())
+			return null;
+		
+		ActionRep oldVehicleOldFirstAction = this.nextAction.get(oldVehicle.id());
+		ActionRep newVehicleOldFirstAction = this.nextAction.get(v.id());
+		ActionRep taskOldNextActionAfterPickup = this.nextActionAfterPickup.get(t.id);
+		ActionRep taskOldNextActionAfterDelivery = this.nextActionAfterDelivery.get(t.id);
+		
+		
+		// Change the vehicle of the task t
+		newVariables.vehicle.set(t.id, v);
+		
+		// Change the first action of the old vehicle if this task was the first
+		if(oldVehicleOldFirstAction.getTask().id == t.id)
+			newVariables.nextAction.set(oldVehicle.id(), taskOldNextActionAfterPickup);
+		
+		// Change the first action of the new vehicle
+		newVariables.nextAction.set(v.id(), new ActionRep(t, ActionName.PICKUP));
+		
+		// Change the next actions of the task
+		newVariables.nextActionAfterPickup.set(t.id, new ActionRep(t, ActionName.DELIVER));
+		newVariables.nextActionAfterDelivery.set(t.id, newVehicleOldFirstAction);
+		
+		// Change the pickup and delivery times of the task
+		newVariables.pickupTime.set(t.id, 0);
+		newVariables.deliveryTime.set(t.id, 1);
+		
+		// Update pickup and delivery times in old vehicle up until the delivery of the task
+		ActionRep currentVehicleAction = taskOldNextActionAfterPickup;
+		ActionRep prevAction = null;
+		
+		while(!(currentVehicleAction.getTask().id == t.id && currentVehicleAction.getAction() == ActionName.DELIVER)) {
+			
+			int currentTaskId = currentVehicleAction.getTask().id;
+			
+			prevAction = currentVehicleAction;
+			
+			switch(currentVehicleAction.getAction()) {
+			
+			case PICKUP:
+				newVariables.pickupTime.set(currentTaskId, this.pickupTime.get(currentTaskId) - 1);
+				currentVehicleAction = this.nextActionAfterPickup.get(currentTaskId);
+				break;
+			case DELIVER:
+				newVariables.deliveryTime.set(currentTaskId, this.deliveryTime.get(currentTaskId) - 1);
+				currentVehicleAction = this.nextActionAfterDelivery.get(currentTaskId);
+				break;
+			}
+			
+		}
+				
+		// Delete the delivery action from the old vehicle
+		switch(prevAction.getAction()) {
+		case PICKUP:
+			newVariables.nextActionAfterPickup.set(prevAction.getTask().id, taskOldNextActionAfterDelivery);
+			break;
+		case DELIVER:
+			newVariables.nextActionAfterDelivery.set(prevAction.getTask().id, taskOldNextActionAfterDelivery);
+			break;
+		}
+		
+		// Update pickup and delivery times in old vehicle after the deleted delivery of the task
+		currentVehicleAction = taskOldNextActionAfterDelivery;
+		while(currentVehicleAction!= null) {
+			
+			int currentTaskId = currentVehicleAction.getTask().id;
+						
+			switch(currentVehicleAction.getAction()) {
+			
+			case PICKUP:
+				newVariables.pickupTime.set(currentTaskId, this.pickupTime.get(currentTaskId) - 2);
+				currentVehicleAction = this.nextActionAfterPickup.get(currentTaskId);
+				break;
+			case DELIVER:
+				newVariables.deliveryTime.set(currentTaskId, this.deliveryTime.get(currentTaskId) - 2);
+				currentVehicleAction = this.nextActionAfterDelivery.get(currentTaskId);
+				break;
+			}
+		}
+		
+		// Update pickup and delivery times in new vehicle
+		currentVehicleAction = newVehicleOldFirstAction;
+		while(currentVehicleAction!= null) {
+			
+			int currentTaskId = currentVehicleAction.getTask().id;
+			switch(currentVehicleAction.getAction()) {
+			
+			case PICKUP:
+				newVariables.pickupTime.set(currentTaskId, this.pickupTime.get(currentTaskId) + 2);
+				currentVehicleAction = this.nextActionAfterPickup.get(currentTaskId);
+				break;
+			case DELIVER:
+				newVariables.deliveryTime.set(currentTaskId, this.deliveryTime.get(currentTaskId) + 2);
+				currentVehicleAction = this.nextActionAfterDelivery.get(currentTaskId);
+				break;
+			}
+		}
+				
+		// Check load constraint for old vehicle
+		if(!newVariables.checkLoadConstraint(oldVehicle))
+			return null;
+		
+		// Check load constraint for new vehicle
+		if(!newVariables.checkLoadConstraint(v))
+			return null;
+		
+		return newVariables;
 	}
 	
 	public Variables changePickupTime(Task t, int newPickupTime){
@@ -445,14 +568,91 @@ public class Variables {
 		return null;
 	}
 	
-	public double computeObjective() {
-		// TODO:
-		return 0;
+	public Variables localChoice(double p, List<Vehicle> vehicles, TaskSet tasks){
+		
+		// Random sample a Bernoulli(p) distribution to know whether to return the old solution or the best neighbor
+		int chooseBestNeighbor = uchicago.src.sim.util.Random.binomial.nextInt(1, p);
+		if(chooseBestNeighbor == 0)
+			return this;
+		
+		List<Variables> candidateNeighbors = this.chooseNeighbors();
+		double bestObjectiveValue = Double.POSITIVE_INFINITY;
+		ArrayList<Variables> bestCandidateNeighbors = new ArrayList<>();
+		
+		// Compute the objective function for every candidate neighbor solution and find the collection of solutions with equal lowest cost
+		for(Variables candidateNeighbor: candidateNeighbors)
+		{
+			double neighborObjectiveValue = candidateNeighbor.computeObjective(vehicles, tasks);
+			if(neighborObjectiveValue < bestObjectiveValue)
+			{
+				bestObjectiveValue = neighborObjectiveValue;
+				bestCandidateNeighbors = new ArrayList<>();
+				bestCandidateNeighbors.add(candidateNeighbor);
+			}
+			else if(neighborObjectiveValue == bestObjectiveValue)
+				bestCandidateNeighbors.add(candidateNeighbor);
+		}
+		
+		// Pick uniformly at random one of the solutions with the same optimal cost
+		Random rng = new Random();
+		int bestCandidateNeighborIndex = rng.nextInt(bestCandidateNeighbors.size());
+		Variables bestCandidateNeighbor = bestCandidateNeighbors.get(bestCandidateNeighborIndex);
+		
+		return bestCandidateNeighbor;
 	}
 	
-	public Variables localChoice(){
-		// TODO:
-		return null;
+	public double computeObjective(List<Vehicle> vehicles, TaskSet tasks) {
+		
+		double objectiveValue = 0;
+		
+		// Add to the cost all travel costs between vehicles' starting cities and pickup cities of first tasks
+		for(Vehicle v: vehicles)
+		{
+			ActionRep vehicleFirstTask = this.nextAction.get(v.id());
+			if(vehicleFirstTask != null)
+				objectiveValue += v.costPerKm() * vehicleFirstTask.getTask().pickupCity.distanceTo(v.homeCity());
+		}
+		
+		// Add to the cost all travel costs between tasks' pickup cities and pickup/delivery cities of next tasks
+		for(Task t: tasks)
+		{
+			ActionRep taskNextActionAfterPickup = this.nextActionAfterPickup.get(t.id);
+			if(taskNextActionAfterPickup != null)
+			{
+				switch(taskNextActionAfterPickup.getAction())
+				{
+				case PICKUP:
+					objectiveValue += this.vehicle.get(t.id).costPerKm() * t.pickupCity.distanceTo(taskNextActionAfterPickup.getTask().pickupCity);
+					break;
+				case DELIVER:
+					objectiveValue += this.vehicle.get(t.id).costPerKm() * t.pickupCity.distanceTo(taskNextActionAfterPickup.getTask().deliveryCity);
+					break;
+				}
+			}
+		}
+		
+		// Add to the cost all travel costs between tasks' delivery cities and pickup/delivery cities of next tasks
+		for(Task t: tasks)
+		{
+			ActionRep taskNextActionAfterDelivery = this.nextActionAfterDelivery.get(t.id);
+			if(taskNextActionAfterDelivery != null)
+			{
+				switch(taskNextActionAfterDelivery.getAction())
+				{
+				case PICKUP:
+					objectiveValue += this.vehicle.get(t.id).costPerKm() * t.deliveryCity.distanceTo(taskNextActionAfterDelivery.getTask().pickupCity);
+					break;
+				case DELIVER:
+					objectiveValue += this.vehicle.get(t.id).costPerKm() * t.deliveryCity.distanceTo(taskNextActionAfterDelivery.getTask().deliveryCity);
+					break;
+				}
+			}
+		}
+		
+		
+		return objectiveValue;
+	}
+	
 	}
 	
 	public List<Plan> inferPlans(List<Vehicle> vehicles, TaskSet tasks){
@@ -553,6 +753,20 @@ public class Variables {
 		this.nextActionAfterDelivery = nextActionAfterDelivery;
 	}
 	
+	
+	
+	@Override
+	protected Object clone() {
+		ArrayList<Vehicle> vehicleNew = new ArrayList<>(this.vehicle);
+		ArrayList<Integer> pickupTimeNew = new ArrayList<>(this.pickupTime);
+		ArrayList<Integer> deliveryTimeNew = new ArrayList<>(this.deliveryTime);
+		ArrayList<ActionRep> nextActionNew = new ArrayList<>(this.nextAction);
+		ArrayList<ActionRep> nextActionAfterPickupNew = new ArrayList<>(this.nextActionAfterPickup);
+		ArrayList<ActionRep> nextActionAfterDeliveryNew = new ArrayList<>(this.nextActionAfterDelivery);
+		
+		return new Variables(vehicleNew, pickupTimeNew, deliveryTimeNew, nextActionNew, nextActionAfterPickupNew, nextActionAfterDeliveryNew);
+	}
+
 	@Override
 	public String toString(){
 		StringBuilder str = new StringBuilder(); 
