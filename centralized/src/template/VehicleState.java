@@ -1,18 +1,26 @@
 package template;
 
+import java.util.ArrayList;
+
 import logist.task.Task;
-import logist.task.TaskSet;
 
 public class VehicleState {
 	private int time;
-	private TaskSet carriedTasks;
+	private ArrayList<Task> carriedTasks;
 	private ActionRep previousAction;
 	
-	public VehicleState(int time, TaskSet carriedTasks, ActionRep previousAction) {
+	public VehicleState(int time, ArrayList<Task> carriedTasks, ActionRep previousAction) {
 		super();
 		this.time = time;
 		this.carriedTasks = carriedTasks;
 		this.previousAction = previousAction;
+	}
+	
+	public int weightSum() {
+		int weightSum = 0;
+		for (Task t: carriedTasks)
+			weightSum += t.weight;
+		return weightSum;
 	}
 
 	public int getTime() {
@@ -23,7 +31,7 @@ public class VehicleState {
 		this.time = time;
 	}
 
-	public TaskSet getCarriedTasks() {
+	public ArrayList<Task> getCarriedTasks() {
 		return carriedTasks;
 	}
 
