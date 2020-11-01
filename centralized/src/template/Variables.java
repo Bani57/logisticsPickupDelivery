@@ -653,6 +653,57 @@ public class Variables {
 		return objectiveValue;
 	}
 	
+	public ActionRep getPredecessorOfAction(Vehicle v, ActionRep action) {
+		
+		ActionRep currentVehicleAction = this.nextAction.get(v.id());
+		ActionRep prevAction = null;
+		while(!(currentVehicleAction.getTask().id == action.getTask().id && currentVehicleAction.getAction() == action.getAction())) {
+			
+			int currentTaskId = currentVehicleAction.getTask().id;
+			
+			prevAction = currentVehicleAction;
+			
+			switch(currentVehicleAction.getAction()) {
+			
+			case PICKUP:
+				currentVehicleAction = this.nextActionAfterPickup.get(currentTaskId);
+				break;
+			case DELIVER:
+				currentVehicleAction = this.nextActionAfterDelivery.get(currentTaskId);
+				break;
+			}
+			
+		}
+		
+		return prevAction;
+	}
+	
+	
+	public boolean checkLoadConstraint(Vehicle v) {
+		
+		ActionRep currentVehicleAction = this.nextAction.get(v.id());
+		int currentLoad = 0;
+		
+		while(currentVehicleAction!= null) {
+			
+			Task currentTask = currentVehicleAction.getTask();
+			
+			switch(currentVehicleAction.getAction()) {
+			
+			case PICKUP:
+				currentLoad += currentTask.weight;
+				if(currentLoad > v.capacity())
+					return false;
+				currentVehicleAction = this.nextActionAfterPickup.get(currentTask.id);
+				break;
+			case DELIVER:
+				currentLoad -= currentTask.weight;
+				currentVehicleAction = this.nextActionAfterDelivery.get(currentTask.id);
+				break;
+			}
+		}
+		
+		return true;
 	}
 	
 	public List<Plan> inferPlans(List<Vehicle> vehicles, TaskSet tasks){
