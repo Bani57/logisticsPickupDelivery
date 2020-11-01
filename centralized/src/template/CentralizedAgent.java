@@ -62,11 +62,14 @@ public class CentralizedAgent implements CentralizedBehavior {
         long time_start = System.currentTimeMillis();
         
         Variables initialSolution = new Variables(vehicles.size(), tasks.size());
-        initialSolution.setToInitialSolution(vehicles, tasks, this.topology, 1);
+        initialSolution.setToInitialSolution(vehicles, tasks, this.topology, 2);
         
         System.out.println(initialSolution.toString());
 
-        List<Plan> plans = new ArrayList<Plan>();
+        List<Plan> plans = initialSolution.inferPlans(vehicles, tasks);
+        
+        System.out.println(plans);
+        
         return plans;
     }
     
