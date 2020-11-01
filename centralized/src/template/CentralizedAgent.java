@@ -28,50 +28,47 @@ import logist.topology.Topology.City;
 @SuppressWarnings("unused")
 public class CentralizedAgent implements CentralizedBehavior {
 
-    private Topology topology;
-    private TaskDistribution distribution;
-    private Agent agent;
-    private long timeout_setup;
-    private long timeout_plan;
-    
-    @Override
-    public void setup(Topology topology, TaskDistribution distribution,
-            Agent agent) {
-        
-        // this code is used to get the timeouts
-        LogistSettings ls = null;
-        try {
-            ls = Parsers.parseSettings("config" + File.separator + "settings_default.xml");
-        }
-        catch (Exception exc) {
-            System.out.println("There was a problem loading the configuration file.");
-        }
-        
-        // the setup method cannot last more than timeout_setup milliseconds
-        timeout_setup = ls.get(LogistSettings.TimeoutKey.SETUP);
-        // the plan method cannot execute more than timeout_plan milliseconds
-        timeout_plan = ls.get(LogistSettings.TimeoutKey.PLAN);
-        
-        this.topology = topology;
-        this.distribution = distribution;
-        this.agent = agent;
-    }
+	private Topology topology;
+	private TaskDistribution distribution;
+	private Agent agent;
+	private long timeout_setup;
+	private long timeout_plan;
 
-    @Override
-    public List<Plan> plan(List<Vehicle> vehicles, TaskSet tasks) {
-        long time_start = System.currentTimeMillis();
-        
-        Variables initialSolution = new Variables(vehicles, tasks);
-        initialSolution.setToInitialSolution(this.topology, 2);
-        
-        System.out.println(initialSolution.toString());
+	@Override
+	public void setup(Topology topology, TaskDistribution distribution, Agent agent) {
 
-        List<Plan> plans = initialSolution.inferPlans();
-        
-        System.out.println(plans);
-        
-        return plans;
-    }
-    
-    
+		// this code is used to get the timeouts
+		LogistSettings ls = null;
+		try {
+			ls = Parsers.parseSettings("config" + File.separator + "settings_default.xml");
+		} catch (Exception exc) {
+			System.out.println("There was a problem loading the configuration file.");
+		}
+
+		// the setup method cannot last more than timeout_setup milliseconds
+		timeout_setup = ls.get(LogistSettings.TimeoutKey.SETUP);
+		// the plan method cannot execute more than timeout_plan milliseconds
+		timeout_plan = ls.get(LogistSettings.TimeoutKey.PLAN);
+
+		this.topology = topology;
+		this.distribution = distribution;
+		this.agent = agent;
+	}
+	
+
+	@Override
+	public List<Plan> plan(List<Vehicle> vehicles, TaskSet tasks) {
+		long time_start = System.currentTimeMillis();
+
+		Variables initialSolution = new Variables(vehicles, tasks);
+		initialSolution.setToInitialSolution(this.topology, 2);
+
+		System.out.println(initialSolution.toString());
+
+		List<Plan> plans = initialSolution.inferPlans();
+
+		System.out.println(plans);
+
+		return plans;
+	}
 }
