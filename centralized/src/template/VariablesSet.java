@@ -75,7 +75,6 @@ public class VariablesSet {
 		case 3:
 			return initCheapestCostLightestTasks();
 		default:
-			System.out.println("Invalid initial solution id.");
 			return false;
 		}
 	}
@@ -292,11 +291,14 @@ public class VariablesSet {
 			this.deliveryTime.set(t.id, currentVehicleState.getTime());
 
 			currentVehicleState.setTime(currentVehicleState.getTime() + 1);
-			currentVehicleState.removeCarriedTask(t);
 
 			prevTask = t;
 			i++;
 		}
+		
+		// Remove all the tasks from the vehicle state
+		currentVehicleState.setCarriedTasks(new ArrayList<>());
+		
 		// Only need to update the previous action once after the final delivery
 		currentVehicleState.setPreviousAction(new ActionRep(prevTask, ActionName.DELIVER));
 	}
@@ -340,8 +342,17 @@ public class VariablesSet {
 	
 
 	public List<VariablesSet> chooseNeighbors() {
-		// TODO:
-		return null;
+		
+		ArrayList<VariablesSet> neighbors = new ArrayList<>();
+		for (Task t: tasks) {
+			for (Vehicle v: vehicles) {
+				VariablesSet n = moveTaskToVehicle(t, v);
+				if (n != null)
+					neighbors.add(n);
+			}
+		}
+		
+		return neighbors;
 	}
 
 	
@@ -462,7 +473,6 @@ public class VariablesSet {
 	
 
 	/**
-	 * @requires vehicle(t1) == vehicle(t2)
 	 * 
 	 * @param t1
 	 * @param t2
@@ -473,9 +483,13 @@ public class VariablesSet {
 		VariablesSet neighbor;
 
 		// If the pickup time of t1 is not greater than the delivery time of t2
-		// or the pickup time of t2 is not greater than the delivery time of t1 there is
-		// no valid neighbor
+		// or the pickup time of t2 is not greater than the delivery time of t1,
+		// then there is no valid neighbor
 		if (pickupTime.get(t2.id) > deliveryTime.get(t1.id) || pickupTime.get(t1.id) > deliveryTime.get(t2.id))
+			return null;
+		
+		// If t1 and t2 are carried by different vehicles, then there is no valid neighbor
+		if (vehicle.get(t1.id) != vehicle.get(t2.id))
 			return null;
 
 		neighbor = (VariablesSet) this.clone();
@@ -564,6 +578,10 @@ public class VariablesSet {
 		// valid neighbor
 		if (deliveryTime.get(t2.id) < pickupTime.get(t1.id) || deliveryTime.get(t1.id) < pickupTime.get(t2.id))
 			return null;
+		
+		// If t1 and t2 are carried by different vehicles, then there is no valid neighbor
+		if (vehicle.get(t1.id) != vehicle.get(t2.id))
+			return null;
 
 		neighbor = (VariablesSet) this.clone();
 
@@ -631,7 +649,7 @@ public class VariablesSet {
 	}
 
 	
-	public VariablesSet localChoice(double p, List<Vehicle> vehicles, TaskSet tasks) {
+	public VariablesSet localChoice(double p) {
 
 		// Random sample a Bernoulli(p) distribution to know whether to return the old
 		// solution or the best neighbor
@@ -646,7 +664,7 @@ public class VariablesSet {
 		// Compute the objective function for every candidate neighbor solution and find
 		// the collection of solutions with equal lowest cost
 		for (VariablesSet candidateNeighbor : candidateNeighbors) {
-			double neighborObjectiveValue = candidateNeighbor.computeObjective(vehicles, tasks);
+			double neighborObjectiveValue = candidateNeighbor.computeObjective();
 			if (neighborObjectiveValue < bestObjectiveValue) {
 				bestObjectiveValue = neighborObjectiveValue;
 				bestCandidateNeighbors = new ArrayList<>();
@@ -664,7 +682,7 @@ public class VariablesSet {
 	}
 	
 
-	public double computeObjective(List<Vehicle> vehicles, TaskSet tasks) {
+	public double computeObjective() {
 
 		double objectiveValue = 0;
 
@@ -774,20 +792,16 @@ public class VariablesSet {
 
 		ArrayList<Plan> plans = new ArrayList<>();
 
-		ArrayList<Task> sortedTasks = new ArrayList<>(tasks);
+		for (Vehicle currentVehicle: vehicles) {
 
-		for (int currentVehicleIndex = 0; currentVehicleIndex < vehicles.size(); currentVehicleIndex++) {
-
-			Vehicle currentVehicle = vehicles.get(currentVehicleIndex);
 			City currentVehicleLocation = currentVehicle.homeCity();
 			Plan plan = new Plan(currentVehicleLocation);
 
-			ActionRep currentVehicleAction = this.nextAction.get(currentVehicleIndex);
+			ActionRep currentVehicleAction = this.nextAction.get(currentVehicle.id());
 
 			while (currentVehicleAction != null) {
 
 				Task currentVehicleTask = currentVehicleAction.getTask();
-				int currentTaskIndex = sortedTasks.indexOf(currentVehicleTask);
 
 				switch (currentVehicleAction.getAction()) {
 
@@ -797,7 +811,7 @@ public class VariablesSet {
 						plan.appendMove(c);
 					currentVehicleLocation = currentVehicleTask.pickupCity;
 					plan.appendPickup(currentVehicleTask);
-					currentVehicleAction = this.nextActionAfterPickup.get(currentTaskIndex);
+					currentVehicleAction = this.nextActionAfterPickup.get(currentVehicleTask.id);
 					break;
 
 				case DELIVER:
@@ -806,7 +820,7 @@ public class VariablesSet {
 						plan.appendMove(c);
 					currentVehicleLocation = currentVehicleTask.deliveryCity;
 					plan.appendDelivery(currentVehicleTask);
-					currentVehicleAction = this.nextActionAfterDelivery.get(currentTaskIndex);
+					currentVehicleAction = this.nextActionAfterDelivery.get(currentVehicleTask.id);
 					break;
 				}
 			}

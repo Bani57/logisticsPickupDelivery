@@ -58,17 +58,47 @@ public class CentralizedAgent implements CentralizedBehavior {
 
 	@Override
 	public List<Plan> plan(List<Vehicle> vehicles, TaskSet tasks) {
+		
+		double p = agent.readProperty("p", Double.class, 1.0); 
+		if (p > 1.0 || p < 0.0) {
+			System.out.println("The parameter p should be between 0.0 and 1.0");
+			System.exit(0);
+		}
+		
+		int initialSolutionId = agent.readProperty("initial-solutions-id", Integer.class, 1);		
+		if (initialSolutionId != 1 && initialSolutionId != 2 && initialSolutionId != 3) {
+			System.out.println("The initial solution id should be either 1, 2 or 3");
+			System.exit(0);
+		}
+		
 		long time_start = System.currentTimeMillis();
 
 		VariablesSet initialSolution = new VariablesSet(vehicles, tasks);
-		initialSolution.init(this.topology, 2);
+		boolean success = initialSolution.init(this.topology, initialSolutionId);
+		
+		if (!success) {
+			System.out.println("The problem has no solution");
+			System.exit(0);
+		}
 
 		System.out.println(initialSolution.toString());
 
-		List<Plan> plans = initialSolution.inferPlans();
+		VariablesSet optimalSolution = initialSolution;
+		double optimalCost = initialSolution.computeObjective();
+		VariablesSet tmpSolution = initialSolution;
+		double tmpCost = tmpSolution.computeObjective();
+		
+		for (int count=0; count<1000; count++) {
+			tmpSolution = tmpSolution.localChoice(p);
+			tmpCost = tmpSolution.computeObjective();
+			if (tmpCost < optimalCost) {
+				optimalSolution = tmpSolution;
+				optimalCost = tmpCost;
+			}
+		}
 
-		System.out.println(plans);
+		System.out.println(optimalSolution.inferPlans().toString());
 
-		return plans;
+		return optimalSolution.inferPlans();
 	}
 }

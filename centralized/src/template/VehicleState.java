@@ -45,10 +45,10 @@ public class VehicleState {
 	}
 	
 
-	public void removeCarriedTask(Task task) {
-		this.carriedTasks.remove(task);
+	public void setCarriedTasks(ArrayList<Task> carriedTasks) {
+		this.carriedTasks = carriedTasks;
 	}
-	
+
 
 	public ActionRep getPreviousAction() {
 		return previousAction;
