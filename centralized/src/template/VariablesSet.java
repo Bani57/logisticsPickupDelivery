@@ -2,7 +2,6 @@ package template;
 
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.Comparator;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -15,9 +14,13 @@ import logist.task.TaskSet;
 import logist.topology.Topology;
 import logist.topology.Topology.City;
 import template.ActionRep.ActionName;
+import template.comparators.TaskWeightComparator;
+import template.comparators.VehicleCapacityComparator;
+import template.comparators.VehicleDistanceComparator;
+
 import java.util.Random;
 
-public class Variables {
+public class VariablesSet {
 
 	private ArrayList<Vehicle> vehicles;
 	private ArrayList<Task> tasks;
@@ -30,7 +33,7 @@ public class Variables {
 	private ArrayList<ActionRep> nextActionAfterDelivery;
 
 	
-	public Variables(List<Vehicle> vehicles, TaskSet tasks) {
+	public VariablesSet(List<Vehicle> vehicles, TaskSet tasks) {
 		super();
 
 		this.vehicles = new ArrayList<>(vehicles);
@@ -48,7 +51,7 @@ public class Variables {
 	}
 	
 
-	public Variables(ArrayList<Vehicle> vehicles, ArrayList<Task> tasks, ArrayList<Vehicle> vehicle,
+	public VariablesSet(ArrayList<Vehicle> vehicles, ArrayList<Task> tasks, ArrayList<Vehicle> vehicle,
 			ArrayList<Integer> pickupTime, ArrayList<Integer> deliveryTime, ArrayList<ActionRep> nextAction,
 			ArrayList<ActionRep> nextActionAfterPickup, ArrayList<ActionRep> nextActionAfterDelivery) {
 		super();
@@ -63,67 +66,35 @@ public class Variables {
 	}
 	
 
-	public void setToInitialSolution(Topology topology, int initialSolutionId) {
+	public boolean init(Topology topology, int initialSolutionId) {
 		switch (initialSolutionId) {
 		case 1:
-			setToInitialSolutionLargestCapacity();
-			break;
+			return initLargestCapacityHeaviestTasks();
 		case 2:
-			setToInitialSolutionClosestToHome(topology);
-			break;
+			return initClosestVehicle(topology);
 		case 3:
-			setToInitialSolutionCheapestMore();
-			break;
+			return initCheapestCostLightestTasks();
 		default:
 			System.out.println("Invalid initial solution id.");
-			break;
+			return false;
 		}
 	}
 	
 
-	class VehicleCapacityComparator implements Comparator<Vehicle> {
-
-		@Override
-		public int compare(Vehicle v1, Vehicle v2) {
-			if (v1.capacity() > v2.capacity())
-				return 1;
-			else if (v1.capacity() < v2.capacity())
-				return -1;
-			else
-				return 0;
-		}
-	};
-
-	
-	class TaskWeightComparator implements Comparator<Task> {
-
-		@Override
-		public int compare(Task t1, Task t2) {
-			if (t1.weight > t2.weight)
-				return 1;
-			else if (t1.weight < t2.weight)
-				return -1;
-			else
-				return 0;
-		}
-	};
-	
-
-	public void setToInitialSolutionLargestCapacity() {
-
-		// TODO: If there is a task with weight greater than the capacity of all
-		// vehicles, return "no solution"
-
-		// TODO: change all indexes with vehicles' and tasks' ids
+	public boolean initLargestCapacityHeaviestTasks() {
 
 		ArrayList<Vehicle> sortedVehicles = new ArrayList<>(vehicles);
 		sortedVehicles.sort(new VehicleCapacityComparator().reversed());
 
 		ArrayList<Task> sortedTasks = new ArrayList<>(tasks);
 		sortedTasks.sort(new TaskWeightComparator().reversed());
+		
+		// If there is a task with weight greater than the capacity of all vehicles, there is no solution
+		if (sortedTasks.get(0).weight > sortedVehicles.get(0).capacity())
+			return false;
 
-		int currentVehicleIndex = 0;
-		int currentTaskIndex = 0;
+		int currentVehicleIndex = 0; //index of the currently analyzed vehicle in sortedVehicles
+		int currentTaskIndex = 0; //index of the currently analyzed task in sortedTasks
 
 		ArrayList<VehicleState> vehicleStates = new ArrayList<>(sortedVehicles.size());
 		for (int i = 0; i < sortedVehicles.size(); i++)
@@ -137,64 +108,14 @@ public class Variables {
 
 			if (currentVehicleState.weightSum() + task.weight <= currentVehicle.capacity()) {
 
-				this.vehicle.set(task.id, currentVehicle);
-
-				int currentVehicleTime = currentVehicleState.getTime();
-
-				if (currentVehicleTime == 0) {
-					// The first action is always to pickup
-					this.nextAction.set(currentVehicleIndex, new ActionRep(task, ActionName.PICKUP));
-					this.pickupTime.set(currentTaskIndex, currentVehicleTime);
-
-					currentVehicleState.setPreviousAction(new ActionRep(task, ActionName.PICKUP));
-					currentVehicleState.addCarriedTask(task);
-				} else {
-
-					// Check the type of the previous action done by this vehicle
-					switch (currentVehicleState.getPreviousAction().getAction()) {
-					case PICKUP:
-						// If it was pickup, update nextActionAfterPickup for the previous task
-						this.nextActionAfterPickup.set(currentVehicleState.getPreviousAction().getTask().id,
-								new ActionRep(task, ActionName.PICKUP));
-						break;
-					case DELIVER:
-						// If it was deliver, update nextActionAfterDelivery for the previous task
-						this.nextActionAfterDelivery.set(currentVehicleState.getPreviousAction().getTask().id,
-								new ActionRep(task, ActionName.PICKUP));
-						break;
-					}
-					this.pickupTime.set(task.id, currentVehicleTime);
-
-					currentVehicleState.setPreviousAction(new ActionRep(task, ActionName.PICKUP));
-					currentVehicleState.addCarriedTask(task);
-				}
-				currentVehicleState.setTime(currentVehicleTime + 1);
+				this.pickupTask(task, currentVehicle, currentVehicleState);
 				currentTaskIndex++;
 			}
 
 			else {
 
 				// If not, first deliver all picked-up tasks
-				int i = 0;
-				Task prevTask = null;
-				ArrayList<Task> currentCarriedTasks = currentVehicleState.getCarriedTasks();
-				for (Task t : currentCarriedTasks) {
-					if (i == 0)
-						this.nextActionAfterPickup.set(currentVehicleState.getPreviousAction().getTask().id,
-								new ActionRep(t, ActionName.DELIVER));
-					else
-						this.nextActionAfterDelivery.set(prevTask.id, new ActionRep(t, ActionName.DELIVER));
-					this.deliveryTime.set(t.id, currentVehicleState.getTime());
-
-					currentVehicleState.setTime(currentVehicleState.getTime() + 1);
-					currentVehicleState.removeCarriedTask(t);
-
-					prevTask = t;
-					i++;
-				}
-
-				// Only need to update the previous action once after the final delivery
-				currentVehicleState.setPreviousAction(new ActionRep(prevTask, ActionName.DELIVER));
+				this.deliverCarriedTasks(currentVehicleState);
 
 				currentVehicleIndex++;
 
@@ -212,61 +133,20 @@ public class Variables {
 		}
 
 		// Deliver any remaining tasks
-		int i = 0;
-		Task prevTask = null;
-		ArrayList<Task> currentCarriedTasks = currentVehicleState.getCarriedTasks();
-		for (Task t : currentCarriedTasks) {
-			if (i == 0)
-				this.nextActionAfterPickup.set(currentVehicleState.getPreviousAction().getTask().id,
-						new ActionRep(t, ActionName.DELIVER));
-			else
-				this.nextActionAfterDelivery.set(prevTask.id, new ActionRep(t, ActionName.DELIVER));
-			this.deliveryTime.set(t.id, currentVehicleState.getTime());
-
-			currentVehicleState.setTime(currentVehicleState.getTime() + 1);
-			currentVehicleState.removeCarriedTask(t);
-
-			prevTask = t;
-			i++;
-		}
-		// Only need to update the previous action once after the final delivery
-		currentVehicleState.setPreviousAction(new ActionRep(prevTask, ActionName.DELIVER));
+		this.deliverCarriedTasks(currentVehicleState);
+		
+		return true;
 	}
-
-	
-	class VehicleDistanceComparator implements Comparator<City> {
-
-		private Task task;
-
-		public VehicleDistanceComparator(Task task) {
-			super();
-			this.task = task;
-		}
-
-		@Override
-		public int compare(City c1, City c2) {
-			double distanceToHome1 = c1.distanceTo(this.task.pickupCity);
-			double distanceToHome2 = c2.distanceTo(this.task.pickupCity);
-
-			if (distanceToHome1 > distanceToHome2)
-				return 1;
-			else if (distanceToHome1 < distanceToHome2)
-				return -1;
-			else
-				return 0;
-		}
-	};
 	
 
-	public void setToInitialSolutionClosestToHome(Topology topology) {
+	public boolean initClosestVehicle(Topology topology) {
 
-		// TODO: If there is a task with weight greater than the capacity of all
-		// vehicles, return "no solution"
-
-		// TODO: change all indexes with vehicles' and tasks' ids
-
-		int currentVehicleIndex = 0;
-		int currentTaskIndex = 0;
+		int maxCapacity = Collections.max(vehicles, new VehicleCapacityComparator()).capacity();
+		int maxTaskWeight = Collections.max(tasks, new TaskWeightComparator()).weight;
+		
+		// If there is a task with weight greater than the capacity of all vehicles, there is no solution
+		if (maxTaskWeight > maxCapacity)
+			return false;
 
 		ArrayList<VehicleState> vehicleStates = new ArrayList<>(vehicles.size());
 		for (int i = 0; i < vehicles.size(); i++)
@@ -280,8 +160,7 @@ public class Variables {
 		for (Vehicle v : vehicles)
 			homeCitiesMap.get(v.homeCity()).add(v);
 
-		while (currentTaskIndex < tasks.size()) {
-			Task task = tasks.get(currentTaskIndex);
+		for (Task task : tasks) {
 
 			PriorityQueue<City> queue = new PriorityQueue<>(new VehicleDistanceComparator(task));
 			queue.add(task.pickupCity);
@@ -294,48 +173,14 @@ public class Variables {
 
 				List<Vehicle> closestVehicles = homeCitiesMap.get(currentCity);
 				for (Vehicle v : closestVehicles) {
-
-					currentVehicleIndex = vehicles.indexOf(v);
+					
 					currentVehicle = v;
-					currentVehicleState = vehicleStates.get(currentVehicleIndex);
+
+					currentVehicleState = vehicleStates.get(currentVehicle.id());
 
 					if (currentVehicleState.weightSum() + task.weight <= currentVehicle.capacity()) {
 
-						this.vehicle.set(task.id, currentVehicle);
-
-						int currentVehicleTime = currentVehicleState.getTime();
-
-						if (currentVehicleTime == 0) {
-							// The first action is always to pickup
-							this.nextAction.set(currentVehicleIndex, new ActionRep(task, ActionName.PICKUP));
-							this.pickupTime.set(currentTaskIndex, currentVehicleTime);
-
-							currentVehicleState.setPreviousAction(new ActionRep(task, ActionName.PICKUP));
-							currentVehicleState.addCarriedTask(task);
-						} else {
-
-							// Check the type of the previous action done by this vehicle
-							switch (currentVehicleState.getPreviousAction().getAction()) {
-							case PICKUP:
-								// If it was pickup, update nextActionAfterPickup for the previous task
-								this.nextActionAfterPickup.set(currentVehicleState.getPreviousAction().getTask().id,
-										new ActionRep(task, ActionName.PICKUP));
-								break;
-							case DELIVER:
-								// If it was deliver, update nextActionAfterDelivery for the previous task
-								this.nextActionAfterDelivery.set(currentVehicleState.getPreviousAction().getTask().id,
-										new ActionRep(task, ActionName.PICKUP));
-								break;
-							}
-							
-							this.pickupTime.set(task.id, currentVehicleTime);
-
-							currentVehicleState.setPreviousAction(new ActionRep(task, ActionName.PICKUP));
-							currentVehicleState.addCarriedTask(task);
-						}
-
-						currentVehicleState.setTime(currentVehicleTime + 1);
-						currentTaskIndex++;
+						this.pickupTask(task, currentVehicle, currentVehicleState);
 
 						taskAssigned = true;
 						break;
@@ -354,109 +199,155 @@ public class Variables {
 
 				// First, deliver all picked-up tasks for each vehicle
 				for (VehicleState vehicleState : vehicleStates) {
-					int i = 0;
-					Task prevTask = null;
-					ArrayList<Task> carriedTasks = vehicleState.getCarriedTasks();
-					for (Task t : carriedTasks) {
-						if (i == 0)
-							this.nextActionAfterPickup.set(vehicleState.getPreviousAction().getTask().id,
-									new ActionRep(t, ActionName.DELIVER));
-						else
-							this.nextActionAfterDelivery.set(prevTask.id, new ActionRep(t, ActionName.DELIVER));
-						this.deliveryTime.set(t.id, vehicleState.getTime());
-
-						vehicleState.setTime(vehicleState.getTime() + 1);
-						vehicleState.removeCarriedTask(t);
-
-						prevTask = t;
-						i++;
-					}
-					
-					// Only need to update the previous action once after the final delivery
-					vehicleState.setPreviousAction(new ActionRep(prevTask, ActionName.DELIVER));
+					this.deliverCarriedTasks(vehicleState);
 				}
 				
 				// Then make the last closest vehicle pickup the unassigned task
-				this.vehicle.set(task.id, currentVehicle);
-
-				int currentVehicleTime = currentVehicleState.getTime();
-
-				if (currentVehicleTime == 0) {
-					// The first action is always to pickup
-					this.nextAction.set(currentVehicleIndex, new ActionRep(task, ActionName.PICKUP));
-					this.pickupTime.set(currentTaskIndex, currentVehicleTime);
-
-					currentVehicleState.setPreviousAction(new ActionRep(task, ActionName.PICKUP));
-					currentVehicleState.addCarriedTask(task);
-				} else {
-
-					// Check the type of the previous action done by this vehicle
-					switch (currentVehicleState.getPreviousAction().getAction()) {
-					case PICKUP:
-						// If it was pickup, update nextActionAfterPickup for the previous task
-						this.nextActionAfterPickup.set(currentVehicleState.getPreviousAction().getTask().id,
-								new ActionRep(task, ActionName.PICKUP));
-						break;
-					case DELIVER:
-						// If it was deliver, update nextActionAfterDelivery for the previous task
-						this.nextActionAfterDelivery.set(currentVehicleState.getPreviousAction().getTask().id,
-								new ActionRep(task, ActionName.PICKUP));
-						break;
-					}
-					
-					this.pickupTime.set(task.id, currentVehicleTime);
-
-					currentVehicleState.setPreviousAction(new ActionRep(task, ActionName.PICKUP));
-					currentVehicleState.addCarriedTask(task);
-				}
-
-				currentVehicleState.setTime(currentVehicleTime + 1);
-				currentTaskIndex++;
+				this.pickupTask(task, currentVehicle, currentVehicleState);
 			}
 		}
 
 		// Deliver any remaining picked-up tasks
 		for (VehicleState vehicleState : vehicleStates) {
-
-			int i = 0;
-			Task prevTask = null;
-			ArrayList<Task> carriedTasks = vehicleState.getCarriedTasks();
-			for (Task t : carriedTasks) {
-				if (i == 0)
-					this.nextActionAfterPickup.set(vehicleState.getPreviousAction().getTask().id,
-							new ActionRep(t, ActionName.DELIVER));
-				else
-					this.nextActionAfterDelivery.set(prevTask.id, new ActionRep(t, ActionName.DELIVER));
-				this.deliveryTime.set(t.id, vehicleState.getTime());
-
-				vehicleState.setTime(vehicleState.getTime() + 1);
-				vehicleState.removeCarriedTask(t);
-
-				prevTask = t;
-				i++;
-			}
-			
-			// Only need to update the previous action once after the final delivery
-			vehicleState.setPreviousAction(new ActionRep(prevTask, ActionName.DELIVER));
+			this.deliverCarriedTasks(vehicleState);
 		}
+		
+		return true;
 	}
 
 	
-	public void setToInitialSolutionCheapestMore() {
-		// TODO: If there is a task with weight greater than the capacity of all
-		// vehicles, return "no solution"
+	public boolean initCheapestCostLightestTasks() {
+		
+		int maxCapacity = Collections.max(vehicles, new VehicleCapacityComparator()).capacity();
+		int maxTaskWeight = Collections.max(tasks, new TaskWeightComparator()).weight;
+		
+		// If there is a task with weight greater than the capacity of all vehicles, there is no solution
+		if (maxTaskWeight > maxCapacity)
+			return false;
+		
+		ArrayList<Vehicle> sortedVehicles = new ArrayList<>(vehicles);
+		sortedVehicles.sort(new VehicleCapacityComparator());
+
+		ArrayList<Task> sortedTasks = new ArrayList<>(tasks);
+		sortedTasks.sort(new TaskWeightComparator());
+		
+		int currentVehicleIndex = 0; //index of the currently analyzed vehicle in sortedVehicles
+		int currentTaskIndex = 0; //index of the currently analyzed task in sortedTasks
+
+		ArrayList<VehicleState> vehicleStates = new ArrayList<>(sortedVehicles.size());
+		for (int i = 0; i < sortedVehicles.size(); i++)
+			vehicleStates.add(new VehicleState(0, new ArrayList<Task>(), null));
+		Vehicle currentVehicle = sortedVehicles.get(0);
+		VehicleState currentVehicleState = vehicleStates.get(0);
+
+		while (currentTaskIndex < sortedTasks.size()) {
+
+			Task task = sortedTasks.get(currentTaskIndex);
+
+			if (currentVehicleState.weightSum() + task.weight <= currentVehicle.capacity()) {
+
+				this.pickupTask(task, currentVehicle, currentVehicleState);
+				currentTaskIndex++;
+			}
+
+			else {
+
+				// If not, first deliver all picked-up tasks
+				this.deliverCarriedTasks(currentVehicleState);
+
+				currentVehicleIndex++;
+
+				// If total weight of all tasks > total capacity of all vehicles,
+				// reset the whole procedure for the remaining subset of tasks,
+				// as all the vehicles are free again after they have delivered all of their
+				// tasks
+				if (currentVehicleIndex == sortedVehicles.size())
+					currentVehicleIndex = 0;
+
+				// Proceed to the next vehicle and reset all vehicle-related variables
+				currentVehicle = sortedVehicles.get(currentVehicleIndex);
+				currentVehicleState = vehicleStates.get(currentVehicleIndex);
+			}
+		}
+
+		// Deliver any remaining tasks
+		this.deliverCarriedTasks(currentVehicleState);
+		
+		return true;
+	}
+	
+	
+	public void deliverCarriedTasks(VehicleState currentVehicleState) {
+		
+		// Deliver any remaining tasks
+		int i = 0;
+		Task prevTask = null;
+		ArrayList<Task> carriedTasks = currentVehicleState.getCarriedTasks();
+		for (Task t : carriedTasks) {
+			if (i == 0)
+				this.nextActionAfterPickup.set(currentVehicleState.getPreviousAction().getTask().id,
+						new ActionRep(t, ActionName.DELIVER));
+			else
+				this.nextActionAfterDelivery.set(prevTask.id, new ActionRep(t, ActionName.DELIVER));
+			this.deliveryTime.set(t.id, currentVehicleState.getTime());
+
+			currentVehicleState.setTime(currentVehicleState.getTime() + 1);
+			currentVehicleState.removeCarriedTask(t);
+
+			prevTask = t;
+			i++;
+		}
+		// Only need to update the previous action once after the final delivery
+		currentVehicleState.setPreviousAction(new ActionRep(prevTask, ActionName.DELIVER));
+	}
+	
+	
+	public void pickupTask(Task task, Vehicle currentVehicle, VehicleState currentVehicleState) {
+		
+		this.vehicle.set(task.id, currentVehicle);
+
+		int currentVehicleTime = currentVehicleState.getTime();
+
+		if (currentVehicleTime == 0) {
+			// The first action is always to pickup
+			this.nextAction.set(currentVehicle.id(), new ActionRep(task, ActionName.PICKUP));
+			this.pickupTime.set(task.id, currentVehicleTime);
+
+			currentVehicleState.setPreviousAction(new ActionRep(task, ActionName.PICKUP));
+			currentVehicleState.addCarriedTask(task);
+		} else {
+
+			// Check the type of the previous action done by this vehicle
+			switch (currentVehicleState.getPreviousAction().getAction()) {
+			case PICKUP:
+				// If it was pickup, update nextActionAfterPickup for the previous task
+				this.nextActionAfterPickup.set(currentVehicleState.getPreviousAction().getTask().id,
+						new ActionRep(task, ActionName.PICKUP));
+				break;
+			case DELIVER:
+				// If it was deliver, update nextActionAfterDelivery for the previous task
+				this.nextActionAfterDelivery.set(currentVehicleState.getPreviousAction().getTask().id,
+						new ActionRep(task, ActionName.PICKUP));
+				break;
+			}
+			this.pickupTime.set(task.id, currentVehicleTime);
+
+			currentVehicleState.setPreviousAction(new ActionRep(task, ActionName.PICKUP));
+			currentVehicleState.addCarriedTask(task);
+		}
+		currentVehicleState.setTime(currentVehicleTime + 1);
 	}
 	
 
-	public List<Variables> chooseNeighbors() {
+	public List<VariablesSet> chooseNeighbors() {
 		// TODO:
 		return null;
 	}
 
 	
-	public Variables changeVehicleOfTask(Task t, Vehicle v) {
+	public VariablesSet moveTaskToVehicle(Task t, Vehicle v) {
 
-		Variables newVariables = (Variables) this.clone();
+		VariablesSet newVariables = (VariablesSet) this.clone();
 
 		Vehicle oldVehicle = this.vehicle.get(t.id);
 
@@ -559,11 +450,11 @@ public class Variables {
 		}
 
 		// Check load constraint for old vehicle
-		if (!newVariables.checkLoadConstraint(oldVehicle))
+		if (!newVariables.isLoadConstraintSatisfied(oldVehicle))
 			return null;
 
 		// Check load constraint for new vehicle
-		if (!newVariables.checkLoadConstraint(v))
+		if (!newVariables.isLoadConstraintSatisfied(v))
 			return null;
 
 		return newVariables;
@@ -577,9 +468,9 @@ public class Variables {
 	 * @param t2
 	 * @return
 	 */
-	public Variables changePickupTime(Task t1, Task t2) {
+	public VariablesSet swapPickupTime(Task t1, Task t2) {
 
-		Variables neighbor;
+		VariablesSet neighbor;
 
 		// If the pickup time of t1 is not greater than the delivery time of t2
 		// or the pickup time of t2 is not greater than the delivery time of t1 there is
@@ -587,7 +478,7 @@ public class Variables {
 		if (pickupTime.get(t2.id) > deliveryTime.get(t1.id) || pickupTime.get(t1.id) > deliveryTime.get(t2.id))
 			return null;
 
-		neighbor = (Variables) this.clone();
+		neighbor = (VariablesSet) this.clone();
 
 		Vehicle vehicle = this.vehicles.get(t1.id); // vehicle carrying t1 (and t2 by the requirements)
 
@@ -607,8 +498,8 @@ public class Variables {
 		if (pickupTime.get(t2.id) == 0)
 			neighbor.getNextAction().set(vehicle.id(), new ActionRep(t1, ActionName.PICKUP));
 
-		ActionRep t1PrevAction = this.getPredecessorOfAction(vehicle, new ActionRep(t1, ActionName.PICKUP));
-		ActionRep t2PrevAction = this.getPredecessorOfAction(vehicle, new ActionRep(t2, ActionName.PICKUP));
+		ActionRep t1PrevAction = this.getPreviousAction(vehicle, new ActionRep(t1, ActionName.PICKUP));
+		ActionRep t2PrevAction = this.getPreviousAction(vehicle, new ActionRep(t2, ActionName.PICKUP));
 
 		// Modify nextActionAfterPickup only if the action that precedes the pickup
 		// action of t1 (or t2) is a pickup action
@@ -656,7 +547,7 @@ public class Variables {
 
 		// If the constraints of capacity are satisfied after the swap the neighbor is a
 		// valid one and it can be returned
-		if (neighbor.checkLoadConstraint(vehicle))
+		if (neighbor.isLoadConstraintSatisfied(vehicle))
 			return neighbor;
 
 		// Otherwise the neighbor is not valid and null is returned
@@ -664,9 +555,9 @@ public class Variables {
 	}
 	
 
-	public Variables changeDeliveryTime(Task t1, Task t2) {
+	public VariablesSet swapDeliveryTime(Task t1, Task t2) {
 
-		Variables neighbor;
+		VariablesSet neighbor;
 
 		// If the delivery time of t1 is less than the pickup time of t2
 		// or the delivery time of t2 is less than the pickup time of t1 there is no
@@ -674,7 +565,7 @@ public class Variables {
 		if (deliveryTime.get(t2.id) < pickupTime.get(t1.id) || deliveryTime.get(t1.id) < pickupTime.get(t2.id))
 			return null;
 
-		neighbor = (Variables) this.clone();
+		neighbor = (VariablesSet) this.clone();
 
 		Vehicle vehicle = this.vehicles.get(t1.id); // vehicle carrying t1 (and t2 by the requirements)
 
@@ -683,8 +574,8 @@ public class Variables {
 		neighbor.getDeliveryTime().set(t1.id, deliveryTime.get(t2.id));
 		neighbor.getDeliveryTime().set(t2.id, deliveryTime.get(t1.id));
 
-		ActionRep t1PrevAction = this.getPredecessorOfAction(vehicle, new ActionRep(t1, ActionName.DELIVER));
-		ActionRep t2PrevAction = this.getPredecessorOfAction(vehicle, new ActionRep(t2, ActionName.DELIVER));
+		ActionRep t1PrevAction = this.getPreviousAction(vehicle, new ActionRep(t1, ActionName.DELIVER));
+		ActionRep t2PrevAction = this.getPreviousAction(vehicle, new ActionRep(t2, ActionName.DELIVER));
 
 		// Modify nextActionAfterPickup only if the action that precedes the delivery
 		// action of t1 (or t2) is a pickup action
@@ -732,7 +623,7 @@ public class Variables {
 
 		// If the constraints of capacity are satisfied after the swap the neighbor is a
 		// valid one and it can be returned
-		if (neighbor.checkLoadConstraint(vehicle))
+		if (neighbor.isLoadConstraintSatisfied(vehicle))
 			return neighbor;
 
 		// Otherwise the neighbor is not valid and null is returned
@@ -740,7 +631,7 @@ public class Variables {
 	}
 
 	
-	public Variables localChoice(double p, List<Vehicle> vehicles, TaskSet tasks) {
+	public VariablesSet localChoice(double p, List<Vehicle> vehicles, TaskSet tasks) {
 
 		// Random sample a Bernoulli(p) distribution to know whether to return the old
 		// solution or the best neighbor
@@ -748,13 +639,13 @@ public class Variables {
 		if (chooseBestNeighbor == 0)
 			return this;
 
-		List<Variables> candidateNeighbors = this.chooseNeighbors();
+		List<VariablesSet> candidateNeighbors = this.chooseNeighbors();
 		double bestObjectiveValue = Double.POSITIVE_INFINITY;
-		ArrayList<Variables> bestCandidateNeighbors = new ArrayList<>();
+		ArrayList<VariablesSet> bestCandidateNeighbors = new ArrayList<>();
 
 		// Compute the objective function for every candidate neighbor solution and find
 		// the collection of solutions with equal lowest cost
-		for (Variables candidateNeighbor : candidateNeighbors) {
+		for (VariablesSet candidateNeighbor : candidateNeighbors) {
 			double neighborObjectiveValue = candidateNeighbor.computeObjective(vehicles, tasks);
 			if (neighborObjectiveValue < bestObjectiveValue) {
 				bestObjectiveValue = neighborObjectiveValue;
@@ -767,7 +658,7 @@ public class Variables {
 		// Pick uniformly at random one of the solutions with the same optimal cost
 		Random rng = new Random();
 		int bestCandidateNeighborIndex = rng.nextInt(bestCandidateNeighbors.size());
-		Variables bestCandidateNeighbor = bestCandidateNeighbors.get(bestCandidateNeighborIndex);
+		VariablesSet bestCandidateNeighbor = bestCandidateNeighbors.get(bestCandidateNeighborIndex);
 
 		return bestCandidateNeighbor;
 	}
@@ -825,7 +716,7 @@ public class Variables {
 	}
 
 	
-	public ActionRep getPredecessorOfAction(Vehicle v, ActionRep action) {
+	public ActionRep getPreviousAction(Vehicle v, ActionRep action) {
 
 		ActionRep currentVehicleAction = this.nextAction.get(v.id());
 		ActionRep prevAction = null;
@@ -851,7 +742,7 @@ public class Variables {
 	}
 	
 
-	public boolean checkLoadConstraint(Vehicle v) {
+	public boolean isLoadConstraintSatisfied(Vehicle v) {
 
 		ActionRep currentVehicleAction = this.nextAction.get(v.id());
 		int currentLoad = 0;
@@ -996,7 +887,7 @@ public class Variables {
 		ArrayList<ActionRep> nextActionAfterPickupNew = new ArrayList<>(this.nextActionAfterPickup);
 		ArrayList<ActionRep> nextActionAfterDeliveryNew = new ArrayList<>(this.nextActionAfterDelivery);
 
-		return new Variables(vehicles, tasks, vehicleNew, pickupTimeNew, deliveryTimeNew, nextActionNew,
+		return new VariablesSet(vehicles, tasks, vehicleNew, pickupTimeNew, deliveryTimeNew, nextActionNew,
 				nextActionAfterPickupNew, nextActionAfterDeliveryNew);
 	}
 
