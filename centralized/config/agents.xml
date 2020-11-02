@@ -11,7 +11,7 @@
 	<agent name="centralized-main">
 		<set class-path="bin/"/>
 		<set class-name="template.CentralizedAgent"/>
-		<set p="1.0"/>
+		<set p="0.4"/>
 		<set initial-solution-id="1"/>
 	</agent>
 	

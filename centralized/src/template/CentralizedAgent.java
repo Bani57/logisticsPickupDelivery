@@ -95,9 +95,9 @@ public class CentralizedAgent implements CentralizedBehavior {
 				optimalSolution = tmpSolution;
 				optimalCost = tmpCost;
 			}
-			System.out.println(optimalCost);
 		}
-
+		
+		System.out.println(optimalCost);
 		System.out.println(optimalSolution.inferPlans().toString());
 
 		return optimalSolution.inferPlans();

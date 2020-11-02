@@ -360,16 +360,17 @@ public class VariablesSet {
 				if (getVehicle(tid).equals(v))
 					carriedTasks.add(tasks.get(tid));
 			}
+			System.out.println(v.id() + " " + carriedTasks.size());
 		
-			for (Task t1: carriedTasks) {
-				for (Task t2: carriedTasks) {
-					n = swapPickupTime(t1, t2);
+			for (Task t: carriedTasks) {
+				for (int newPickupTime=0; newPickupTime<2*carriedTasks.size(); newPickupTime++) {
+					n = changePickupTime(t, newPickupTime);
 					if (n != null)
 						neighbors.add(n);
 				}
 			}			
 		}
-		
+//		
 //		for (Vehicle v : vehicles) {
 //			ArrayList<Task> carriedTasks = new ArrayList<>();
 //			for (int tid = 0; tid < this.vehicle.size(); tid++) {
@@ -377,9 +378,9 @@ public class VariablesSet {
 //					carriedTasks.add(tasks.get(tid));
 //			}
 //		
-//			for (Task t1: carriedTasks) {
-//				for (Task t2: carriedTasks) {
-//					n = swapDeliveryTime(t1, t2);
+//			for (Task t: carriedTasks) {
+//				for (int newDeliveryTime=0; newDeliveryTime<2*carriedTasks.size(); newDeliveryTime++) {
+//					n = changeDeliveryTime(t, newDeliveryTime);
 //					if (n != null)
 //						neighbors.add(n);
 //				}
@@ -423,205 +424,274 @@ public class VariablesSet {
 		return neighbor;
 	}
 	
-
-	/**
-	 * 
-	 * @param t1
-	 * @param t2
-	 * @return
-	 */
-	public VariablesSet swapPickupTime(Task t1, Task t2) {
-
+	
+	public VariablesSet changePickupTime(Task t, int newPickupTime) {
 		VariablesSet neighbor;
 		
-		// If t1 and t2 are the same task, there is no valid neighbor
-		if (t1.equals(t2))
+		int tPickupTime = this.getPickupTime(t.id);
+		int tDeliveryTime = this.getDeliveryTime(t.id);
+		
+		// If the new pickup time is equal to the previous one for the task, there is no valid neighbor
+		if (tPickupTime == newPickupTime)
 			return null;
 
-		// If the pickup time of t1 is not greater than the delivery time of t2
-		// or the pickup time of t2 is not greater than the delivery time of t1,
+		// If the new pickup time is after the current delivery time of the task,
 		// then there is no valid neighbor
-		if (getPickupTime(t2.id) > getDeliveryTime(t1.id) || getPickupTime(t1.id) > getDeliveryTime(t2.id))
+		if(newPickupTime > tDeliveryTime)
 			return null;
 		
-		// If t1 and t2 are carried by different vehicles, then there is no valid neighbor
-		if (getVehicle(t1.id) != getVehicle(t2.id))
-			return null;
-
 		neighbor = (VariablesSet) this.clone();
-
-		Vehicle vehicle = this.vehicles.get(t1.id); // vehicle carrying t1 (and t2 by the requirements)
-
-		// Modify pickupTime by swapping the pickup time of t1 with pickup time of t2
-		neighbor.setPickupTime(t1.id, getPickupTime(t2.id));
-		neighbor.setPickupTime(t2.id, getPickupTime(t1.id));
-
-		// Modify nextAction only if either the pickup time of t1 (or t2) is 0
-
-		// If the pickup time of t1 is 0,
-		// then nextAction of the current vehicle has to be changed into picking up t2
-		if (getPickupTime(t1.id) == 0)
-			neighbor.setNextAction(vehicle.id(), new ActionRep(t2, ActionName.PICKUP));
 		
-		else {
-			
-			ActionRep t1PrevAction = this.getPreviousAction(vehicle, new ActionRep(t1, ActionName.PICKUP));
-
-			// Modify nextActionAfterPickup only if the action that precedes the pickup
-			// action of t1 is a pickup action
-			// and modify nextActionAfterDelivery only if the action that precedes the
-			// pickup action of t1 is a deliver action
-			switch (t1PrevAction.getAction()) {
-
-			// If the action before picking up t1 is a pickup action,
-			// then set its next action to be the action of picking up t2
-			case PICKUP:
-				neighbor.setNextActionAfterPickup(t1PrevAction.getTask().id, // id of the task picked up just before
-																					// t1
-						new ActionRep(t2, ActionName.PICKUP) // action of picking up t2
-				);
-				break;
-
-			// If the action before picking up t1 is a deliver action,
-			// then set its next action to be the action of picking up t2
-			case DELIVER:
-				neighbor.setNextActionAfterDelivery(t1PrevAction.getTask().id, // id of the task delivered just before
-																						// picking up t1
-						new ActionRep(t2, ActionName.PICKUP) // action of picking up t2
-				);
-				break;
-			}
-		}
-
-		// If the pickup time of t2 is 0,
-		// then nextAction of the current vehicle has to be changed into picking up t1
-		if (getPickupTime(t2.id) == 0)
-			neighbor.setNextAction(vehicle.id(), new ActionRep(t1, ActionName.PICKUP));
+		Vehicle v =  getVehicle(t.id);
 		
-		else {
-			
-			ActionRep t2PrevAction = this.getPreviousAction(vehicle, new ActionRep(t2, ActionName.PICKUP));
+		ArrayList<ActionRep> actionsVehicle = this.inferActionSequenceForVehicle(v);
+		ActionRep pickupAction = actionsVehicle.get(tPickupTime);
+		
+		actionsVehicle.remove(tPickupTime);
+		actionsVehicle.add(newPickupTime, pickupAction);
+		
+		neighbor.updateVariablesForVehicle(v, actionsVehicle);
 
-			// Modify nextActionAfterPickup only if the action that precedes the pickup
-			// action of t2 is a pickup action
-			// and modify nextActionAfterDelivery only if the action that precedes the
-			// pickup action of t2 is a deliver action
-			switch (t2PrevAction.getAction()) {
+		// Check load constraint for new vehicle
+		if (!neighbor.isLoadConstraintSatisfied(v))
+			return null;
+		
+		return neighbor;
+	}
+	
+	public VariablesSet changeDeliveryTime(Task t, int newDeliveryTime) {
+		VariablesSet neighbor;
+		
+		int tPickupTime = this.getPickupTime(t.id);
+		int tDeliveryTime = this.getDeliveryTime(t.id);
+		
+		// If the new pickup time is equal to the previous one for the task, there is no valid neighbor
+		if (tDeliveryTime == newDeliveryTime)
+			return null;
 
-			// If the action before picking up t2 is a pickup action,
-			// then set its next action to be the action of picking up t1
-			case PICKUP:
-				neighbor.setNextActionAfterPickup(t2PrevAction.getTask().id, // id of the task picked up just before
-																					// t2
-						new ActionRep(t1, ActionName.PICKUP) // action of picking up task t1
-				);
-				break;
+		// If the new pickup time is after the current delivery time of the task,
+		// then there is no valid neighbor
+		if(newDeliveryTime < tPickupTime)
+			return null;
+		
+		neighbor = (VariablesSet) this.clone();
+		
+		Vehicle v =  getVehicle(t.id);
+		
+		ArrayList<ActionRep> actionsVehicle = this.inferActionSequenceForVehicle(v);
+		ActionRep deliveryAction = actionsVehicle.get(tDeliveryTime);
+		
+		actionsVehicle.remove(tDeliveryTime);
+		actionsVehicle.add(newDeliveryTime, deliveryAction);
+		
+		neighbor.updateVariablesForVehicle(v, actionsVehicle);
 
-				// If the action before picking up t2 is a deliver action,
-				// then set its next action to be the action of picking up t1
-			case DELIVER:
-				neighbor.setNextActionAfterDelivery(t2PrevAction.getTask().id, // id of the task delivered just before
-																						// picking up t2
-						new ActionRep(t1, ActionName.PICKUP) // action of picking up task t1
-				);
-				break;
-			}
-		}		
-
-		// If the constraints of capacity are satisfied after the swap the neighbor is a
-		// valid one and it can be returned
-		if (neighbor.isLoadConstraintSatisfied(vehicle))
-			return neighbor;
-
-		// Otherwise the neighbor is not valid and null is returned
-		return null;
+		// Check load constraint for new vehicle
+		if (!neighbor.isLoadConstraintSatisfied(v))
+			return null;
+		
+		return neighbor;
 	}
 	
 
-	public VariablesSet swapDeliveryTime(Task t1, Task t2) {
+//	/**
+//	 * 
+//	 * @param t1
+//	 * @param t2
+//	 * @return
+//	 */
+//	public VariablesSet swapPickupTime(Task t1, Task t2) {
+//
+//		VariablesSet neighbor;
+//		
+//		// If t1 and t2 are the same task, there is no valid neighbor
+//		if (t1.equals(t2))
+//			return null;
+//
+//		// If the pickup time of t1 is not greater than the delivery time of t2
+//		// or the pickup time of t2 is not greater than the delivery time of t1,
+//		// then there is no valid neighbor
+//		if (getPickupTime(t2.id) > getDeliveryTime(t1.id) || getPickupTime(t1.id) > getDeliveryTime(t2.id))
+//			return null;
+//		
+//		// If t1 and t2 are carried by different vehicles, then there is no valid neighbor
+//		if (getVehicle(t1.id) != getVehicle(t2.id))
+//			return null;
+//
+//		neighbor = (VariablesSet) this.clone();
+//
+//		Vehicle vehicle = this.getVehicle(t1.id); // vehicle carrying t1 (and t2 by the requirements)
+//
+//		// Modify pickupTime by swapping the pickup time of t1 with pickup time of t2
+//		neighbor.setPickupTime(t1.id, getPickupTime(t2.id));
+//		neighbor.setPickupTime(t2.id, getPickupTime(t1.id));
+//
+//		// Modify nextAction only if either the pickup time of t1 (or t2) is 0
+//
+//		// If the pickup time of t1 is 0,
+//		// then nextAction of the current vehicle has to be changed into picking up t2
+//		if (getPickupTime(t1.id) == 0)
+//			neighbor.setNextAction(vehicle.id(), new ActionRep(t2, ActionName.PICKUP));
+//		
+//		else {
+//			
+//			ActionRep t1PrevAction = this.getPreviousAction(vehicle, new ActionRep(t1, ActionName.PICKUP));
+//
+//			// Modify nextActionAfterPickup only if the action that precedes the pickup
+//			// action of t1 is a pickup action
+//			// and modify nextActionAfterDelivery only if the action that precedes the
+//			// pickup action of t1 is a deliver action
+//			switch (t1PrevAction.getAction()) {
+//
+//			// If the action before picking up t1 is a pickup action,
+//			// then set its next action to be the action of picking up t2
+//			case PICKUP:
+//				neighbor.setNextActionAfterPickup(t1PrevAction.getTask().id, // id of the task picked up just before
+//																					// t1
+//						new ActionRep(t2, ActionName.PICKUP) // action of picking up t2
+//				);
+//				break;
+//
+//			// If the action before picking up t1 is a deliver action,
+//			// then set its next action to be the action of picking up t2
+//			case DELIVER:
+//				neighbor.setNextActionAfterDelivery(t1PrevAction.getTask().id, // id of the task delivered just before
+//																						// picking up t1
+//						new ActionRep(t2, ActionName.PICKUP) // action of picking up t2
+//				);
+//				break;
+//			}
+//		}
+//
+//		// If the pickup time of t2 is 0,
+//		// then nextAction of the current vehicle has to be changed into picking up t1
+//		if (getPickupTime(t2.id) == 0)
+//			neighbor.setNextAction(vehicle.id(), new ActionRep(t1, ActionName.PICKUP));
+//		
+//		else {
+//			
+//			ActionRep t2PrevAction = this.getPreviousAction(vehicle, new ActionRep(t2, ActionName.PICKUP));
+//
+//			// Modify nextActionAfterPickup only if the action that precedes the pickup
+//			// action of t2 is a pickup action
+//			// and modify nextActionAfterDelivery only if the action that precedes the
+//			// pickup action of t2 is a deliver action
+//			switch (t2PrevAction.getAction()) {
+//
+//			// If the action before picking up t2 is a pickup action,
+//			// then set its next action to be the action of picking up t1
+//			case PICKUP:
+//				neighbor.setNextActionAfterPickup(t2PrevAction.getTask().id, // id of the task picked up just before
+//																					// t2
+//						new ActionRep(t1, ActionName.PICKUP) // action of picking up task t1
+//				);
+//				break;
+//
+//				// If the action before picking up t2 is a deliver action,
+//				// then set its next action to be the action of picking up t1
+//			case DELIVER:
+//				neighbor.setNextActionAfterDelivery(t2PrevAction.getTask().id, // id of the task delivered just before
+//																						// picking up t2
+//						new ActionRep(t1, ActionName.PICKUP) // action of picking up task t1
+//				);
+//				break;
+//			}
+//		}		
+//
+//		// If the constraints of capacity are satisfied after the swap the neighbor is a
+//		// valid one and it can be returned
+//		if (neighbor.isLoadConstraintSatisfied(vehicle))
+//			return neighbor;
+//
+//		// Otherwise the neighbor is not valid and null is returned
+//		return null;
+//	}
+//	
 
-		VariablesSet neighbor;
-		
-		// If t1 and t2 are the same task, there is no valid neighbor
-		if (t1.equals(t2))
-			return null;
-
-		// If the delivery time of t1 is less than the pickup time of t2
-		// or the delivery time of t2 is less than the pickup time of t1 there is no
-		// valid neighbor
-		if (getDeliveryTime(t2.id) < getPickupTime(t1.id) || getDeliveryTime(t1.id) < getPickupTime(t2.id))
-			return null;
-		
-		// If t1 and t2 are carried by different vehicles, then there is no valid neighbor
-		if (getVehicle(t1.id) != getVehicle(t2.id))
-			return null;
-
-		neighbor = (VariablesSet) this.clone();
-
-		Vehicle vehicle = this.vehicles.get(t1.id); // vehicle carrying t1 (and t2 by the requirements)
-
-		// Modify deliveryTime by swapping the delivery time of t1 with delivery time oft2
-		neighbor.setDeliveryTime(t1.id, getDeliveryTime(t2.id));
-		neighbor.setDeliveryTime(t2.id, getDeliveryTime(t1.id));
-
-		ActionRep t1PrevAction = this.getPreviousAction(vehicle, new ActionRep(t1, ActionName.DELIVER));
-		ActionRep t2PrevAction = this.getPreviousAction(vehicle, new ActionRep(t2, ActionName.DELIVER));
-
-		// Modify nextActionAfterPickup only if the action that precedes the delivery
-		// action of t1 (or t2) is a pickup action
-		// and modify nextActionAfterDelivery only if the action that precedes the
-		// delivery action of t1 (or t2) is a deliver action
-
-		switch (t1PrevAction.getAction()) {
-
-		// If the action before delivering t1 is a pickup action,
-		// then set its next action to be the action of delivering t2
-		case PICKUP:
-			neighbor.setNextActionAfterPickup(t1PrevAction.getTask().id, // id of the task picked up just before
-																				// t1
-					new ActionRep(t2, ActionName.DELIVER) // action of delivering t2
-			);
-			break;
-
-		// If the action before delivering t1 is a deliver action,
-		// then set its next action to be the action of delivering t2
-		case DELIVER:
-			neighbor.setNextActionAfterDelivery(t1PrevAction.getTask().id, // id of the task delivered just before
-																					// picking up t1
-					new ActionRep(t2, ActionName.DELIVER) // action of delivering t2
-			);
-			break;
-		}
-
-		switch (t2PrevAction.getAction()) {
-
-		// If the action before delivering t2 is a pickup action,
-		// then set its next action to be the action of delivering t1
-		case PICKUP:
-			neighbor.setNextActionAfterPickup(t2PrevAction.getTask().id, // id of the task picked up just before
-																				// t2
-					new ActionRep(t1, ActionName.DELIVER) // action of delivering task t1
-			);
-			break;
-
-			// If the action before delivering t2 is a deliver action,
-			// then set its next action to be the action of delivering t1
-		case DELIVER:
-			neighbor.setNextActionAfterDelivery(t2PrevAction.getTask().id, // id of the task delivered just before
-																					// picking up t2
-					new ActionRep(t1, ActionName.DELIVER) // action of delivering task t1
-			);
-			break;
-		}
-
-		// If the constraints of capacity are satisfied after the swap the neighbor is a
-		// valid one and it can be returned
-		if (neighbor.isLoadConstraintSatisfied(vehicle))
-			return neighbor;
-
-		// Otherwise the neighbor is not valid and null is returned
-		return null;
-	}
+//	public VariablesSet swapDeliveryTime(Task t1, Task t2) {
+//
+//		VariablesSet neighbor;
+//		
+//		// If t1 and t2 are the same task, there is no valid neighbor
+//		if (t1.equals(t2))
+//			return null;
+//
+//		// If the delivery time of t1 is less than the pickup time of t2
+//		// or the delivery time of t2 is less than the pickup time of t1 there is no
+//		// valid neighbor
+//		if (getDeliveryTime(t2.id) < getPickupTime(t1.id) || getDeliveryTime(t1.id) < getPickupTime(t2.id))
+//			return null;
+//		
+//		// If t1 and t2 are carried by different vehicles, then there is no valid neighbor
+//		if (getVehicle(t1.id) != getVehicle(t2.id))
+//			return null;
+//
+//		neighbor = (VariablesSet) this.clone();
+//
+//		Vehicle vehicle = this.getVehicle(t1.id); // vehicle carrying t1 (and t2 by the requirements)
+//
+//		// Modify deliveryTime by swapping the delivery time of t1 with delivery time oft2
+//		neighbor.setDeliveryTime(t1.id, getDeliveryTime(t2.id));
+//		neighbor.setDeliveryTime(t2.id, getDeliveryTime(t1.id));
+//
+//		ActionRep t1PrevAction = this.getPreviousAction(vehicle, new ActionRep(t1, ActionName.DELIVER));
+//		ActionRep t2PrevAction = this.getPreviousAction(vehicle, new ActionRep(t2, ActionName.DELIVER));
+//
+//		// Modify nextActionAfterPickup only if the action that precedes the delivery
+//		// action of t1 (or t2) is a pickup action
+//		// and modify nextActionAfterDelivery only if the action that precedes the
+//		// delivery action of t1 (or t2) is a deliver action
+//
+//		switch (t1PrevAction.getAction()) {
+//
+//		// If the action before delivering t1 is a pickup action,
+//		// then set its next action to be the action of delivering t2
+//		case PICKUP:
+//			neighbor.setNextActionAfterPickup(t1PrevAction.getTask().id, // id of the task picked up just before
+//																				// t1
+//					new ActionRep(t2, ActionName.DELIVER) // action of delivering t2
+//			);
+//			break;
+//
+//		// If the action before delivering t1 is a deliver action,
+//		// then set its next action to be the action of delivering t2
+//		case DELIVER:
+//			neighbor.setNextActionAfterDelivery(t1PrevAction.getTask().id, // id of the task delivered just before
+//																					// picking up t1
+//					new ActionRep(t2, ActionName.DELIVER) // action of delivering t2
+//			);
+//			break;
+//		}
+//
+//		switch (t2PrevAction.getAction()) {
+//
+//		// If the action before delivering t2 is a pickup action,
+//		// then set its next action to be the action of delivering t1
+//		case PICKUP:
+//			neighbor.setNextActionAfterPickup(t2PrevAction.getTask().id, // id of the task picked up just before
+//																				// t2
+//					new ActionRep(t1, ActionName.DELIVER) // action of delivering task t1
+//			);
+//			break;
+//
+//			// If the action before delivering t2 is a deliver action,
+//			// then set its next action to be the action of delivering t1
+//		case DELIVER:
+//			neighbor.setNextActionAfterDelivery(t2PrevAction.getTask().id, // id of the task delivered just before
+//																					// picking up t2
+//					new ActionRep(t1, ActionName.DELIVER) // action of delivering task t1
+//			);
+//			break;
+//		}
+//
+//		// If the constraints of capacity are satisfied after the swap the neighbor is a
+//		// valid one and it can be returned
+//		if (neighbor.isLoadConstraintSatisfied(vehicle))
+//			return neighbor;
+//
+//		// Otherwise the neighbor is not valid and null is returned
+//		return null;
+//	}
 
 	
 	public VariablesSet localChoice(double p) {
@@ -644,6 +714,10 @@ public class VariablesSet {
 			return this;
 
 		List<VariablesSet> candidateNeighbors = this.chooseNeighbors();
+		
+		if(candidateNeighbors.isEmpty())
+			return this;
+		
 		double bestObjectiveValue = Double.POSITIVE_INFINITY;
 		ArrayList<VariablesSet> bestCandidateNeighbors = new ArrayList<>();
 
@@ -725,8 +799,7 @@ public class VariablesSet {
 		ActionRep currentVehicleAction = this.getNextAction(v.id());
 		ActionRep prevAction = null;
 		
-		while (!(currentVehicleAction.getTask().id == a.getTask().id
-				&& currentVehicleAction.getAction() == a.getAction())) {
+		while (currentVehicleAction != null && currentVehicleAction.equals(a)) {
 
 			int currentTaskId = currentVehicleAction.getTask().id;
 
