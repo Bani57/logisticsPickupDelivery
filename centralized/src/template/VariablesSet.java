@@ -397,10 +397,10 @@ public class VariablesSet {
 		
 		ArrayList<ActionRep> actionsOldVehicle = this.inferActionSequenceForVehicle(oldVehicle);
 		ArrayList<ActionRep> actionsNewVehicle = this.inferActionSequenceForVehicle(v);
+
+		ActionRep pickupAction = actionsOldVehicle.get(this.getPickupTime(t.id));
+		ActionRep deliverAction = actionsOldVehicle.get(this.getDeliveryTime(t.id));
 				
-		ActionRep pickupAction = new ActionRep(t, ActionName.PICKUP);
-		ActionRep deliverAction = new ActionRep(t, ActionName.DELIVER);
-		
 		actionsOldVehicle.remove(pickupAction);
 		actionsOldVehicle.remove(deliverAction);
 		actionsNewVehicle.add(pickupAction);
@@ -604,32 +604,6 @@ public class VariablesSet {
 		}
 
 		return objectiveValue;
-	}
-
-	
-	public ActionRep getPreviousAction(Vehicle v, ActionRep a) {
-
-		ActionRep currentVehicleAction = this.getNextAction(v.id());
-		ActionRep prevAction = null;
-		
-		while (currentVehicleAction != null && currentVehicleAction.equals(a)) {
-
-			int currentTaskId = currentVehicleAction.getTask().id;
-
-			prevAction = currentVehicleAction;
-
-			switch (currentVehicleAction.getAction()) {
-
-			case PICKUP:
-				currentVehicleAction = this.getNextActionAfterPickup(currentTaskId);
-				break;
-			case DELIVER:
-				currentVehicleAction = this.getNextActionAfterDelivery(currentTaskId);
-				break;
-			}
-		}
-		
-		return prevAction;
 	}
 	
 
