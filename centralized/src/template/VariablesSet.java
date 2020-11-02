@@ -343,10 +343,12 @@ public class VariablesSet {
 
 	public List<VariablesSet> chooseNeighbors() {
 		
+		VariablesSet n;
+		
 		ArrayList<VariablesSet> neighbors = new ArrayList<>();
 		for (Task t: tasks) {
 			for (Vehicle v: vehicles) {
-				VariablesSet n = moveTaskToVehicle(t, v);
+				n = moveTaskToVehicle(t, v);
 				if (n != null)
 					neighbors.add(n);
 			}
@@ -358,107 +360,26 @@ public class VariablesSet {
 	
 	public VariablesSet moveTaskToVehicle(Task t, Vehicle v) {
 
-		VariablesSet newVariables = (VariablesSet) this.clone();
-
 		Vehicle oldVehicle = this.vehicle.get(t.id);
 
 		if (oldVehicle.id() == v.id())
 			return null;
-
-		ActionRep oldVehicleOldFirstAction = this.nextAction.get(oldVehicle.id());
-		ActionRep newVehicleOldFirstAction = this.nextAction.get(v.id());
-		ActionRep taskOldNextActionAfterPickup = this.nextActionAfterPickup.get(t.id);
-		ActionRep taskOldNextActionAfterDelivery = this.nextActionAfterDelivery.get(t.id);
-
-		// Change the vehicle of the task t
-		newVariables.vehicle.set(t.id, v);
-
-		// Change the first action of the old vehicle if this task was the first
-		if (oldVehicleOldFirstAction.getTask().id == t.id)
-			newVariables.nextAction.set(oldVehicle.id(), taskOldNextActionAfterPickup);
-
-		// Change the first action of the new vehicle
-		newVariables.nextAction.set(v.id(), new ActionRep(t, ActionName.PICKUP));
-
-		// Change the next actions of the task
-		newVariables.nextActionAfterPickup.set(t.id, new ActionRep(t, ActionName.DELIVER));
-		newVariables.nextActionAfterDelivery.set(t.id, newVehicleOldFirstAction);
-
-		// Change the pickup and delivery times of the task
-		newVariables.pickupTime.set(t.id, 0);
-		newVariables.deliveryTime.set(t.id, 1);
-
-		// Update pickup and delivery times in old vehicle up until the delivery of the
-		// task
-		ActionRep currentVehicleAction = taskOldNextActionAfterPickup;
-		ActionRep prevAction = null;
-
-		while (!(currentVehicleAction.getTask().id == t.id && currentVehicleAction.getAction() == ActionName.DELIVER)) {
-
-			int currentTaskId = currentVehicleAction.getTask().id;
-
-			prevAction = currentVehicleAction;
-
-			switch (currentVehicleAction.getAction()) {
-
-			case PICKUP:
-				newVariables.pickupTime.set(currentTaskId, this.pickupTime.get(currentTaskId) - 1);
-				currentVehicleAction = this.nextActionAfterPickup.get(currentTaskId);
-				break;
-			case DELIVER:
-				newVariables.deliveryTime.set(currentTaskId, this.deliveryTime.get(currentTaskId) - 1);
-				currentVehicleAction = this.nextActionAfterDelivery.get(currentTaskId);
-				break;
-			}
-		}
-
-		// Delete the delivery action from the old vehicle
-		switch (prevAction.getAction()) {
-		case PICKUP:
-			newVariables.nextActionAfterPickup.set(prevAction.getTask().id, taskOldNextActionAfterDelivery);
-			break;
-		case DELIVER:
-			newVariables.nextActionAfterDelivery.set(prevAction.getTask().id, taskOldNextActionAfterDelivery);
-			break;
-		}
-
-		// Update pickup and delivery times in old vehicle after the deleted delivery of
-		// the task
-		currentVehicleAction = taskOldNextActionAfterDelivery;
-		while (currentVehicleAction != null) {
-
-			int currentTaskId = currentVehicleAction.getTask().id;
-
-			switch (currentVehicleAction.getAction()) {
-
-			case PICKUP:
-				newVariables.pickupTime.set(currentTaskId, this.pickupTime.get(currentTaskId) - 2);
-				currentVehicleAction = this.nextActionAfterPickup.get(currentTaskId);
-				break;
-			case DELIVER:
-				newVariables.deliveryTime.set(currentTaskId, this.deliveryTime.get(currentTaskId) - 2);
-				currentVehicleAction = this.nextActionAfterDelivery.get(currentTaskId);
-				break;
-			}
-		}
-
-		// Update pickup and delivery times in new vehicle
-		currentVehicleAction = newVehicleOldFirstAction;
-		while (currentVehicleAction != null) {
-
-			int currentTaskId = currentVehicleAction.getTask().id;
-			switch (currentVehicleAction.getAction()) {
-
-			case PICKUP:
-				newVariables.pickupTime.set(currentTaskId, this.pickupTime.get(currentTaskId) + 2);
-				currentVehicleAction = this.nextActionAfterPickup.get(currentTaskId);
-				break;
-			case DELIVER:
-				newVariables.deliveryTime.set(currentTaskId, this.deliveryTime.get(currentTaskId) + 2);
-				currentVehicleAction = this.nextActionAfterDelivery.get(currentTaskId);
-				break;
-			}
-		}
+		
+		ArrayList<ActionRep> actionsOldVehicle = this.inferActionSequenceForVehicle(oldVehicle);
+		ArrayList<ActionRep> actionsNewVehicle = this.inferActionSequenceForVehicle(v);
+				
+		ActionRep pickupAction = new ActionRep(t, ActionName.PICKUP);
+		ActionRep deliverAction = new ActionRep(t, ActionName.DELIVER);
+		
+		actionsOldVehicle.remove(pickupAction);
+		actionsOldVehicle.remove(deliverAction);
+		actionsNewVehicle.add(pickupAction);
+		actionsNewVehicle.add(deliverAction);
+		
+		VariablesSet newVariables = (VariablesSet) this.clone();
+		
+		newVariables.updateVariablesForVehicle(oldVehicle, actionsOldVehicle);
+		newVariables.updateVariablesForVehicle(v, actionsNewVehicle);
 
 		// Check load constraint for old vehicle
 		if (!newVariables.isLoadConstraintSatisfied(oldVehicle))
@@ -840,6 +761,61 @@ public class VariablesSet {
 		}
 
 		return plans;
+	}
+	
+	public ArrayList<ActionRep> inferActionSequenceForVehicle(Vehicle v){
+		ArrayList<ActionRep> actionSequence = new ArrayList<>();
+		
+		ActionRep currentAction = this.nextAction.get(v.id());
+		
+		while(currentAction!=null) {
+			actionSequence.add(currentAction);
+			
+			switch (currentAction.getAction()) {
+			case PICKUP:
+				currentAction = this.nextActionAfterPickup.get(currentAction.getTask().id);
+				break;
+			case DELIVER:
+				currentAction = this.nextActionAfterDelivery.get(currentAction.getTask().id);
+				break;
+			}
+		}
+		
+		return actionSequence;
+	}
+	
+	public void updateVariablesForVehicle(Vehicle v, ArrayList<ActionRep> actionSequence) {
+		int vehicleTime = 0;
+		ActionRep prevAction = null;
+		
+		for(ActionRep currentAction: actionSequence)
+		{
+			if(vehicleTime==0)
+			{
+				this.nextAction.set(v.id(), currentAction);
+				this.pickupTime.set(currentAction.getTask().id, vehicleTime);
+			}
+			else {
+				switch (prevAction.getAction()) {
+				case PICKUP:
+					this.nextActionAfterPickup.set(prevAction.getTask().id, currentAction);
+					this.pickupTime.set(currentAction.getTask().id, vehicleTime);
+					break;
+				case DELIVER:
+					this.nextActionAfterDelivery.set(prevAction.getTask().id, currentAction);
+					this.deliveryTime.set(currentAction.getTask().id, vehicleTime);
+					break;
+				}
+			}
+			
+			this.vehicle.set(currentAction.getTask().id, v);
+			vehicleTime++;
+			prevAction = currentAction;
+		}
+		
+		if(prevAction!=null)
+			this.nextActionAfterDelivery.set(prevAction.getTask().id, null);
+		
 	}
 	
 
