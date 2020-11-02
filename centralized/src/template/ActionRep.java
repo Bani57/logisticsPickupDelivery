@@ -37,7 +37,26 @@ public class ActionRep {
 	public void setAction(ActionName action) {
 		this.action = action;
 	}
-	
+
+	@Override
+	public boolean equals(Object obj) {
+		if (this == obj)
+			return true;
+		if (obj == null)
+			return false;
+		if (getClass() != obj.getClass())
+			return false;
+		ActionRep other = (ActionRep) obj;
+		if (action != other.action)
+			return false;
+		if (task == null) {
+			if (other.task != null)
+				return false;
+		} else if (!task.equals(other.task))
+			return false;
+		return true;
+	}
+
 
 	@Override
 	public String toString() {

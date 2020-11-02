@@ -83,10 +83,10 @@ public class CentralizedAgent implements CentralizedBehavior {
 
 		System.out.println(initialSolution.toString());
 
+		VariablesSet tmpSolution = initialSolution;
+		double tmpCost;
 		VariablesSet optimalSolution = initialSolution;
 		double optimalCost = initialSolution.computeObjective();
-		VariablesSet tmpSolution = initialSolution;
-		double tmpCost = tmpSolution.computeObjective();
 		
 		for (int count=0; count<1000; count++) {
 			tmpSolution = tmpSolution.localChoice(p);
@@ -95,6 +95,7 @@ public class CentralizedAgent implements CentralizedBehavior {
 				optimalSolution = tmpSolution;
 				optimalCost = tmpCost;
 			}
+			System.out.println(optimalCost);
 		}
 
 		System.out.println(optimalSolution.inferPlans().toString());
