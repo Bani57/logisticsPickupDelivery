@@ -59,7 +59,7 @@ public class CentralizedAgent implements CentralizedBehavior {
 	@Override
 	public List<Plan> plan(List<Vehicle> vehicles, TaskSet tasks) {
 		
-		double p = agent.readProperty("p", Double.class, 1.0); 
+		final double p = agent.readProperty("p", Double.class, 0.5); 
 		if (p > 1.0 || p < 0.0) {
 			System.out.println("The parameter p should be between 0.0 and 1.0");
 			System.exit(0);

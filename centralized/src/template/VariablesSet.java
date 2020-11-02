@@ -297,7 +297,7 @@ public class VariablesSet {
 		}
 		
 		// Remove all the tasks from the vehicle state
-		currentVehicleState.setCarriedTasks(new ArrayList<>());
+		currentVehicleState.setCarriedTasks(new ArrayList<Task>());
 		
 		// Only need to update the previous action once after the final delivery
 		currentVehicleState.setPreviousAction(new ActionRep(prevTask, ActionName.DELIVER));
@@ -653,7 +653,18 @@ public class VariablesSet {
 
 		// Random sample a Bernoulli(p) distribution to know whether to return the old
 		// solution or the best neighbor
-		int chooseBestNeighbor = uchicago.src.sim.util.Random.binomial.nextInt(1, p);
+		
+		int chooseBestNeighbor;
+		
+		if(p==0)
+			chooseBestNeighbor = 0;
+		else if(p==1)
+			chooseBestNeighbor = 1;
+		else {
+			uchicago.src.sim.util.Random.createBinomial(1, p);
+			chooseBestNeighbor = uchicago.src.sim.util.Random.binomial.nextInt(1, p);
+		}
+		
 		if (chooseBestNeighbor == 0)
 			return this;
 
