@@ -88,7 +88,7 @@ public class CentralizedAgent implements CentralizedBehavior {
 		VariablesSet optimalSolution = initialSolution;
 		double optimalCost = initialSolution.computeObjective();
 		
-		for (int count=0; count<1000; count++) {
+		for (int count=0; count<10000; count++) {
 			tmpSolution = tmpSolution.localChoice(p);
 			tmpCost = tmpSolution.computeObjective();
 			if (tmpCost < optimalCost) {
