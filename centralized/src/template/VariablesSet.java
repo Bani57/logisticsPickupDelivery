@@ -929,7 +929,6 @@ public class VariablesSet {
 	public ActionRep getNextAction(int vid) {
 		return nextAction.get(vid);
 	}
-
 	
 	public void setNextAction(ArrayList<ActionRep> nextAction) {
 		this.nextAction = nextAction;
@@ -968,7 +967,7 @@ public class VariablesSet {
 	}
 	
 	public void setNextActionAfterDelivery(int tid, ActionRep a) {
-		this.setNextActionAfterDelivery(tid, a);
+		this.nextActionAfterDelivery.set(tid, a);
 	}
 	
 	@Override
