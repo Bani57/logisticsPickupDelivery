@@ -5,11 +5,18 @@ import java.util.Comparator;
 import logist.task.Task;
 import logist.topology.Topology.City;
 
-public class VehicleDistanceComparator implements Comparator<City> {
+/**
+ * Comparator for the class City: the compare method takes into account only the
+ * distances of the two cities from the task's pickup city
+ * 
+ * @author Andrej Janchevski
+ * @author Orazio Rillo
+ */
+public class CityDistanceFromVehicleComparator implements Comparator<City> {
 
 	private Task task;
 
-	public VehicleDistanceComparator(Task task) {
+	public CityDistanceFromVehicleComparator(Task task) {
 		super();
 		this.task = task;
 	}

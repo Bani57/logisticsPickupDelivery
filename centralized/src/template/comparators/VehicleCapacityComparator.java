@@ -4,6 +4,13 @@ import java.util.Comparator;
 
 import logist.simulation.Vehicle;
 
+/**
+ * Comparator for the class Vehicle: the compare method takes into account the
+ * vehicle capacity only
+ * 
+ * @author Andrej Janchevski
+ * @author Orazio Rillo
+ */
 public class VehicleCapacityComparator implements Comparator<Vehicle> {
 
 	@Override

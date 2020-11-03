@@ -2,37 +2,38 @@ package template;
 
 import logist.task.Task;
 
+/**
+ * Class that represents an action in the model
+ * 
+ * @author Andrej Janchevski
+ * @author Orazio Rillo
+ */
 public class ActionRep {
 
 	enum ActionName {
 		PICKUP, DELIVER
 	};
 
-	private Task task;
-	private ActionName action;
+	private Task task; // task to pickup/deliver
+	private ActionName action; // can be PICKUP or DELIVER
 
-	
 	public ActionRep(Task task, ActionName action) {
 		super();
 		this.task = task;
 		this.action = action;
 	}
-	
 
 	public Task getTask() {
 		return task;
 	}
 
-	
 	public void setTask(Task task) {
 		this.task = task;
 	}
 
-	
 	public ActionName getAction() {
 		return action;
 	}
-	
 
 	public void setAction(ActionName action) {
 		this.action = action;
@@ -46,7 +47,6 @@ public class ActionRep {
 		result = prime * result + ((task == null) ? 0 : task.hashCode());
 		return result;
 	}
-
 
 	@Override
 	public boolean equals(Object obj) {
@@ -66,7 +66,6 @@ public class ActionRep {
 			return false;
 		return true;
 	}
-
 
 	@Override
 	public String toString() {

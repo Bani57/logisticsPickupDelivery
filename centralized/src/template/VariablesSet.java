@@ -16,7 +16,7 @@ import logist.topology.Topology.City;
 import template.ActionRep.ActionName;
 import template.comparators.TaskWeightComparator;
 import template.comparators.VehicleCapacityComparator;
-import template.comparators.VehicleDistanceComparator;
+import template.comparators.CityDistanceFromVehicleComparator;
 
 import java.util.Random;
 
@@ -160,7 +160,7 @@ public class VariablesSet {
 
 		for (Task task : tasks) {
 
-			PriorityQueue<City> queue = new PriorityQueue<>(new VehicleDistanceComparator(task));
+			PriorityQueue<City> queue = new PriorityQueue<>(new CityDistanceFromVehicleComparator(task));
 			queue.add(task.pickupCity);
 			HashSet<City> visitedCities = new HashSet<>();
 
@@ -412,9 +412,6 @@ public class VariablesSet {
 		ArrayList<ActionRep> actionsOldVehicle = this.inferActionSequenceForVehicle(oldVehicle);
 		ArrayList<ActionRep> actionsNewVehicle = this.inferActionSequenceForVehicle(v);
 
-//		ActionRep pickupAction = actionsOldVehicle.get(this.getPickupTime(t.id));
-//		ActionRep deliverAction = actionsOldVehicle.get(this.getDeliveryTime(t.id));
-
 		ActionRep pickupAction = new ActionRep(t, ActionName.PICKUP);
 		ActionRep deliverAction = new ActionRep(t, ActionName.DELIVER);
 
@@ -438,11 +435,8 @@ public class VariablesSet {
 		neighbor.updateVariablesForVehicle(oldVehicle, actionsOldVehicle);
 		neighbor.updateVariablesForVehicle(v, actionsNewVehicle);
 
-		neighborDescr.append("It turned\n")
-			.append(this.toString())
-			.append("\n\ninto\n")
-			.append(neighbor.toString());
-		
+		neighborDescr.append("It turned\n").append(this.toString()).append("\n\ninto\n").append(neighbor.toString());
+
 		neighbor.setDescr(neighborDescr);
 
 		// Check load constraint for old vehicle
@@ -493,11 +487,8 @@ public class VariablesSet {
 
 		neighbor.updateVariablesForVehicle(v, actionsVehicle);
 
-		neighborDescr.append("It turned\n")
-			.append(this.toString())
-			.append("\n\ninto\n")
-			.append(neighbor.toString());
-		
+		neighborDescr.append("It turned\n").append(this.toString()).append("\n\ninto\n").append(neighbor.toString());
+
 		neighbor.setDescr(neighborDescr);
 
 		// Check load constraint for new vehicle
@@ -547,11 +538,8 @@ public class VariablesSet {
 
 		neighbor.updateVariablesForVehicle(v, actionsVehicle);
 
-		neighborDescr.append("It turned\n")
-			.append(this.toString())
-			.append("\n\ninto\n")
-			.append(neighbor.toString());
-		
+		neighborDescr.append("It turned\n").append(this.toString()).append("\n\ninto\n").append(neighbor.toString());
+
 		neighbor.setDescr(neighborDescr);
 
 		// Check load constraint for new vehicle
@@ -790,14 +778,15 @@ public class VariablesSet {
 			vehicleTime++;
 			prevAction = currentAction;
 		}
-		
+
 		if (prevAction == null)
 			// if prevAction is null, it means that there is no action in the sequence,
 			// so set nextAction of the vehicle to null
 			this.setNextAction(v.id(), null);
 
 		else
-			// if prevAction is not null, it means that the last updated action for v is a delivery,
+			// if prevAction is not null, it means that the last updated action for v is a
+			// delivery,
 			// so set nextActionAfterDelivery of the last delivered task to null
 			this.setNextActionAfterDelivery(prevAction.getTask().id, null);
 	}
@@ -977,13 +966,13 @@ public class VariablesSet {
 
 		str.append("]\n");
 
-		// Append nextActionAfterDelivery
+		// Append nextActionAfterDelivery, some entries might be null
 		str.append("nextActionAfterDelivery : [t0 -> ");
 		if (getNextActionAfterDelivery(0) == null)
 			str.append("null");
 		else
 			str.append(getNextActionAfterDelivery(0).toString());
-		
+
 		for (int i = 1; i < nextActionAfterDelivery.size(); i++) {
 			str.append(", t").append(i).append(" -> ");
 			if (getNextActionAfterDelivery(i) == null)

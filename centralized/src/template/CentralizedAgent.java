@@ -21,9 +21,11 @@ import logist.topology.Topology;
 import logist.topology.Topology.City;
 
 /**
- * A very simple auction agent that assigns all tasks to its first vehicle and
- * handles them sequentially.
+ * Implementation of the centralized agent The optimal plan to assign to
+ * vehicles is computed using the SLS algorithm.
  *
+ * @author Andrej Janchevski
+ * @author Orazio Rillo
  */
 @SuppressWarnings("unused")
 public class CentralizedAgent implements CentralizedBehavior {
@@ -59,12 +61,17 @@ public class CentralizedAgent implements CentralizedBehavior {
 	@Override
 	public List<Plan> plan(List<Vehicle> vehicles, TaskSet tasks) {
 		
+		int numIterations = 10000;
+		
+		// Read p, it has to be between 0 and 1
 		final double p = agent.readProperty("p", Double.class, 1.0); 
 		if (p > 1.0 || p < 0.0) {
 			System.out.println("The parameter p should be between 0.0 and 1.0");
 			System.exit(0);
 		}
 		
+		// Read initial solution id, valid values go from 1 to 3. 
+		// @see template.VariablesSet#init() to know more about the 3 different initial solutions. 
 		int initialSolutionId = agent.readProperty("initial-solution-id", Integer.class, 1);		
 		if (initialSolutionId != 1 && initialSolutionId != 2 && initialSolutionId != 3) {
 			System.out.println("The initial solution id should be either 1, 2 or 3");
@@ -73,22 +80,25 @@ public class CentralizedAgent implements CentralizedBehavior {
 		
 		long time_start = System.currentTimeMillis();
 
+		// Find an initial solution 
 		VariablesSet initialSolution = new VariablesSet(vehicles, tasks);
 		boolean success = initialSolution.init(this.topology, initialSolutionId);
 		
+		// If the problem has no solution (e.g. there is a task whose weight is higher than each vehicle's capacity),
+		// than exit
 		if (!success) {
 			System.out.println("The problem has no solution");
 			System.exit(0);
 		}
-
-		System.out.println(initialSolution.toString());
 
 		VariablesSet tmpSolution = initialSolution;
 		double tmpCost;
 		VariablesSet optimalSolution = initialSolution;
 		double optimalCost = initialSolution.computeObjective();
 		
-		for (int count=0; count<10000; count++) {
+		// Iterate the SLS until the termination condition is met
+		// TODO: add termination condition and write the comment properly
+		for (int count=0; count<numIterations; count++) {
 			tmpSolution = tmpSolution.localChoice(p);
 			tmpCost = tmpSolution.computeObjective();
 			if (tmpCost < optimalCost) {
@@ -97,9 +107,18 @@ public class CentralizedAgent implements CentralizedBehavior {
 			}
 		}
 		
-		System.out.println(optimalCost);
-		System.out.println(optimalSolution.inferPlans().toString());
-
+		// Build the string to output
+		StringBuilder output = new StringBuilder();
+		output.append("\nPARAMETERS\n")
+			.append("p = ").append(p).append("\n")
+			.append("# of tasks = ").append(tasks.size()).append("\n")
+			.append("# of vehicles = ").append(vehicles.size()).append("\n")
+			.append("# of iterations = ").append(numIterations).append("\n")
+			.append("\n")
+			.append("COST of the optimal plan = ").append(optimalCost);
+		
+		System.out.println(output);
+		
 		return optimalSolution.inferPlans();
 	}
 }

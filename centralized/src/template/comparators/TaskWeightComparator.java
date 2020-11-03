@@ -4,6 +4,13 @@ import java.util.Comparator;
 
 import logist.task.Task;
 
+/**
+ * Comparator for the class Task: the compare method takes into account the task
+ * weight only
+ * 
+ * @author Andrej Janchevski
+ * @author Orazio Rillo
+ */
 public class TaskWeightComparator implements Comparator<Task> {
 
 	@Override
