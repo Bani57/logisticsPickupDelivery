@@ -75,7 +75,8 @@ public class CentralizedAgent implements CentralizedBehavior {
 	@Override
 	public List<Plan> plan(List<Vehicle> vehicles, TaskSet tasks) {
 
-		int numIterations = 10000;
+		// Read the number of iterations
+		final int numIterations = agent.readProperty("num-iterations", Integer.class, 10000);
 
 		// Read p, it has to be between 0 and 1
 		final double p = agent.readProperty("p", Double.class, 1.0);
