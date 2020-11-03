@@ -12,11 +12,11 @@ import logist.topology.Topology.City;
  * @author Andrej Janchevski
  * @author Orazio Rillo
  */
-public class CityDistanceFromVehicleComparator implements Comparator<City> {
+public class CityDistanceFromTaskComparator implements Comparator<City> {
 
 	private Task task;
 
-	public CityDistanceFromVehicleComparator(Task task) {
+	public CityDistanceFromTaskComparator(Task task) {
 		super();
 		this.task = task;
 	}

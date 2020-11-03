@@ -18,7 +18,7 @@ import template.CentralizedTemplate;
 import template.comparators.TaskWeightComparator;
 import template.comparators.VehicleCapacityComparator;
 import template.comparators.VehicleCostPerKmComparator;
-import template.comparators.CityDistanceFromVehicleComparator;
+import template.comparators.CityDistanceFromTaskComparator;
 
 /**
  * Set of variables for the SLS algorithm.
@@ -200,7 +200,7 @@ public class VariablesSet {
 
 		for (Task task : tasks) {
 
-			PriorityQueue<City> queue = new PriorityQueue<>(new CityDistanceFromVehicleComparator(task));
+			PriorityQueue<City> queue = new PriorityQueue<>(new CityDistanceFromTaskComparator(task));
 			queue.add(task.pickupCity);
 			HashSet<City> visitedCities = new HashSet<>();
 
