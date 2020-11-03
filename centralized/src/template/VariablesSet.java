@@ -32,6 +32,8 @@ public class VariablesSet {
 	private ArrayList<ActionRep> nextActionAfterPickup;
 	private ArrayList<ActionRep> nextActionAfterDelivery;
 
+	private StringBuilder descr;
+
 	public VariablesSet(List<Vehicle> vehicles, TaskSet tasks) {
 		super();
 
@@ -343,8 +345,14 @@ public class VariablesSet {
 		for (Task t : tasks) {
 			for (Vehicle v : vehicles) {
 				n = moveTaskToVehicle(t, v);
-				if (n != null)
+				if (n != null) {
+					if (!n.isValid()) {
+						System.out.println("\n>>>>> INVALID NEIGHBOR <<<<<\n" + n.toString());
+						System.out.println("\n>>>>> Applied tranformation: " + n.descr());
+						System.exit(0);
+					}
 					neighbors.add(n);
+				}
 			}
 		}
 
@@ -357,8 +365,14 @@ public class VariablesSet {
 			for (Task t : carriedTasks) {
 				for (int newPickupTime = 0; newPickupTime < 2 * carriedTasks.size(); newPickupTime++) {
 					n = changePickupTime(t, newPickupTime);
-					if (n != null)
+					if (n != null) {
+						if (!n.isValid()) {
+							System.out.println("\n>>>>> INVALID NEIGHBOR <<<<<\n" + n.toString());
+							System.out.println("\n>>>>> Applied tranformation: " + n.descr());
+							System.exit(0);
+						}
 						neighbors.add(n);
+					}
 				}
 			}
 		}
@@ -373,8 +387,14 @@ public class VariablesSet {
 			for (Task t : carriedTasks) {
 				for (int newDeliveryTime = 0; newDeliveryTime < 2 * carriedTasks.size(); newDeliveryTime++) {
 					n = changeDeliveryTime(t, newDeliveryTime);
-					if (n != null)
+					if (n != null) {
+						if (!n.isValid()) {
+							System.out.println("\n>>>>> INVALID NEIGHBOR <<<<<\n" + n.toString());
+							System.out.println("\n>>>>> Applied tranformation: " + n.descr());
+							System.exit(0);
+						}
 						neighbors.add(n);
+					}
 				}
 			}
 		}
@@ -392,48 +412,38 @@ public class VariablesSet {
 		ArrayList<ActionRep> actionsOldVehicle = this.inferActionSequenceForVehicle(oldVehicle);
 		ArrayList<ActionRep> actionsNewVehicle = this.inferActionSequenceForVehicle(v);
 
+//		ActionRep pickupAction = actionsOldVehicle.get(this.getPickupTime(t.id));
+//		ActionRep deliverAction = actionsOldVehicle.get(this.getDeliveryTime(t.id));
+
 		ActionRep pickupAction = new ActionRep(t, ActionName.PICKUP);
 		ActionRep deliverAction = new ActionRep(t, ActionName.DELIVER);
 
-		ArrayList<ActionRep> before1 = (ArrayList<ActionRep>) actionsOldVehicle.clone();
-		ArrayList<ActionRep> before2 = (ArrayList<ActionRep>) actionsNewVehicle.clone();
+		StringBuilder neighborDescr = new StringBuilder();
+
+		neighborDescr.append("MOVE TASK TO VEHICLE\n")
+				.append("t" + t.id + ": v" + oldVehicle.id() + " --> v" + v.id() + "\n")
+				.append("v" + oldVehicle.id() + " BEFORE : " + actionsOldVehicle + "\n")
+				.append("v" + v.id() + " BEFORE: " + actionsNewVehicle);
 
 		actionsOldVehicle.remove(pickupAction);
 		actionsOldVehicle.remove(deliverAction);
 		actionsNewVehicle.add(pickupAction);
-		actionsNewVehicle.add(deliverAction);	
-		
-		
+		actionsNewVehicle.add(deliverAction);
+
+		neighborDescr.append("v" + oldVehicle.id() + " AFTER: " + actionsOldVehicle + "\n")
+				.append("v" + v.id() + " AFTER: " + actionsNewVehicle + "\n\n");
+
 		VariablesSet neighbor = (VariablesSet) this.clone();
 
-		try {
-			neighbor.updateVariablesForVehicle(oldVehicle, actionsOldVehicle);
-		} catch (ConstraintViolatedException e) {
-			// TODO Auto-generated catch block
-			System.out.println("MOVE TASK TO VEHICLE (update old)");
-			System.out.println("t" + t.id + ": " + oldVehicle.id() + " --> " + v.id());
-			System.out.println(oldVehicle.id() + " before : " + before1);
-			System.out.println(v.id() + " before: " + before2);
-			System.out.println(oldVehicle.id() + " after: " + actionsOldVehicle);
-			System.out.println(v.id() + " after: " + actionsNewVehicle);
-			System.exit(0);
-		}
-		try {
-			neighbor.updateVariablesForVehicle(v, actionsNewVehicle);
-		} catch (ConstraintViolatedException e) {
-			// TODO Auto-generated catch block
-			System.out.println("MOVE TASK TO VEHICLE (update new)");
-			for (int i=0; i<tasks.size(); i++) {
-				System.out.print("t" + i + " -> v" + getVehicle(i).id() + "   ");
-			}
-			System.out.print("\n");
-			System.out.println("t" + t.id + ": " + oldVehicle.id() + " --> " + v.id());
-			System.out.println(oldVehicle.id() + " before : " + before1);
-			System.out.println(v.id() + " before: " + before2);
-			System.out.println(oldVehicle.id() + " after: " + actionsOldVehicle);
-			System.out.println(v.id() + " after: " + actionsNewVehicle);
-			System.exit(0);
-		}
+		neighbor.updateVariablesForVehicle(oldVehicle, actionsOldVehicle);
+		neighbor.updateVariablesForVehicle(v, actionsNewVehicle);
+
+		neighborDescr.append("It turned\n")
+			.append(this.toString())
+			.append("\n\ninto\n")
+			.append(neighbor.toString());
+		
+		neighbor.setDescr(neighborDescr);
 
 		// Check load constraint for old vehicle
 		if (!neighbor.isLoadConstraintSatisfied(oldVehicle))
@@ -448,7 +458,7 @@ public class VariablesSet {
 
 	public VariablesSet changePickupTime(Task t, int newPickupTime) {
 		VariablesSet neighbor;
-		
+
 		int tPickupTime = this.getPickupTime(t.id);
 		int tDeliveryTime = this.getDeliveryTime(t.id);
 
@@ -467,24 +477,28 @@ public class VariablesSet {
 		Vehicle v = getVehicle(t.id);
 
 		ArrayList<ActionRep> actionsVehicle = this.inferActionSequenceForVehicle(v);
-		
+
+		StringBuilder neighborDescr = new StringBuilder();
+
+		neighborDescr.append("CHANGE PICKUP v" + getVehicle(t.id).id() + "\n")
+				.append("(t" + t.id + ", PICKUP): " + tPickupTime + " --> " + newPickupTime + "\n")
+				.append("BEFORE" + actionsVehicle + "\n");
+
 		ActionRep pickupAction = actionsVehicle.get(tPickupTime);
 
 		actionsVehicle.remove(tPickupTime);
 		actionsVehicle.add(newPickupTime, pickupAction);
+
+		neighborDescr.append("AFTER" + actionsVehicle + "\n\n");
+
+		neighbor.updateVariablesForVehicle(v, actionsVehicle);
+
+		neighborDescr.append("It turned\n")
+			.append(this.toString())
+			.append("\n\ninto\n")
+			.append(neighbor.toString());
 		
-
-
-		try {
-			neighbor.updateVariablesForVehicle(v, actionsVehicle);
-		} catch (ConstraintViolatedException e) {
-			// TODO Auto-generated catch block
-			System.out.println("CHANGE PICKUP v" + getVehicle(t.id).id() + "___________________________________");
-			System.out.println("(t" + t.id + ", PICKUP): " + tPickupTime + " --> " + newPickupTime);
-			System.out.println("BEFORE" +  actionsVehicle);
-			System.out.println("AFTER" +  actionsVehicle);
-			System.exit(0);
-		}
+		neighbor.setDescr(neighborDescr);
 
 		// Check load constraint for new vehicle
 		if (!neighbor.isLoadConstraintSatisfied(v))
@@ -514,25 +528,31 @@ public class VariablesSet {
 		Vehicle v = getVehicle(t.id);
 
 		ArrayList<ActionRep> actionsVehicle = this.inferActionSequenceForVehicle(v);
-	
+
 		ActionRep deliveryAction = actionsVehicle.get(tDeliveryTime);
+
+		StringBuilder neighborDescr = new StringBuilder();
+
+		neighborDescr.append("CHANGE DELIVERY v" + getVehicle(t.id).id() + "\n")
+				.append("t" + t.id + ", DELIVERY): " + tDeliveryTime + " --> " + newDeliveryTime + "\n")
+				.append("BEFORE" + actionsVehicle + "\n");
 
 		actionsVehicle.remove(tDeliveryTime);
 		if (newDeliveryTime == actionsVehicle.size())
 			actionsVehicle.add(deliveryAction);
 		else
 			actionsVehicle.add(newDeliveryTime, deliveryAction);
+
+		neighborDescr.append("AFTER" + actionsVehicle + "\n\n");
+
+		neighbor.updateVariablesForVehicle(v, actionsVehicle);
+
+		neighborDescr.append("It turned\n")
+			.append(this.toString())
+			.append("\n\ninto\n")
+			.append(neighbor.toString());
 		
-		try {
-			neighbor.updateVariablesForVehicle(v, actionsVehicle);
-		} catch (ConstraintViolatedException e) {
-			// TODO Auto-generated catch block
-			System.out.println("CHANGE DELIVERY v" + getVehicle(t.id).id() + "___________________________________");
-			System.out.println("(t" + t.id + ", DELIVERY): " + tDeliveryTime + " --> " + newDeliveryTime);
-			System.out.println("BEFORE" +  actionsVehicle);
-			System.out.println("AFTER" +  actionsVehicle);
-			System.exit(0);
-		}
+		neighbor.setDescr(neighborDescr);
 
 		// Check load constraint for new vehicle
 		if (!neighbor.isLoadConstraintSatisfied(v))
@@ -567,6 +587,7 @@ public class VariablesSet {
 			Random rng = new Random();
 			int candidateNeighborIndex = rng.nextInt(candidateNeighbors.size());
 			VariablesSet candidateNeighbor = candidateNeighbors.get(candidateNeighborIndex);
+//			System.out.println("\n" + candidateNeighbor.toString());
 			return candidateNeighbor;
 		}
 
@@ -590,6 +611,7 @@ public class VariablesSet {
 		int bestCandidateNeighborIndex = rng.nextInt(bestCandidateNeighbors.size());
 		VariablesSet bestCandidateNeighbor = bestCandidateNeighbors.get(bestCandidateNeighborIndex);
 
+//		System.out.println("\n" + bestCandidateNeighbor.toString());
 		return bestCandidateNeighbor;
 	}
 
@@ -642,31 +664,6 @@ public class VariablesSet {
 		}
 
 		return objectiveValue;
-	}
-
-	public ActionRep getPreviousAction(Vehicle v, ActionRep a) {
-
-		ActionRep currentVehicleAction = this.getNextAction(v.id());
-		ActionRep prevAction = null;
-
-		while (currentVehicleAction != null && currentVehicleAction.equals(a)) {
-
-			int currentTaskId = currentVehicleAction.getTask().id;
-
-			prevAction = currentVehicleAction;
-
-			switch (currentVehicleAction.getAction()) {
-
-			case PICKUP:
-				currentVehicleAction = this.getNextActionAfterPickup(currentTaskId);
-				break;
-			case DELIVER:
-				currentVehicleAction = this.getNextActionAfterDelivery(currentTaskId);
-				break;
-			}
-		}
-
-		return prevAction;
 	}
 
 	public boolean isLoadConstraintSatisfied(Vehicle v) {
@@ -760,17 +757,15 @@ public class VariablesSet {
 		return actionSequence;
 	}
 
-	public void updateVariablesForVehicle(Vehicle v, ArrayList<ActionRep> actionSequence) throws ConstraintViolatedException {
+	public void updateVariablesForVehicle(Vehicle v, ArrayList<ActionRep> actionSequence) {
 		int vehicleTime = 0;
 		ActionRep prevAction = null;
-		
-		int checker = 0;
-		
+
 		for (ActionRep currentAction : actionSequence) {
+
 			if (vehicleTime == 0) {
 				this.setNextAction(v.id(), currentAction);
 				this.setPickupTime(currentAction.getTask().id, vehicleTime);
-				checker++;
 
 			} else {
 				switch (prevAction.getAction()) {
@@ -784,11 +779,9 @@ public class VariablesSet {
 				switch (currentAction.getAction()) {
 				case PICKUP:
 					this.setPickupTime(currentAction.getTask().id, vehicleTime);
-					checker++;
 					break;
 				case DELIVER:
 					this.setDeliveryTime(currentAction.getTask().id, vehicleTime);
-					checker--;
 					break;
 				}
 			}
@@ -797,15 +790,34 @@ public class VariablesSet {
 			vehicleTime++;
 			prevAction = currentAction;
 		}
-
-		if (prevAction != null)
-			this.setNextActionAfterDelivery(prevAction.getTask().id, null);
 		
-		if (checker != 0) {
-			throw new ConstraintViolatedException();
-		}
-			
+		if (prevAction == null)
+			// if prevAction is null, it means that there is no action in the sequence,
+			// so set nextAction of the vehicle to null
+			this.setNextAction(v.id(), null);
 
+		else
+			// if prevAction is not null, it means that the last updated action for v is a delivery,
+			// so set nextActionAfterDelivery of the last delivered task to null
+			this.setNextActionAfterDelivery(prevAction.getTask().id, null);
+	}
+
+	public boolean isValid() {
+		for (Vehicle v : this.vehicles) {
+			List<ActionRep> actionSeq = this.inferActionSequenceForVehicle(v);
+			if (actionSeq.size() % 2 != 0) {
+				return false;
+			}
+		}
+		return true;
+	}
+
+	public String descr() {
+		return descr.toString();
+	}
+
+	public void setDescr(StringBuilder descr) {
+		this.descr = descr;
 	}
 
 	public ArrayList<Vehicle> getVehicle() {
@@ -966,11 +978,18 @@ public class VariablesSet {
 		str.append("]\n");
 
 		// Append nextActionAfterDelivery
-		if (getNextActionAfterDelivery(0) != null)
-			str.append("nextActionAfterDelivery : [t0 -> ").append(getNextActionAfterDelivery(0).toString());
+		str.append("nextActionAfterDelivery : [t0 -> ");
+		if (getNextActionAfterDelivery(0) == null)
+			str.append("null");
+		else
+			str.append(getNextActionAfterDelivery(0).toString());
+		
 		for (int i = 1; i < nextActionAfterDelivery.size(); i++) {
-			if (getNextActionAfterDelivery(i) != null)
-				str.append(", t").append(i).append(" -> ").append(getNextActionAfterDelivery(i).toString());
+			str.append(", t").append(i).append(" -> ");
+			if (getNextActionAfterDelivery(i) == null)
+				str.append("null");
+			else
+				str.append(getNextActionAfterDelivery(i).toString());
 		}
 
 		str.append("]");
