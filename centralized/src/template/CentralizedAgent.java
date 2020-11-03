@@ -1,10 +1,20 @@
 package template;
 
 import java.io.File;
+import java.io.FileWriter;
+import java.io.IOException;
 //the list of imports
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
+
+import org.apache.commons.math.stat.descriptive.moment.StandardDeviation;
+import org.apache.commons.math.stat.descriptive.moment.Variance;
+
+import cern.colt.Arrays;
+import logist.LogistException;
 import logist.LogistSettings;
 
 import logist.Measures;
@@ -37,6 +47,7 @@ public class CentralizedAgent implements CentralizedBehavior {
 	private Agent agent;
 	private long timeout_setup;
 	private long timeout_plan;
+	private Random rng;
 
 	@Override
 	public void setup(Topology topology, TaskDistribution distribution, Agent agent) {
@@ -53,10 +64,12 @@ public class CentralizedAgent implements CentralizedBehavior {
 		timeout_setup = ls.get(LogistSettings.TimeoutKey.SETUP);
 		// the plan method cannot execute more than timeout_plan milliseconds
 		timeout_plan = ls.get(LogistSettings.TimeoutKey.PLAN);
-
+				
 		this.topology = topology;
 		this.distribution = distribution;
 		this.agent = agent;
+		
+		rng = new Random();		
 	}
 
 	@Override
@@ -98,11 +111,18 @@ public class CentralizedAgent implements CentralizedBehavior {
 		double tmpCost;
 		VariablesSet optimalSolution = initialSolution;
 		double optimalCost = initialSolution.computeObjective();
-
+		long time_current;
+		
 		// Iterate the SLS until the termination condition is met
 		// TODO: add termination condition and write the comment properly
 		for (int count = 0; count < numIterations; count++) {
-
+			
+			time_current = System.currentTimeMillis();
+			
+			// If the execution time is close to the timeout threshold by less than half a second, stop the execution of the algorithm
+			if(time_current - time_start > timeout_plan - 500)
+				break;
+			
 			// Select the candidate neighbors
 			List<VariablesSet> candidateNeighbors = chooseNeighbors(tmpSolution, vehicles, tasks);
 
@@ -119,15 +139,45 @@ public class CentralizedAgent implements CentralizedBehavior {
 				optimalCost = tmpCost;
 			}
 		}
+		
+		long time_end = System.currentTimeMillis();
+		
+		// Count the number of tasks assigned to each vehicle by the optimal solution
+		double[] tasksPerVehicle = new double[vehicles.size()];
+		for(Task t: tasks)
+			tasksPerVehicle[optimalSolution.getVehicle(t.id).id()]++;
+		
+		// Compute the empirical standard deviation of the number of tasks per vehicle
+		StandardDeviation sd = new StandardDeviation();
+		double taskAssignmentSd = sd.evaluate(tasksPerVehicle);
 
 		// Build the string to output
 		StringBuilder output = new StringBuilder();
 		output.append("\nPARAMETERS\n").append("p = ").append(p).append("\n").append("# of tasks = ")
 				.append(tasks.size()).append("\n").append("# of vehicles = ").append(vehicles.size()).append("\n")
 				.append("# of iterations = ").append(numIterations).append("\n").append("\n")
-				.append("COST of the optimal plan = ").append(optimalCost);
+				.append("COST of the optimal plan = ").append(optimalCost).append("\tCOST PER TASK = ").append(optimalCost/((double)tasks.size())).append("\n")
+				.append("NUM TASKS PER VEHICLE = ").append(Arrays.toString(tasksPerVehicle)).append("\tSD = ").append(taskAssignmentSd).append("\n").append("\n")
+				.append("EXECUTION TIME (sec) = ").append((time_end - time_start)/1000.0).append("\n");
 
 		System.out.println(output);
+		File resultsFile = new File("./optimal_costs.txt");
+		FileWriter fw = null;
+		try {
+			fw = new FileWriter(resultsFile, true);
+			fw.write(optimalCost + "\n");
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} finally {
+			try {
+				fw.close();
+			} catch (IOException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+		}
+		
 
 		return optimalSolution.inferPlans();
 	}
@@ -223,7 +273,6 @@ public class CentralizedAgent implements CentralizedBehavior {
 
 		if (chooseBestNeighbor == 0) {
 			// Pick uniformly at random one of the solutions
-			Random rng = new Random();
 			int candidateNeighborIndex = rng.nextInt(candidateNeighbors.size());
 			VariablesSet candidateNeighbor = candidateNeighbors.get(candidateNeighborIndex);
 			return candidateNeighbor;
@@ -245,7 +294,6 @@ public class CentralizedAgent implements CentralizedBehavior {
 		}
 
 		// Pick uniformly at random one of the solutions with the same optimal cost
-		Random rng = new Random();
 		int bestCandidateNeighborIndex = rng.nextInt(bestCandidateNeighbors.size());
 		VariablesSet bestCandidateNeighbor = bestCandidateNeighbors.get(bestCandidateNeighborIndex);
 

@@ -14,7 +14,6 @@ import logist.task.TaskSet;
 import logist.topology.Topology;
 import logist.topology.Topology.City;
 import template.ActionRep.ActionName;
-import template.CentralizedTemplate;
 import template.comparators.TaskWeightComparator;
 import template.comparators.VehicleCapacityComparator;
 import template.comparators.VehicleCostPerKmComparator;
@@ -136,7 +135,7 @@ public class VariablesSet {
 			Task task = sortedTasks.get(currentTaskIndex);
 			
 			if (currentVehicleState.weightSum() + task.weight <= currentVehicle.capacity()) {
-				// If the task can be carried by the current vehicle assign it to it
+				// If the task can be carried by the current vehicle assign that task to it
 				this.assignPickupTask(task, currentVehicle, currentVehicleState);
 				currentTaskIndex++;
 			}
@@ -191,7 +190,7 @@ public class VariablesSet {
 		Vehicle currentVehicle = vehicles.get(0);
 		VehicleState currentVehicleState = vehicleStates.get(0);
 
-		//TODO add comments
+		// Map every city in the topology to the list of vehicles starting from that home city
 		HashMap<City, List<Vehicle>> homeCitiesMap = new HashMap<>();
 		for (City c : topology.cities())
 			homeCitiesMap.put(c, new ArrayList<Vehicle>());
@@ -200,21 +199,29 @@ public class VariablesSet {
 
 		for (Task task : tasks) {
 
+			// For every task, find the closest vehicles using a modified Djikstra search algorithm
+			// Use a PriorityQueue to automatically order all vehicles
+			// by the distance from their home city to the pickup city of the task
 			PriorityQueue<City> queue = new PriorityQueue<>(new CityDistanceFromTaskComparator(task));
 			queue.add(task.pickupCity);
+			
+			// Used for cycle detection
 			HashSet<City> visitedCities = new HashSet<>();
 
+			// Initially every task is unassigned
 			boolean taskAssigned = false;
 
 			while (!queue.isEmpty() && !taskAssigned) {
 				
+				// For every city get all of the vehicles having that city as home
 				City currentCity = queue.poll();
 				List<Vehicle> closestVehicles = homeCitiesMap.get(currentCity);
 				
 				for (Vehicle v : closestVehicles) {
 					currentVehicle = v;
 					currentVehicleState = vehicleStates.get(currentVehicle.id());
-
+					
+					// If the task can be carried by the current vehicle assign that task to it
 					if (currentVehicleState.weightSum() + task.weight <= currentVehicle.capacity()) {
 
 						this.assignPickupTask(task, currentVehicle, currentVehicleState);
@@ -224,6 +231,7 @@ public class VariablesSet {
 					}
 				}
 
+				// Add all neighboring cities not already visited to the PriorityQueue in order to sort them
 				for (City neighborCity : currentCity.neighbors()) {
 					if (!visitedCities.contains(neighborCity)) {
 						queue.add(neighborCity);
@@ -232,6 +240,7 @@ public class VariablesSet {
 				}
 			}
 
+			// If it was not possible to assign the task...
 			if (!taskAssigned) {
 
 				// First, deliver all picked-up tasks for each vehicle
