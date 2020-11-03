@@ -404,7 +404,8 @@ public class VariablesSet {
 		currentVehicleState.setCarriedTasks(new ArrayList<Task>());
 
 		// Only update the previous action once after the final delivery
-		currentVehicleState.setPreviousAction(new ActionRep(prevTask, ActionName.DELIVER));
+		if(prevTask != null)
+			currentVehicleState.setPreviousAction(new ActionRep(prevTask, ActionName.DELIVER));
 	}
 
 	/**
