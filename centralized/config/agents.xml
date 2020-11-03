@@ -11,19 +11,19 @@
 	<agent name="centralized-main">
 		<set class-path="bin/"/>
 		<set class-name="template.CentralizedAgent"/>
-		<set p="0.3"/>
+		<set p="0.9"/>
 		<set initial-solution-id="2"/>
 	</agent>
 	<agent name="centralized-init-sol-1">
 		<set class-path="bin/"/>
 		<set class-name="template.CentralizedAgent"/>
-		<set p="0.5"/>
+		<set p="0.9"/>
 		<set initial-solution-id="1"/>
 	</agent>
 	<agent name="centralized-init-sol-3">
 		<set class-path="bin/"/>
 		<set class-name="template.CentralizedAgent"/>
-		<set p="0.5"/>
+		<set p="0.9"/>
 		<set initial-solution-id="3"/>
 	</agent>
 	

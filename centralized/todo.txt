@@ -1,8 +1,0 @@
-- Termination condition
-- handle timeout
-- test multiple combinations of parameters (to discuss tomorrow morning)
-- draw tables 
-- add experiments and observations in the report
-- add comments
-- cleanup code
-- check what chooseNeighbors increases entropy the most

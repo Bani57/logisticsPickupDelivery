@@ -114,7 +114,6 @@ public class CentralizedAgent implements CentralizedBehavior {
 		long time_current;
 		
 		// Iterate the SLS until the termination condition is met
-		// TODO: add termination condition and write the comment properly
 		for (int count = 0; count < numIterations; count++) {
 			
 			time_current = System.currentTimeMillis();
@@ -161,23 +160,6 @@ public class CentralizedAgent implements CentralizedBehavior {
 				.append("EXECUTION TIME (sec) = ").append((time_end - time_start)/1000.0).append("\n");
 
 		System.out.println(output);
-		File resultsFile = new File("./optimal_costs.txt");
-		FileWriter fw = null;
-		try {
-			fw = new FileWriter(resultsFile, true);
-			fw.write(optimalCost + "\n");
-		} catch (IOException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		} finally {
-			try {
-				fw.close();
-			} catch (IOException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
-			}
-		}
-		
 
 		return optimalSolution.inferPlans();
 	}
@@ -252,7 +234,7 @@ public class CentralizedAgent implements CentralizedBehavior {
 	 * @requires candidateNeighbors is not empty
 	 * 
 	 * @param candidateNeighbors List of neighbors to choose among
-	 * @param p (double) the probability of choosing the best among the neigbors
+	 * @param p (double) the probability of choosing the best among the neighbors
 	 * @return VariablesSet the selected neighbor
 	 */
 	public VariablesSet localChoice(List<VariablesSet> candidateNeighbors, double p) {
