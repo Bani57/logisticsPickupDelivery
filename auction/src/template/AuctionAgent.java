@@ -108,6 +108,8 @@ public class AuctionAgent implements AuctionBehavior {
 		this.updatedSolution = this.getUpdatedSolution(task, time_start);
 		Double updatedCost = this.updatedSolution.computeObjective();
 		
+		//TODO: check better why sometime marginalCost is negative 
+		//(hyp: either our optimization algorithm doesn't always find the optimum or we have an error in the computation of the objective function)
 		Double marginalCost = updatedCost - currentCost;
 		
 		if (marginalCost < 0) {
