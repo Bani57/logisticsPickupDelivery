@@ -23,6 +23,7 @@ import logist.task.TaskDistribution;
 import logist.task.TaskSet;
 import logist.topology.Topology;
 import logist.topology.Topology.City;
+import uchicago.src.collection.Pair;
 
 /**
  * A very simple auction agent that assigns all tasks to its first vehicle and
@@ -30,7 +31,7 @@ import logist.topology.Topology.City;
  * 
  */
 @SuppressWarnings("unused")
-public class AuctionAgent implements AuctionBehavior {
+public class AuctionAgent2 implements AuctionBehavior {
 
 	private Topology topology;
 	private TaskDistribution distribution;
@@ -40,6 +41,7 @@ public class AuctionAgent implements AuctionBehavior {
 	Long minBid;
 	
 	private AuctionPlayer player;
+	private AuctionPlayer opponent;
 	
 	private VariablesSet currentSolution;
 	private VariablesSet updatedSolution;
@@ -77,12 +79,17 @@ public class AuctionAgent implements AuctionBehavior {
 		this.currentSolution = new VariablesSet(agent.vehicles(), new ArrayList<Task>());
 		
 		this.player = new AuctionPlayer(agent.id());
+		// We assume that only two agents will compete in the auction
+		int opponentId = (this.agent.id() + 1) % 2;
+		this.opponent = new AuctionPlayer(opponentId);
 	}
 
 	@Override
 	public void auctionResult(Task previous, int winner, Long[] bids) {
 		
+		System.out.println("Opponent bids: " +  bids[this.opponent.getId()]);
 		this.player.updatePlayerStatus(previous, winner == agent.id(), bids[agent.id()]);
+		this.opponent.updatePlayerStatus(previous, winner != agent.id(), bids[this.opponent.getId()]);
 				
 		if (winner == agent.id()) {
 			this.currentSolution = this.updatedSolution;
@@ -97,6 +104,11 @@ public class AuctionAgent implements AuctionBehavior {
 
 		long time_start = System.currentTimeMillis();
 		long time_current;
+		
+		Pair opponentBidEstimate = this.opponent.estimatePriceBin(task);
+		double opponentBidLowerBound = (double )opponentBidEstimate.first;
+		double opponentBidUpperBound = (double )opponentBidEstimate.second;
+		System.out.println("Opponent bid estimate: (" + opponentBidLowerBound + ", " + opponentBidUpperBound + ")");
 		
 		// Parameters of the bid computation
 		Double maxRelativeGain = 0.8;
@@ -117,8 +129,27 @@ public class AuctionAgent implements AuctionBehavior {
 		
 		// Compute the bid we are asking for the task
 		Double relativeGain = this.player.hasWonTasks() ? Math.pow(base, relativeMarginalCost) + minRelativeGain : 1.0;
-		Long tentativeBid = (long) Math.ceil(relativeGain * marginalCost); //- valueForAdversary		
-		Long actualBid = Math.max(tentativeBid, minBid);
+		Long tentativeBid = (long) Math.ceil(relativeGain * marginalCost); //- valueForAdversary
+		
+		System.out.println("Tentative bid: " + tentativeBid);
+		Long randomBid;
+		// In between (marginalCost, tentativeBid) - player and opponent have probably similar costs or both high
+		if(marginalCost >= opponentBidLowerBound)
+		{
+			long minRandomBid = (long) Math.ceil(marginalCost);
+			randomBid = (long) (Math.random() * (tentativeBid - minRandomBid)) + minRandomBid;
+		}
+		// In between (tentativeBid, opponentBidLowerBound) - player has a cheaper cost than opponent
+		else if (tentativeBid <= opponentBidLowerBound){
+			randomBid = (long) (Math.random() * (tentativeBid - opponentBidLowerBound)) + tentativeBid;
+		} 
+		// In between (opponentBidLowerBound, tentativeBid) - opponent has a cheaper cost than player
+		else {
+			long minRandomBid = (long) Math.ceil(opponentBidLowerBound);
+			randomBid = (long) (Math.random() * (opponentBidLowerBound - tentativeBid)) + minRandomBid;
+		}
+		
+		Long actualBid = Math.max(randomBid, minBid);
 		
 		System.out.println("Task: " + task.toString() + "\nMarginal cost: " + marginalCost + "\nRelative marginal cost:" + relativeMarginalCost + "\nBid:" + actualBid);
 

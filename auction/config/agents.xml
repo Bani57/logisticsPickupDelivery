@@ -14,5 +14,11 @@
 		<set p="0.9"/>
 		<set num-iterations="1000"/>
 	</agent>
+	<agent name="auction-main-38-2">
+		<set class-path="bin/"/>
+		<set class-name="template.AuctionAgent2"/>
+		<set p="0.9"/>
+		<set num-iterations="1000"/>
+	</agent>
 	
 </agents>
