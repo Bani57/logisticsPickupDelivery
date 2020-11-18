@@ -356,7 +356,6 @@ public class VariablesSet {
 
 	public boolean assignTaskRandomly(Task task, Random rng) {
 
-		// TODO: check whether the assignment is possible or not
 		int maxCapacity = Collections.max(vehicles, new VehicleCapacityComparator()).capacity();
 		if (task.weight > maxCapacity)
 			return false;

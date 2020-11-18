@@ -6,31 +6,50 @@ import java.util.HashSet;
 import org.apache.commons.math.stat.descriptive.moment.StandardDeviation;
 
 import logist.task.Task;
+import logist.task.TaskDistribution;
+import logist.topology.Topology;
 import logist.topology.Topology.City;
 
 public class AuctionPlayer {
 
 	private int id;
+	private Topology topology;
+	private TaskDistribution taskDistribution;
 	private ArrayList<Task> wonTasks;
-	private long currentProfit;
+	private long currentReward;
 	private ArrayList<Long> pastBids;
 	private double meanBid;
 	private double bidStd;
 
-	public AuctionPlayer(int id) {
+	public AuctionPlayer(int id, Topology topology, TaskDistribution td) {
 		super();
 		this.id = id;
+		this.topology = topology;
+		this.taskDistribution = td;
 		this.wonTasks = new ArrayList<>();
-		this.currentProfit = 0;
+		this.currentReward = 0;
 		this.pastBids = new ArrayList<>();
 		this.meanBid = 0;
 		this.bidStd = 0;
 	}
 
+	private AuctionPlayer(int id, Topology topology, TaskDistribution taskDistribution, ArrayList<Task> wonTasks,
+			long currentReward, ArrayList<Long> pastBids, double meanBid, double bidStd) {
+		super();
+		this.id = id;
+		this.topology = topology;
+		this.taskDistribution = taskDistribution;
+		this.wonTasks = wonTasks;
+		this.currentReward = currentReward;
+		this.pastBids = pastBids;
+		this.meanBid = meanBid;
+		this.bidStd = bidStd;
+	}
+
 	public void updatePlayerStatus(Task t, boolean wonAuction, Long bid) {
 		if (wonAuction) {
 			this.wonTasks.add(t);
-			this.currentProfit += bid;
+			this.currentReward += bid;
 		}
 		int numPastBids = this.pastBids.size();
 		this.pastBids.add(bid);
@@ -43,19 +62,18 @@ public class AuctionPlayer {
 		return std.evaluate(this.pastBids.stream().mapToDouble(l -> l).toArray());
 	}
 
-	public double getCurrentTotalProfit() {
-		return this.currentProfit;
+	public double getCurrentTotalReward() {
+		return this.currentReward;
 	}
 
-	private double computeDissimilarityOfTask(Task t, double topologyDiameter) {
-		HashSet<City> citiesInPath = new HashSet<>();
-
+	private double computeDissimilarityOfTask(City taskPickupCity, City taskDeliveryCity, double topologyDiameter) {
 		// If the agent still hasn't won any task, in the best case there will be
 		// vehicles with a homeCity equal to t.pickupCity and t.deliveryCity
 		if (!hasWonTasks())
 			return 0;
 
 		// Get all of the cities in the current path of the agent
+		HashSet<City> citiesInPath = new HashSet<>();
 		for (Task wonTask : this.wonTasks) {
 			citiesInPath.add(wonTask.pickupCity);
 			citiesInPath.add(wonTask.deliveryCity);
@@ -68,11 +86,11 @@ public class AuctionPlayer {
 		double relativeDistanceToTaskCity;
 		for (City cityInPath : citiesInPath) {
 
-			relativeDistanceToTaskCity = t.pickupCity.distanceTo(cityInPath) / topologyDiameter;
+			relativeDistanceToTaskCity = taskPickupCity.distanceTo(cityInPath) / topologyDiameter;
 			if (relativeDistanceToTaskCity < minRelativeDistanceToTaskPickupCity)
 				minRelativeDistanceToTaskPickupCity = relativeDistanceToTaskCity;
 
-			relativeDistanceToTaskCity = t.deliveryCity.distanceTo(cityInPath) / topologyDiameter;
+			relativeDistanceToTaskCity = taskDeliveryCity.distanceTo(cityInPath) / topologyDiameter;
 			if (relativeDistanceToTaskCity < minRelativeDistanceToTaskDeliveryCity)
 				minRelativeDistanceToTaskDeliveryCity = relativeDistanceToTaskCity;
 		}
@@ -82,12 +100,41 @@ public class AuctionPlayer {
 
 	}
 
+	private double expectedFutureDissimilarity(Task auctionTask, double topologyDiameter) {
+		AuctionPlayer futurePlayer = new AuctionPlayer(this.id, this.topology, this.taskDistribution,
+				new ArrayList<>(this.wonTasks), this.currentReward, new ArrayList<>(pastBids), this.meanBid,
+				this.bidStd);
+		futurePlayer.updatePlayerStatus(auctionTask, true, (long) 0);
+
+		double expectedFutureDissimilarity = 0.0;
+		double futureTaskProbability;
+		double futureTaskDissimilarity;
+
+		for (City from : this.topology.cities()) {
+			for (City to : this.topology.cities()) {
+				if (!from.equals(to)) {
+					futureTaskProbability = this.taskDistribution.probability(from, to);
+					futureTaskDissimilarity = futurePlayer.computeDissimilarityOfTask(from, to, topologyDiameter);
+					expectedFutureDissimilarity += futureTaskProbability * futureTaskDissimilarity;
+				}
+			}
+		}
+
+		return expectedFutureDissimilarity;
+	}
+
 	public double estimateTaskPriceLowerBound(Task t, double topologyDiameter) {
 		double lowerBoundInterval = this.meanBid - 2 * this.bidStd;
 		double upperBoundInterval = this.meanBid + 2 * this.bidStd;
-		double dissimilarity = this.computeDissimilarityOfTask(t, topologyDiameter);
+		double dissimilarity = this.computeDissimilarityOfTask(t.pickupCity, t.deliveryCity, topologyDiameter);
+		double expectedFutureDissimilarity = this.expectedFutureDissimilarity(t, topologyDiameter);
 
-		return dissimilarity * (upperBoundInterval - lowerBoundInterval) + lowerBoundInterval;
+		// TODO: Add attribute for weight of future
+		double weightOfFuture = 0.2;
+		double discountedDissimilarity = (1 - weightOfFuture) * dissimilarity
+				+ weightOfFuture * expectedFutureDissimilarity;
+
+		return discountedDissimilarity * (upperBoundInterval - lowerBoundInterval) + lowerBoundInterval;
 	}
 
 	public int getId() {

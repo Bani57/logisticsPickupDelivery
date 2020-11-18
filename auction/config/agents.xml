@@ -11,6 +11,13 @@
 		<set num-iterations="10000"/>
 		<set initial-solution-id="2"/>
 	</agent>
+	<agent name="auction-conservative">
+		<set class-path="bin/"/>
+		<set class-name="template.AuctionAgentConservative"/>
+		<set p="0.9"/>
+		<set num-iterations="10000"/>
+		<set initial-solution-id="2"/>
+	</agent>
 	<agent name="auction-dummy-marginal-cost">
 		<set class-path="bin/"/>
 		<set class-name="template.AuctionDummyMarginalCost"/>

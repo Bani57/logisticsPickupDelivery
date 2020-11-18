@@ -76,7 +76,7 @@ public class AuctionDummyGreedy implements AuctionBehavior {
 		this.minBid = (long) Math.floor(minEdgeCost());
 		this.currentSolution = new VariablesSet(agent.vehicles(), new ArrayList<Task>());
 
-		this.player = new AuctionPlayer(agent.id());
+		this.player = new AuctionPlayer(agent.id(), topology, distribution);
 	}
 
 	@Override
@@ -292,7 +292,7 @@ public class AuctionDummyGreedy implements AuctionBehavior {
 		output.append("AGENT ID = ").append(this.agent.id()).append("\n").append("NUM TASKS WON AT AUCTION = ")
 				.append(tasks.size()).append("\n").append("COST of the optimal plan = ").append(optimalCost)
 				.append("\n").append("TOTAL PROFIT OF THE AGENT = ")
-				.append(this.player.getCurrentTotalProfit() - optimalCost).append("\n");
+				.append(this.player.getCurrentTotalReward() - optimalCost).append("\n");
 		System.out.println(output);
 
 		return optimalSolution.inferPlans();

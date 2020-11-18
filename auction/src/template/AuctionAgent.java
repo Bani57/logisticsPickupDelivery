@@ -85,10 +85,10 @@ public class AuctionAgent implements AuctionBehavior {
 		// object value for the opponent anyway
 		this.opponentSolution = new VariablesSet(agent.vehicles(), new ArrayList<Task>());
 
-		this.player = new AuctionPlayer(agent.id());
+		this.player = new AuctionPlayer(agent.id(), topology, distribution);
 		// We assume that only two agents will compete in the auction
 		int opponentId = (this.agent.id() + 1) % 2;
-		this.opponent = new AuctionPlayer(opponentId);
+		this.opponent = new AuctionPlayer(opponentId, topology, distribution);
 	}
 
 	@Override
@@ -145,24 +145,17 @@ public class AuctionAgent implements AuctionBehavior {
 		Double updatedCostOpponent = this.updatedSolutionOpponent.computeObjective(false);
 		Double marginalCostOpponent = updatedCostOpponent - currentCostOpponent;
 
-		// Update our lower bound opponent bid estimate with the new information if
-		// necessary
-		System.out.println("Marginal cost opponent: " + marginalCostOpponent);
-		// opponentBidLowerBound = Math.min(opponentBidLowerBound,
-		// marginalCostOpponent);
-
 		// Compute the bid we are asking for the task
 		Double relativeGain = this.player.hasWonTasks() ? Math.pow(base, relativeMarginalCost) + minRelativeGain : 1.0;
 		Long tentativeBid = (long) Math.ceil(relativeGain * marginalCost);
 
 		Long randomBid;
+		double totalProfitPlayer = this.player.getCurrentTotalReward() - currentCost;
+		double totalProfitOpponent = this.opponent.getCurrentTotalReward() - currentCostOpponent;
 		// Case when the estimated cost of the new task is above the estimated lower
 		// bound of opponent bids
 		if (marginalCost >= opponentBidLowerBound) {
-			double totalProfitPlayer = this.player.getCurrentTotalProfit() - currentCost;
-			double totalProfitOpponent = this.opponent.getCurrentTotalProfit() - currentCostOpponent;
-			double chinaMaxReduction = (opponentBidLowerBound - marginalCost)
-					+ (totalProfitPlayer - totalProfitOpponent);
+			double chinaMaxReduction = totalProfitPlayer - marginalCost - totalProfitOpponent + marginalCostOpponent;
 			if (chinaMaxReduction > 0) {
 				// If it is possible to still have the higher profit after bidding below the
 				// marginalCost, be like China and reduce the price to a random value in
@@ -213,11 +206,16 @@ public class AuctionAgent implements AuctionBehavior {
 			}
 		}
 
+		// totalProfitPlayer - marginalCost + randomBid > 0
+		// <=> randomBid > marginalCost - totalProfitPlayer
+		if (totalProfitPlayer - marginalCost + randomBid < 0)
+			randomBid = (long) (marginalCost - totalProfitPlayer);
+
 		Long actualBid = Math.max(randomBid, minBid);
 
 		System.out
 				.println("Task: " + task.toString() + "\nMarginal cost: " + marginalCost + "\nRelative marginal cost: "
-						+ relativeMarginalCost + "\nTentative bid: " + tentativeBid + "\nBid: " + actualBid + "\n");
+						+ relativeMarginalCost + "\nTentative bid: " + tentativeBid + "\nBid: " + actualBid);
 
 		return actualBid;
 	}
@@ -390,7 +388,7 @@ public class AuctionAgent implements AuctionBehavior {
 		output.append("AGENT ID = ").append(this.agent.id()).append("\n").append("NUM TASKS WON AT AUCTION = ")
 				.append(tasks.size()).append("\n").append("COST of the optimal plan = ").append(optimalCost)
 				.append("\n").append("TOTAL PROFIT OF THE AGENT = ")
-				.append(this.player.getCurrentTotalProfit() - optimalCost).append("\n");
+				.append(this.player.getCurrentTotalReward() - optimalCost).append("\n");
 		System.out.println(output);
 
 		return optimalSolution.inferPlans();
