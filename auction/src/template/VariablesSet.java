@@ -27,31 +27,34 @@ import template.comparators.CityDistanceFromTaskComparator;
  */
 public class VariablesSet {
 
-	private List<Vehicle> vehicles; //list of vehicles
-	private ArrayList<Task> tasks; //list of tasks
-	private HashMap<Integer,Integer> taskIdx;
+	private List<Vehicle> vehicles; // list of vehicles
+	private ArrayList<Task> tasks; // list of tasks
+	private HashMap<Integer, Integer> taskIdx;
 
-	private ArrayList<Vehicle> vehicle; //at position i, contains the vehicle that carries the task with id i
-	private ArrayList<Integer> pickupTime; //at position i, contains the pickup time of the task with id i 
-	private ArrayList<Integer> deliveryTime; //at position i, contains the delivery time of the task with id i 
-	private ArrayList<ActionRep> nextAction; //at position i, contains the first action performed by vehicle with id i 
-	private ArrayList<ActionRep> nextActionAfterPickup; //at position i, contains the action performed after the pickup action of the task with id i
-	private ArrayList<ActionRep> nextActionAfterDelivery; //at position i, contains the action performed after the delivery action of the task with id i
+	private ArrayList<Vehicle> vehicle; // at position i, contains the vehicle that carries the task with id i
+	private ArrayList<Integer> pickupTime; // at position i, contains the pickup time of the task with id i
+	private ArrayList<Integer> deliveryTime; // at position i, contains the delivery time of the task with id i
+	private ArrayList<ActionRep> nextAction; // at position i, contains the first action performed by vehicle with id i
+	private ArrayList<ActionRep> nextActionAfterPickup; // at position i, contains the action performed after the pickup
+														// action of the task with id i
+	private ArrayList<ActionRep> nextActionAfterDelivery; // at position i, contains the action performed after the
+															// delivery action of the task with id i
 
-	private StringBuilder descr; //textual descriptor of the VariablesSet, only used for debugging
+	private StringBuilder descr; // textual descriptor of the VariablesSet, only used for debugging
 
 	/**
-	 * Constructor which initializes a Variables set with empty arrays as attributes, 
-	 * it only initializes the variables relative to the topology i.e. vehicles and tasks
+	 * Constructor which initializes a Variables set with empty arrays as
+	 * attributes, it only initializes the variables relative to the topology i.e.
+	 * vehicles and tasks
 	 */
 	public VariablesSet(List<Vehicle> vehicles, ArrayList<Task> tasks) {
 		super();
 
 		this.vehicles = vehicles;
 		this.tasks = tasks;
-		
+
 		this.taskIdx = new HashMap<>();
-		for (int i=0; i<tasks.size(); i++) {
+		for (int i = 0; i < tasks.size(); i++) {
 			taskIdx.put(tasks.get(i).id, i);
 		}
 
@@ -67,7 +70,8 @@ public class VariablesSet {
 	}
 
 	/**
-	 * Constructor which initializes all the variables according to the given parameters
+	 * Constructor which initializes all the variables according to the given
+	 * parameters
 	 */
 	public VariablesSet(List<Vehicle> vehicles, ArrayList<Task> tasks, ArrayList<Vehicle> vehicle,
 			ArrayList<Integer> pickupTime, ArrayList<Integer> deliveryTime, ArrayList<ActionRep> nextAction,
@@ -75,12 +79,12 @@ public class VariablesSet {
 		super();
 		this.vehicles = vehicles;
 		this.tasks = tasks;
-		
+
 		this.taskIdx = new HashMap<>();
-		for (int i=0; i<tasks.size(); i++) {
+		for (int i = 0; i < tasks.size(); i++) {
 			taskIdx.put(tasks.get(i).id, i);
 		}
-		
+
 		this.vehicle = vehicle;
 		this.pickupTime = pickupTime;
 		this.deliveryTime = deliveryTime;
@@ -90,11 +94,14 @@ public class VariablesSet {
 	}
 
 	/**
-	 * This method builds the initial solution 
-	 * @param topology Topology selected in the configuration file
-	 * @param initialSolutionId int id of the selected initial solution (might be 1, 2, or 3)
-	 * @return true if the solution has been build with success
-	 * 		   false if there is no possible solution to the problem or the initial solution id is incorrect
+	 * This method builds the initial solution
+	 * 
+	 * @param topology          Topology selected in the configuration file
+	 * @param initialSolutionId int id of the selected initial solution (might be 1,
+	 *                          2, or 3)
+	 * @return true if the solution has been build with success false if there is no
+	 *         possible solution to the problem or the initial solution id is
+	 *         incorrect
 	 */
 	public boolean init(Topology topology, int initialSolutionId) {
 		switch (initialSolutionId) {
@@ -110,9 +117,9 @@ public class VariablesSet {
 	}
 
 	/**
-	 * Method that builds the initial solution with id 1.
-	 * It consists in assigning the heaviest tasks to the vehicle with largest capacity;
-	 * once it is full, the vehicle with the second largest capacity is selected and so on
+	 * Method that builds the initial solution with id 1. It consists in assigning
+	 * the heaviest tasks to the vehicle with largest capacity; once it is full, the
+	 * vehicle with the second largest capacity is selected and so on
 	 * 
 	 * @return true for success, false for fail
 	 */
@@ -131,21 +138,21 @@ public class VariablesSet {
 		if (sortedTasks.get(0).weight > sortedVehicles.get(0).capacity())
 			return false;
 
-		int currentVehicleIndex = 0; //index of the currently analyzed vehicle in sortedVehicles
-		int currentTaskIndex = 0; //index of the currently analyzed task in sortedTasks
+		int currentVehicleIndex = 0; // index of the currently analyzed vehicle in sortedVehicles
+		int currentTaskIndex = 0; // index of the currently analyzed task in sortedTasks
 
 		// Build an array of vehicle states corresponding to the sortedVehicles
 		ArrayList<VehicleState> vehicleStates = new ArrayList<>(sortedVehicles.size());
 		for (int i = 0; i < sortedVehicles.size(); i++)
 			vehicleStates.add(new VehicleState(0, new ArrayList<Task>(), null));
-		
+
 		Vehicle currentVehicle = sortedVehicles.get(0);
 		VehicleState currentVehicleState = vehicleStates.get(0);
 
 		while (currentTaskIndex < sortedTasks.size()) {
 
 			Task task = sortedTasks.get(currentTaskIndex);
-			
+
 			if (currentVehicleState.weightSum() + task.weight <= currentVehicle.capacity()) {
 				// If the task can be carried by the current vehicle assign that task to it
 				this.assignPickupTask(task, currentVehicle, currentVehicleState);
@@ -161,7 +168,8 @@ public class VariablesSet {
 
 				// If total weight of all tasks > total capacity of all vehicles,
 				// reset the whole procedure for the remaining subset of tasks,
-				// as all the vehicles are free again after they have delivered all of their tasks
+				// as all the vehicles are free again after they have delivered all of their
+				// tasks
 				if (currentVehicleIndex == sortedVehicles.size())
 					currentVehicleIndex = 0;
 
@@ -171,15 +179,16 @@ public class VariablesSet {
 			}
 		}
 
-		// Assign to the last considered vehicle a deliver action for every remaining tasks
+		// Assign to the last considered vehicle a deliver action for every remaining
+		// tasks
 		this.assignDeliverCarriedTasks(currentVehicleState);
 
 		return true;
 	}
 
 	/**
-	 * Method that builds the initial solution with id 2.
-	 * It consists in assigning every task to the vehicle which is the closest to its pickup city
+	 * Method that builds the initial solution with id 2. It consists in assigning
+	 * every task to the vehicle which is the closest to its pickup city
 	 * 
 	 * @param topology Topology selected in the configuration file
 	 * @return true for success, false for fail
@@ -198,11 +207,12 @@ public class VariablesSet {
 		ArrayList<VehicleState> vehicleStates = new ArrayList<>(vehicles.size());
 		for (int i = 0; i < vehicles.size(); i++)
 			vehicleStates.add(new VehicleState(0, new ArrayList<Task>(), null));
-		
+
 		Vehicle currentVehicle = vehicles.get(0);
 		VehicleState currentVehicleState = vehicleStates.get(0);
 
-		// Map every city in the topology to the list of vehicles starting from that home city
+		// Map every city in the topology to the list of vehicles starting from that
+		// home city
 		HashMap<City, List<Vehicle>> homeCitiesMap = new HashMap<>();
 		for (City c : topology.cities())
 			homeCitiesMap.put(c, new ArrayList<Vehicle>());
@@ -211,12 +221,13 @@ public class VariablesSet {
 
 		for (Task task : tasks) {
 
-			// For every task, find the closest vehicles using a modified Djikstra search algorithm
+			// For every task, find the closest vehicles using a modified Djikstra search
+			// algorithm
 			// Use a PriorityQueue to automatically order all vehicles
 			// by the distance from their home city to the pickup city of the task
 			PriorityQueue<City> queue = new PriorityQueue<>(new CityDistanceFromTaskComparator(task));
 			queue.add(task.pickupCity);
-			
+
 			// Used for cycle detection
 			HashSet<City> visitedCities = new HashSet<>();
 
@@ -224,15 +235,15 @@ public class VariablesSet {
 			boolean taskAssigned = false;
 
 			while (!queue.isEmpty() && !taskAssigned) {
-				
+
 				// For every city get all of the vehicles having that city as home
 				City currentCity = queue.poll();
 				List<Vehicle> closestVehicles = homeCitiesMap.get(currentCity);
-				
+
 				for (Vehicle v : closestVehicles) {
 					currentVehicle = v;
 					currentVehicleState = vehicleStates.get(currentVehicle.id());
-					
+
 					// If the task can be carried by the current vehicle assign that task to it
 					if (currentVehicleState.weightSum() + task.weight <= currentVehicle.capacity()) {
 
@@ -243,7 +254,8 @@ public class VariablesSet {
 					}
 				}
 
-				// Add all neighboring cities not already visited to the PriorityQueue in order to sort them
+				// Add all neighboring cities not already visited to the PriorityQueue in order
+				// to sort them
 				for (City neighborCity : currentCity.neighbors()) {
 					if (!visitedCities.contains(neighborCity)) {
 						queue.add(neighborCity);
@@ -265,16 +277,16 @@ public class VariablesSet {
 		}
 
 		// Deliver any remaining picked-up tasks
-		for (VehicleState vehicleState : vehicleStates) 
+		for (VehicleState vehicleState : vehicleStates)
 			this.assignDeliverCarriedTasks(vehicleState);
 
 		return true;
 	}
 
 	/**
-	 * Method that builds the initial solution with id 1.
-	 * It consists in assigning the heaviest tasks to the vehicle with largest capacity;
-	 * once it is full, the vehicle with the second largest capacity is selected and so on
+	 * Method that builds the initial solution with id 1. It consists in assigning
+	 * the heaviest tasks to the vehicle with largest capacity; once it is full, the
+	 * vehicle with the second largest capacity is selected and so on
 	 * 
 	 * @return true for success, false for fail
 	 */
@@ -296,14 +308,14 @@ public class VariablesSet {
 		ArrayList<Task> sortedTasks = new ArrayList<>(tasks);
 		sortedTasks.sort(new TaskWeightComparator());
 
-		int currentVehicleIndex = 0; //index of the currently analyzed vehicle in sortedVehicles
-		int currentTaskIndex = 0; //index of the currently analyzed task in sortedTasks
+		int currentVehicleIndex = 0; // index of the currently analyzed vehicle in sortedVehicles
+		int currentTaskIndex = 0; // index of the currently analyzed task in sortedTasks
 
 		// Build an array of vehicle states corresponding to the sortedVehicles
 		ArrayList<VehicleState> vehicleStates = new ArrayList<>(sortedVehicles.size());
 		for (int i = 0; i < sortedVehicles.size(); i++)
 			vehicleStates.add(new VehicleState(0, new ArrayList<Task>(), null));
-		
+
 		Vehicle currentVehicle = sortedVehicles.get(0);
 		VehicleState currentVehicleState = vehicleStates.get(0);
 
@@ -324,7 +336,8 @@ public class VariablesSet {
 
 				// If total weight of all tasks > total capacity of all vehicles,
 				// reset the whole procedure for the remaining subset of tasks,
-				// as all the vehicles are free again after they have delivered all of their tasks
+				// as all the vehicles are free again after they have delivered all of their
+				// tasks
 				if (currentVehicleIndex == sortedVehicles.size())
 					currentVehicleIndex = 0;
 
@@ -334,54 +347,62 @@ public class VariablesSet {
 			}
 		}
 
-		// Assign to the last considered vehicle a deliver action for every remaining tasks
+		// Assign to the last considered vehicle a deliver action for every remaining
+		// tasks
 		this.assignDeliverCarriedTasks(currentVehicleState);
 
 		return true;
 	}
-	
-	public void assignTaskRandomly(Task task, Random rng) {
-		
+
+	public boolean assignTaskRandomly(Task task, Random rng) {
+
 		// TODO: check whether the assignment is possible or not
-		
+		int maxCapacity = Collections.max(vehicles, new VehicleCapacityComparator()).capacity();
+		if (task.weight > maxCapacity)
+			return false;
+
 		// Select a random vehicle to assign the task to
 		int vId = rng.nextInt(vehicles.size());
 		Vehicle v = vehicles.get(vId);
-		
+
 		// Update tasks and vehicle coherently to the inclusion of the new task
 		this.tasks.add(task);
 		this.taskIdx.put(task.id, tasks.size() - 1); // the new task will have index tasks.size() - 1
 		this.vehicle.add(v);
-		
+
 		// Compute the old action sequence of the vehicle
 		ArrayList<ActionRep> vActionSequence = this.inferActionSequenceForVehicle(v);
 		int vNextTime = vActionSequence.size();
-		
-		// Update pickupTime and deliveryTime with the time instants inferred from the action sequence of the vehicle
+
+		// Update pickupTime and deliveryTime with the time instants inferred from the
+		// action sequence of the vehicle
 		this.pickupTime.add(vNextTime);
 		this.deliveryTime.add(vNextTime + 1);
-		
+
 		if (vNextTime == 0)
 			// If the vehicle does not carry any other task, update nextAction
 			this.setNextAction(v.id(), new ActionRep(task, ActionName.PICKUP));
 		else {
-			// Otherwise, update nextActionAfterDelivery of the current last task to deliver (which is currently null)
+			// Otherwise, update nextActionAfterDelivery of the current last task to deliver
+			// (which is currently null)
 			Task lastTask = vActionSequence.get(vActionSequence.size() - 1).getTask();
 			this.setNextActionAfterDelivery(this.getTaskIdx(lastTask.id), new ActionRep(task, ActionName.PICKUP));
 		}
-		
+
 		// Update nextActionAfterPickup with the delivery action of task and
 		// nextActionAfterDelivery with a null action
 		this.nextActionAfterPickup.add(new ActionRep(task, ActionName.DELIVER));
 		this.nextActionAfterDelivery.add(null);
+
+		return true;
 	}
 
 	/**
 	 * Method that assigns a pickup action of the given task to the current vehicle
 	 * In order to do this, it modifies the attributes of the current VariablesSet
 	 * 
-	 * @param task Task to pickup
-	 * @param currentVehicle Vehicle to assign the task to
+	 * @param task                Task to pickup
+	 * @param currentVehicle      Vehicle to assign the task to
 	 * @param currentVehicleState VehicleState of the vehicle
 	 */
 	public void assignPickupTask(Task task, Vehicle currentVehicle, VehicleState currentVehicleState) {
@@ -392,14 +413,15 @@ public class VariablesSet {
 		if (currentVehicleTime == 0) {
 			// The first action is always to pickup
 			this.setNextAction(currentVehicle.id(), new ActionRep(task, ActionName.PICKUP));
-			this.setPickupTime(taskIdx.get(task.id), currentVehicleTime); 
+			this.setPickupTime(taskIdx.get(task.id), currentVehicleTime);
 
 			currentVehicleState.setPreviousAction(new ActionRep(task, ActionName.PICKUP));
 			currentVehicleState.addCarriedTask(task);
 		} else {
 
 			// If the action is not the first one, update either nextActionAfterPickup or
-			// nextActionAfterDelivery according to the type of the previous action done by this vehicle
+			// nextActionAfterDelivery according to the type of the previous action done by
+			// this vehicle
 			switch (currentVehicleState.getPreviousAction().getAction()) {
 			case PICKUP:
 				// If it is pickup, update nextActionAfterPickup for the previous task
@@ -422,8 +444,9 @@ public class VariablesSet {
 	}
 
 	/**
-	 * Method that assigns a deliver action for each of the carried tasks to the current vehicle
-	 * In order to do this, it modifies the attributes of the current VariablesSet
+	 * Method that assigns a deliver action for each of the carried tasks to the
+	 * current vehicle In order to do this, it modifies the attributes of the
+	 * current VariablesSet
 	 * 
 	 * @param currentVehicleState VehicleState of the current vehicle
 	 */
@@ -452,13 +475,13 @@ public class VariablesSet {
 		currentVehicleState.setCarriedTasks(new ArrayList<Task>());
 
 		// Only update the previous action once after the final delivery
-		if(prevTask != null)
+		if (prevTask != null)
 			currentVehicleState.setPreviousAction(new ActionRep(prevTask, ActionName.DELIVER));
 	}
 
 	/**
-	 * First method to generate a neighbor. It consists in assigning the task t to vehicle v.
-	 * All the attributes of the VariablesSet are consequently updated
+	 * First method to generate a neighbor. It consists in assigning the task t to
+	 * vehicle v. All the attributes of the VariablesSet are consequently updated
 	 * 
 	 * @param t Task that has to be reassigned
 	 * @param v Vehicle to which t has to be assigned
@@ -468,15 +491,17 @@ public class VariablesSet {
 
 		Vehicle oldVehicle = this.getVehicle(taskIdx.get(t.id));
 
-		// If the id of the new vehicle is the same of the id of the vehicle that carries t, 
+		// If the id of the new vehicle is the same of the id of the vehicle that
+		// carries t,
 		// there is no valid neighbor
 		if (oldVehicle.id() == v.id())
 			return null;
 
-		// Infer the lists of actions of both the vehicle that used to carry t and the new one
+		// Infer the lists of actions of both the vehicle that used to carry t and the
+		// new one
 		ArrayList<ActionRep> actionsOldVehicle = this.inferActionSequenceForVehicle(oldVehicle);
 		ArrayList<ActionRep> actionsNewVehicle = this.inferActionSequenceForVehicle(v);
-		
+
 		// Create a pair of actions to assign to v
 		ActionRep pickupAction = new ActionRep(t, ActionName.PICKUP);
 		ActionRep deliverAction = new ActionRep(t, ActionName.DELIVER);
@@ -489,7 +514,7 @@ public class VariablesSet {
 //					.append("v" + oldVehicle.id() + " BEFORE : " + actionsOldVehicle + "\n")
 //					.append("v" + v.id() + " BEFORE: " + actionsNewVehicle);
 //		}
-		
+
 		// Modify the lists of vehicles' action in order to assign t to v
 		actionsOldVehicle.remove(pickupAction);
 		actionsOldVehicle.remove(deliverAction);
@@ -500,7 +525,7 @@ public class VariablesSet {
 //			neighborDescr.append("v" + oldVehicle.id() + " AFTER: " + actionsOldVehicle + "\n")
 //					.append("v" + v.id() + " AFTER: " + actionsNewVehicle + "\n\n");
 //		}
-		
+
 		VariablesSet neighbor = (VariablesSet) this.clone();
 
 		// Update the clone's variable set according to the new lists of actions
@@ -512,24 +537,26 @@ public class VariablesSet {
 //					.append(neighbor.toString());
 //			neighbor.setDescr(neighborDescr);
 //		}
-		
-		// If the load constraint is not satisfied for the old vehicle, the neighbor is not valid
+
+		// If the load constraint is not satisfied for the old vehicle, the neighbor is
+		// not valid
 		if (!neighbor.isLoadConstraintSatisfied(oldVehicle))
 			return null;
-		
-		// If the load constraint is not satisfied for the new vehicle, the neighbor is not valid
+
+		// If the load constraint is not satisfied for the new vehicle, the neighbor is
+		// not valid
 		if (!neighbor.isLoadConstraintSatisfied(v))
 			return null;
 
 		return neighbor;
 	}
-	
+
 	/**
-	 * Second method to generate a neighbor. It consists in changing the pickup time of a task.
-	 * All the attributes of the VariablesSet are consequently updated
+	 * Second method to generate a neighbor. It consists in changing the pickup time
+	 * of a task. All the attributes of the VariablesSet are consequently updated
 	 * 
-	 * @param t Task which pickup time has to be modified
-	 * @param newPickupTime int 
+	 * @param t             Task which pickup time has to be modified
+	 * @param newPickupTime int
 	 * @return VariablesSet the neighbor obtained with this transformation
 	 */
 	public VariablesSet changePickupTime(Task t, int newPickupTime) {
@@ -551,7 +578,7 @@ public class VariablesSet {
 		neighbor = (VariablesSet) this.clone();
 
 		Vehicle v = getVehicle(taskIdx.get(t.id));
-		ArrayList<ActionRep> actionsVehicle = this.inferActionSequenceForVehicle(v); //list of actions of v
+		ArrayList<ActionRep> actionsVehicle = this.inferActionSequenceForVehicle(v); // list of actions of v
 		ActionRep pickupAction = actionsVehicle.get(tPickupTime);
 
 //		StringBuilder neighborDescr = new StringBuilder();
@@ -574,7 +601,8 @@ public class VariablesSet {
 //			neighbor.setDescr(neighborDescr);
 //		}
 
-		// If the load constraint is not satisfied for the new vehicle, the neighbor is not valid
+		// If the load constraint is not satisfied for the new vehicle, the neighbor is
+		// not valid
 		if (!neighbor.isLoadConstraintSatisfied(v))
 			return null;
 
@@ -582,11 +610,12 @@ public class VariablesSet {
 	}
 
 	/**
-	 * Third method to generate a neighbor. It consists in changing the delivery time of a task.
-	 * All the attributes of the VariablesSet are consequently updated
+	 * Third method to generate a neighbor. It consists in changing the delivery
+	 * time of a task. All the attributes of the VariablesSet are consequently
+	 * updated
 	 * 
-	 * @param t Task which pickup time has to be modified
-	 * @param newDeliveryTime int 
+	 * @param t               Task which pickup time has to be modified
+	 * @param newDeliveryTime int
 	 * @return VariablesSet the neighbor obtained with this transformation
 	 */
 	public VariablesSet changeDeliveryTime(Task t, int newDeliveryTime) {
@@ -608,9 +637,9 @@ public class VariablesSet {
 		neighbor = (VariablesSet) this.clone();
 
 		Vehicle v = getVehicle(taskIdx.get(t.id));
-		ArrayList<ActionRep> actionsVehicle = this.inferActionSequenceForVehicle(v); //list of actions of v
+		ArrayList<ActionRep> actionsVehicle = this.inferActionSequenceForVehicle(v); // list of actions of v
 		ActionRep deliveryAction = actionsVehicle.get(tDeliveryTime);
-		
+
 //		StringBuilder neighborDescr = new StringBuilder();
 //		if (CentralizedAgent.DEBUG) {
 //			neighborDescr.append("CHANGE DELIVERY v" + getVehicle(taskIdx.get(t.id)).id() + "\n")
@@ -620,7 +649,8 @@ public class VariablesSet {
 
 		// Update the list of actions by moving the pickup time of t.
 		// Note that a delivery time can be the last action of a vehicle,
-		// so this edge case is handled by just appending the action at the end of the list 
+		// so this edge case is handled by just appending the action at the end of the
+		// list
 		// instead of specifying an index which would be out of bound
 		actionsVehicle.remove(tDeliveryTime);
 		if (newDeliveryTime == actionsVehicle.size())
@@ -630,13 +660,13 @@ public class VariablesSet {
 
 		// Update the clone's variable set according to the new list of actions
 		neighbor.updateVariablesForVehicle(v, actionsVehicle);
-		
+
 //		if (CentralizedAgent.DEBUG) {
 //			neighborDescr.append("AFTER" + actionsVehicle + "\n\n");
 //			neighborDescr.append("It turned\n").append(this.toString()).append("\n\ninto\n").append(neighbor.toString());
 //			neighbor.setDescr(neighborDescr);
 //		}
-		
+
 		// Check load constraint for new vehicle
 		if (!neighbor.isLoadConstraintSatisfied(v))
 			return null;
@@ -645,35 +675,48 @@ public class VariablesSet {
 	}
 
 	/**
-	 * Method that computes the objective function's value in the current set of variables
+	 * Method that computes the objective function's value in the current set of
+	 * variables
 	 * 
 	 * @return double objective function's value
 	 */
-	public double computeObjective() {
+	public double computeObjective(boolean vehicleDependent) {
 
 		double objectiveValue = 0;
+		double averageCostPerKm = 3;
 
 		// Add to the cost all travel costs between vehicles' starting cities and pickup
 		// cities of first tasks
-		for (Vehicle v : vehicles) {
-			ActionRep vehicleFirstTask = this.getNextAction(v.id());
-			if (vehicleFirstTask != null)
-				objectiveValue += v.costPerKm() * vehicleFirstTask.getTask().pickupCity.distanceTo(v.homeCity());
+		if (vehicleDependent) {
+			for (Vehicle v : vehicles) {
+				ActionRep vehicleFirstTask = this.getNextAction(v.id());
+				if (vehicleFirstTask != null)
+					objectiveValue += v.costPerKm() * vehicleFirstTask.getTask().pickupCity.distanceTo(v.homeCity());
+			}
 		}
 
 		// Add to the cost all travel costs between tasks' pickup cities and
 		// next actions' task's city
+		double cost;
 		for (Task t : tasks) {
 			ActionRep taskNextActionAfterPickup = this.getNextActionAfterPickup(taskIdx.get(t.id));
 			if (taskNextActionAfterPickup != null) {
 				switch (taskNextActionAfterPickup.getAction()) {
 				case PICKUP:
-					objectiveValue += this.getVehicle(taskIdx.get(t.id)).costPerKm()
-							* t.pickupCity.distanceTo(taskNextActionAfterPickup.getTask().pickupCity);
+					cost = t.pickupCity.distanceTo(taskNextActionAfterPickup.getTask().pickupCity);
+					if (vehicleDependent)
+						cost *= this.getVehicle(taskIdx.get(t.id)).costPerKm();
+					else
+						cost *= averageCostPerKm;
+					objectiveValue += cost;
 					break;
 				case DELIVER:
-					objectiveValue += this.getVehicle(taskIdx.get(t.id)).costPerKm()
-							* t.pickupCity.distanceTo(taskNextActionAfterPickup.getTask().deliveryCity);
+					cost = t.pickupCity.distanceTo(taskNextActionAfterPickup.getTask().deliveryCity);
+					if (vehicleDependent)
+						cost *= this.getVehicle(taskIdx.get(t.id)).costPerKm();
+					else
+						cost *= averageCostPerKm;
+					objectiveValue += cost;
 					break;
 				}
 			}
@@ -686,12 +729,20 @@ public class VariablesSet {
 			if (taskNextActionAfterDelivery != null) {
 				switch (taskNextActionAfterDelivery.getAction()) {
 				case PICKUP:
-					objectiveValue += this.getVehicle(taskIdx.get(t.id)).costPerKm()
-							* t.deliveryCity.distanceTo(taskNextActionAfterDelivery.getTask().pickupCity);
+					cost = t.deliveryCity.distanceTo(taskNextActionAfterDelivery.getTask().pickupCity);
+					if (vehicleDependent)
+						cost *= this.getVehicle(taskIdx.get(t.id)).costPerKm();
+					else
+						cost *= averageCostPerKm;
+					objectiveValue += cost;
 					break;
 				case DELIVER:
-					objectiveValue += this.getVehicle(taskIdx.get(t.id)).costPerKm()
-							* t.deliveryCity.distanceTo(taskNextActionAfterDelivery.getTask().deliveryCity);
+					cost = t.deliveryCity.distanceTo(taskNextActionAfterDelivery.getTask().deliveryCity);
+					if (vehicleDependent)
+						cost *= this.getVehicle(taskIdx.get(t.id)).costPerKm();
+					else
+						cost *= averageCostPerKm;
+					objectiveValue += cost;
 					break;
 				}
 			}
@@ -701,7 +752,8 @@ public class VariablesSet {
 	}
 
 	/**
-	 * This method checks whether the carried tasks' total weight exceeds or not the vehicle's capacity
+	 * This method checks whether the carried tasks' total weight exceeds or not the
+	 * vehicle's capacity
 	 * 
 	 * @param v Vehicle
 	 * @return true for constraint satisfied, false for constraint not satisfied
@@ -712,7 +764,7 @@ public class VariablesSet {
 		int currentLoad = 0;
 
 		while (currentVehicleAction != null) {
-			
+
 			Task currentTask = currentVehicleAction.getTask();
 
 			switch (currentVehicleAction.getAction()) {
@@ -723,7 +775,7 @@ public class VariablesSet {
 					return false;
 				currentVehicleAction = this.getNextActionAfterPickup(taskIdx.get(currentTask.id));
 				break;
-				
+
 			case DELIVER:
 				currentLoad -= currentTask.weight;
 				currentVehicleAction = this.getNextActionAfterDelivery(taskIdx.get(currentTask.id));
@@ -742,18 +794,19 @@ public class VariablesSet {
 	public List<Plan> inferPlans() {
 
 		ArrayList<Plan> plans = new ArrayList<>();
-		
+
 		for (Vehicle currentVehicle : vehicles) {
 
 			City currentVehicleLocation = currentVehicle.homeCity();
-			
-			//Initialize a new plan for vehicle v
-			Plan plan = new Plan(currentVehicleLocation); 
+
+			// Initialize a new plan for vehicle v
+			Plan plan = new Plan(currentVehicleLocation);
 
 			ActionRep currentVehicleAction = this.getNextAction(currentVehicle.id());
 
-			// Keep iterating until the current action is not set to null, 
-			// this happens when it is assigned to action that follows the last delivery action
+			// Keep iterating until the current action is not set to null,
+			// this happens when it is assigned to action that follows the last delivery
+			// action
 			while (currentVehicleAction != null) {
 
 				Task currentVehicleTask = currentVehicleAction.getTask();
@@ -767,27 +820,28 @@ public class VariablesSet {
 						plan.appendMove(c);
 					// Update vehicle's location
 					currentVehicleLocation = currentVehicleTask.pickupCity;
-					// Add to the plan pickup action 
+					// Add to the plan pickup action
 					plan.appendPickup(currentVehicleTask);
 					// Update the current action
 					currentVehicleAction = this.getNextActionAfterPickup(taskIdx.get(currentVehicleTask.id));
 					break;
 
 				case DELIVER:
-					// First add to the plan the action of moving to the city of delivery of the task
+					// First add to the plan the action of moving to the city of delivery of the
+					// task
 					List<City> shortestPathToDelivery = currentVehicleLocation.pathTo(currentVehicleTask.deliveryCity);
 					for (City c : shortestPathToDelivery)
 						plan.appendMove(c);
 					// Update vehicle's location
 					currentVehicleLocation = currentVehicleTask.deliveryCity;
-					// Add to the plan deliver action 
+					// Add to the plan deliver action
 					plan.appendDelivery(currentVehicleTask);
 					// Update the current action
 					currentVehicleAction = this.getNextActionAfterDelivery(taskIdx.get(currentVehicleTask.id));
 					break;
 				}
 			}
-			
+
 			// Add the constructed plan the list of plans
 			plans.add(plan);
 		}
@@ -796,28 +850,30 @@ public class VariablesSet {
 	}
 
 	/**
-	 * Method that infers a list of action for a given vehicle according to the current configuration of the variables
+	 * Method that infers a list of action for a given vehicle according to the
+	 * current configuration of the variables
 	 * 
 	 * @param v Vehicle for which the plan has to be inferred
-	 * @return List of actions 
+	 * @return List of actions
 	 */
 	public ArrayList<ActionRep> inferActionSequenceForVehicle(Vehicle v) {
 		ArrayList<ActionRep> actionSequence = new ArrayList<>();
 		ActionRep currentAction = this.getNextAction(v.id());
 
-		// Keep iterating until the current action is not set to null, 
-		// this happens when it is assigned to action that follows the last delivery action
+		// Keep iterating until the current action is not set to null,
+		// this happens when it is assigned to action that follows the last delivery
+		// action
 		while (currentAction != null) {
 			// Add the current action to the sequence
 			actionSequence.add(currentAction);
 			switch (currentAction.getAction()) {
 			case PICKUP:
-				// If the current action is a pickup one, 
+				// If the current action is a pickup one,
 				// the consequent one will be stored in the array nextActionAfterPickup
 				currentAction = this.getNextActionAfterPickup(taskIdx.get(currentAction.getTask().id));
 				break;
 			case DELIVER:
-				// If the current action is a deliver one, 
+				// If the current action is a deliver one,
 				// the consequent one will be stored in the array nextActionAfterDelivery
 				currentAction = this.getNextActionAfterDelivery(taskIdx.get(currentAction.getTask().id));
 				break;
@@ -828,13 +884,15 @@ public class VariablesSet {
 	}
 
 	/**
-	 * Method used to update the current variables set according to the new actions sequence of a vehicle
+	 * Method used to update the current variables set according to the new actions
+	 * sequence of a vehicle
 	 * 
-	 * @param v Vehicle
+	 * @param v              Vehicle
 	 * @param actionSequence List
 	 */
 	public void updateVariablesForVehicle(Vehicle v, ArrayList<ActionRep> actionSequence) {
-		int vehicleTime = 0; //virtual time of the vehicle, it takes into account both pickup and deliver actions
+		int vehicleTime = 0; // virtual time of the vehicle, it takes into account both pickup and deliver
+								// actions
 		ActionRep prevAction = null;
 
 		for (ActionRep currentAction : actionSequence) {
@@ -846,8 +904,10 @@ public class VariablesSet {
 				this.setPickupTime(taskIdx.get(currentAction.getTask().id), vehicleTime);
 
 			} else {
-				// For all the other actions the variable to update depends on both the previous and the current actions
-				// The previous action's type is used to know whether to update nextActionAfterPickup or nextActionAfterDelivery 
+				// For all the other actions the variable to update depends on both the previous
+				// and the current actions
+				// The previous action's type is used to know whether to update
+				// nextActionAfterPickup or nextActionAfterDelivery
 				switch (prevAction.getAction()) {
 				case PICKUP:
 					this.setNextActionAfterPickup(taskIdx.get(prevAction.getTask().id), currentAction);
@@ -856,8 +916,9 @@ public class VariablesSet {
 					this.setNextActionAfterDelivery(taskIdx.get(prevAction.getTask().id), currentAction);
 					break;
 				}
-				
-				// The current action's type is used to know whether to update pickupTime or deliveryTime 
+
+				// The current action's type is used to know whether to update pickupTime or
+				// deliveryTime
 				switch (currentAction.getAction()) {
 				case PICKUP:
 					this.setPickupTime(taskIdx.get(currentAction.getTask().id), vehicleTime);
@@ -867,10 +928,10 @@ public class VariablesSet {
 					break;
 				}
 			}
-			
+
 			// In any case the vehicle array must be updated
 			this.setVehicle(taskIdx.get(currentAction.getTask().id), v);
-			
+
 			vehicleTime++;
 			prevAction = currentAction;
 		}
@@ -881,7 +942,8 @@ public class VariablesSet {
 			this.setNextAction(v.id(), null);
 
 		else
-			// If prevAction is not null, it means that at least one iteration of the for loop 
+			// If prevAction is not null, it means that at least one iteration of the for
+			// loop
 			// has been done and since the last updated action for v must be a delivery,
 			// set nextActionAfterDelivery of the last delivered task to null
 			this.setNextActionAfterDelivery(taskIdx.get(prevAction.getTask().id), null);
@@ -894,15 +956,15 @@ public class VariablesSet {
 	public void setDescr(StringBuilder descr) {
 		this.descr = descr;
 	}
-	
+
 	public List<Vehicle> getVehicles() {
 		return this.vehicles;
 	}
-	
+
 	public ArrayList<Task> getTasks() {
 		return this.tasks;
 	}
-	
+
 	public Integer getTaskIdx(int tId) {
 		return taskIdx.get(tId);
 	}
@@ -1084,14 +1146,16 @@ public class VariablesSet {
 
 		return str.toString();
 	}
-	
+
 	/**
-	 * toString method for an ActionRep that considers the indexing of the tasks instead of their ids
+	 * toString method for an ActionRep that considers the indexing of the tasks
+	 * instead of their ids
+	 * 
 	 * @param action the ActionRep to convert to a string
 	 * @return String representing action
 	 */
 	private String actionToString(ActionRep action) {
 		return "(t" + this.getTaskIdx(action.getTask().id) + ", " + action.getAction().toString() + ")";
-		
+
 	}
 }

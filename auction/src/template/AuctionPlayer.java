@@ -7,12 +7,12 @@ import org.apache.commons.math.stat.descriptive.moment.StandardDeviation;
 
 import logist.task.Task;
 import logist.topology.Topology.City;
-import uchicago.src.collection.Pair;
 
 public class AuctionPlayer {
 
 	private int id;
 	private ArrayList<Task> wonTasks;
+	private long currentProfit;
 	private ArrayList<Long> pastBids;
 	private double meanBid;
 	private double bidStd;
@@ -21,58 +21,73 @@ public class AuctionPlayer {
 		super();
 		this.id = id;
 		this.wonTasks = new ArrayList<>();
+		this.currentProfit = 0;
 		this.pastBids = new ArrayList<>();
 		this.meanBid = 0;
 		this.bidStd = 0;
 	}
-	
+
 	public void updatePlayerStatus(Task t, boolean wonAuction, Long bid) {
-		if(wonAuction)
+		if (wonAuction) {
 			this.wonTasks.add(t);
+			this.currentProfit += bid;
+		}
 		int numPastBids = this.pastBids.size();
 		this.pastBids.add(bid);
-		this.meanBid = ((numPastBids * this.meanBid) + bid) / (double)(numPastBids + 1);
-		this.bidStd = this.computeStd(this.pastBids.stream().mapToDouble(l -> l).toArray());
+		this.meanBid = ((numPastBids * this.meanBid) + bid) / (double) (numPastBids + 1);
+		this.bidStd = this.computeStdPastBids();
 	}
-	
-	private double computeStd(double[] data) {
+
+	private double computeStdPastBids() {
 		StandardDeviation std = new StandardDeviation();
-		return std.evaluate(data);
+		return std.evaluate(this.pastBids.stream().mapToDouble(l -> l).toArray());
 	}
-	
-	private int computeDissimilarityOfTask(Task t) {
+
+	public double getCurrentTotalProfit() {
+		return this.currentProfit;
+	}
+
+	private double computeDissimilarityOfTask(Task t, double topologyDiameter) {
 		HashSet<City> citiesInPath = new HashSet<>();
-		
-		for(Task wonTask : this.wonTasks)
-		{
+
+		// If the agent still hasn't won any task, in the best case there will be
+		// vehicles with a homeCity equal to t.pickupCity and t.deliveryCity
+		if (!hasWonTasks())
+			return 0;
+
+		// Get all of the cities in the current path of the agent
+		for (Task wonTask : this.wonTasks) {
 			citiesInPath.add(wonTask.pickupCity);
 			citiesInPath.add(wonTask.deliveryCity);
 		}
-		
-		// TODO: Think about how to compute and use the depth/hop count of the task t's pickup and delivery cities
-		int dissimilarity = 2;
-		if(citiesInPath.contains(t.pickupCity))
-			dissimilarity--;
-		if(citiesInPath.contains(t.deliveryCity))
-			dissimilarity--;
-		
-		return dissimilarity;
-		
+
+		// Compute the minimum distance, relative to the topology diameter, the agent
+		// needs to travel to pickup and deliver this task
+		double minRelativeDistanceToTaskPickupCity = 1.0;
+		double minRelativeDistanceToTaskDeliveryCity = 1.0;
+		double relativeDistanceToTaskCity;
+		for (City cityInPath : citiesInPath) {
+
+			relativeDistanceToTaskCity = t.pickupCity.distanceTo(cityInPath) / topologyDiameter;
+			if (relativeDistanceToTaskCity < minRelativeDistanceToTaskPickupCity)
+				minRelativeDistanceToTaskPickupCity = relativeDistanceToTaskCity;
+
+			relativeDistanceToTaskCity = t.deliveryCity.distanceTo(cityInPath) / topologyDiameter;
+			if (relativeDistanceToTaskCity < minRelativeDistanceToTaskDeliveryCity)
+				minRelativeDistanceToTaskDeliveryCity = relativeDistanceToTaskCity;
+		}
+
+		// The dissimilarity is the average of these relative minimum distances
+		return (minRelativeDistanceToTaskPickupCity + minRelativeDistanceToTaskDeliveryCity) / 2;
+
 	}
-	
-	public Pair estimatePriceBin(Task t) {
+
+	public double estimateTaskPriceLowerBound(Task t, double topologyDiameter) {
 		double lowerBoundInterval = this.meanBid - 2 * this.bidStd;
 		double upperBoundInterval = this.meanBid + 2 * this.bidStd;
-		
-		double priceIntervalSize = (upperBoundInterval - lowerBoundInterval) / 3;
-		int dissimilarity = this.computeDissimilarityOfTask(t);
-		
-		double lowerEstimate = lowerBoundInterval + dissimilarity * priceIntervalSize;
-		double upperEstimate = lowerBoundInterval + (dissimilarity + 1) * priceIntervalSize;
-		
-		Pair pair = new Pair(lowerEstimate, upperEstimate);
-		
-		return pair;
+		double dissimilarity = this.computeDissimilarityOfTask(t, topologyDiameter);
+
+		return dissimilarity * (upperBoundInterval - lowerBoundInterval) + lowerBoundInterval;
 	}
 
 	public int getId() {
@@ -82,7 +97,7 @@ public class AuctionPlayer {
 	public ArrayList<Task> getWonTasks() {
 		return wonTasks;
 	}
-	
+
 	public boolean hasWonTasks() {
 		return !wonTasks.isEmpty();
 	}
@@ -98,6 +113,5 @@ public class AuctionPlayer {
 	public double getBidStd() {
 		return bidStd;
 	}
-	
-	
+
 }

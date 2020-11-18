@@ -23,7 +23,6 @@ import logist.task.TaskDistribution;
 import logist.task.TaskSet;
 import logist.topology.Topology;
 import logist.topology.Topology.City;
-import uchicago.src.collection.Pair;
 
 /**
  * A very simple auction agent that assigns all tasks to its first vehicle and
@@ -31,21 +30,24 @@ import uchicago.src.collection.Pair;
  * 
  */
 @SuppressWarnings("unused")
-public class AuctionAgent2 implements AuctionBehavior {
+public class AuctionDummyOpponentMatcher implements AuctionBehavior {
 
 	private Topology topology;
 	private TaskDistribution distribution;
 	private Agent agent;
 	private Random random;
-	
-	Long minBid;
-	
+
+	private Long minBid;
+	private double topologyDiameter;
+
 	private AuctionPlayer player;
 	private AuctionPlayer opponent;
-	
+
 	private VariablesSet currentSolution;
 	private VariablesSet updatedSolution;
-	
+	private VariablesSet opponentSolution;
+	private VariablesSet updatedSolutionOpponent;
+
 	private long timeout_setup;
 	private long timeout_plan;
 	private long timeout_bid;
@@ -74,10 +76,15 @@ public class AuctionAgent2 implements AuctionBehavior {
 
 		long seed = -9019554669489983951L * (agent.id() + 1);
 		this.random = new Random(seed);
-		
+
 		this.minBid = (long) Math.floor(minEdgeCost());
+		this.topologyDiameter = this.topologyGraphDiameter();
 		this.currentSolution = new VariablesSet(agent.vehicles(), new ArrayList<Task>());
-		
+		// Assume the opponent has the same vehicles as the player just to be able to
+		// build a solution, however the choice of vehicles will not influence the
+		// object value for the opponent anyway
+		this.opponentSolution = new VariablesSet(agent.vehicles(), new ArrayList<Task>());
+
 		this.player = new AuctionPlayer(agent.id());
 		// We assume that only two agents will compete in the auction
 		int opponentId = (this.agent.id() + 1) % 2;
@@ -86,16 +93,14 @@ public class AuctionAgent2 implements AuctionBehavior {
 
 	@Override
 	public void auctionResult(Task previous, int winner, Long[] bids) {
-		
-		System.out.println("Opponent bids: " +  bids[this.opponent.getId()]);
+
 		this.player.updatePlayerStatus(previous, winner == agent.id(), bids[agent.id()]);
 		this.opponent.updatePlayerStatus(previous, winner != agent.id(), bids[this.opponent.getId()]);
-				
+
 		if (winner == agent.id()) {
 			this.currentSolution = this.updatedSolution;
-			System.out.println("WON AUCTION\n");
 		} else {
-			System.out.println("LOST AUCTION\n");
+			this.opponentSolution = this.updatedSolutionOpponent;
 		}
 	}
 
@@ -104,79 +109,40 @@ public class AuctionAgent2 implements AuctionBehavior {
 
 		long time_start = System.currentTimeMillis();
 		long time_current;
-		
-		Pair opponentBidEstimate = this.opponent.estimatePriceBin(task);
-		double opponentBidLowerBound = (double )opponentBidEstimate.first;
-		double opponentBidUpperBound = (double )opponentBidEstimate.second;
-		System.out.println("Opponent bid estimate: (" + opponentBidLowerBound + ", " + opponentBidUpperBound + ")");
-		
-		// Parameters of the bid computation
-		Double maxRelativeGain = 0.8;
-		Double minRelativeGain = 0.2;
-		Double base = 1 + maxRelativeGain - minRelativeGain;
 
-		Double currentCost = this.player.hasWonTasks() ? this.currentSolution.computeObjective() : 0;
-		
-		// Compute the absolute and relative cost of adding the task to our plan
-		this.updatedSolution = this.getUpdatedSolution(task, time_start);
-		Double updatedCost = this.updatedSolution.computeObjective();
-		
-		//TODO: check better why sometime marginalCost is negative 
-		//(hyp: either our optimization algorithm doesn't always find the optimum or we have an error in the computation of the objective function)
-		Double marginalCost = updatedCost - currentCost;
-		
-		Double relativeMarginalCost = marginalCost / updatedCost;
-		
-		// Compute the bid we are asking for the task
-		Double relativeGain = this.player.hasWonTasks() ? Math.pow(base, relativeMarginalCost) + minRelativeGain : 1.0;
-		Long tentativeBid = (long) Math.ceil(relativeGain * marginalCost); //- valueForAdversary
-		
-		System.out.println("Tentative bid: " + tentativeBid);
-		Long randomBid;
-		// In between (marginalCost, tentativeBid) - player and opponent have probably similar costs or both high
-		if(marginalCost >= opponentBidLowerBound)
-		{
-			long minRandomBid = (long) Math.ceil(marginalCost);
-			randomBid = (long) (Math.random() * (tentativeBid - minRandomBid)) + minRandomBid;
-		}
-		// In between (tentativeBid, opponentBidLowerBound) - player has a cheaper cost than opponent
-		else if (tentativeBid <= opponentBidLowerBound){
-			randomBid = (long) (Math.random() * (tentativeBid - opponentBidLowerBound)) + tentativeBid;
-		} 
-		// In between (opponentBidLowerBound, tentativeBid) - opponent has a cheaper cost than player
-		else {
-			long minRandomBid = (long) Math.ceil(opponentBidLowerBound);
-			randomBid = (long) (Math.random() * (opponentBidLowerBound - tentativeBid)) + minRandomBid;
-		}
-		
-		Long actualBid = Math.max(randomBid, minBid);
-		
-		System.out.println("Task: " + task.toString() + "\nMarginal cost: " + marginalCost + "\nRelative marginal cost:" + relativeMarginalCost + "\nBid:" + actualBid);
+		double opponentBidLowerBound = this.opponent.estimateTaskPriceLowerBound(task, this.topologyDiameter);
 
-//		if (vehicle.capacity() < task.weight)
-//			return null;
-//
-//		long distanceTask = task.pickupCity.distanceUnitsTo(task.deliveryCity);
-//		long distanceSum = distanceTask + currentCity.distanceUnitsTo(task.pickupCity);
-//		double marginalCost = Measures.unitsToKM(distanceSum * vehicle.costPerKm());
-//
-//		double ratio = 1.0 + (random.nextDouble() * 0.05 * task.id);
-//		double bid = ratio * marginalCost;
-//
-//		return (long) Math.round(bid);
-		
-//		time_current = System.currentTimeMillis();
-		
-//		// If the execution time is close to the timeout threshold by less than half a
-//		// second, stop the execution of the algorithm
-//		if (time_current - time_start > timeout_bid - 500)
-//			break;
-		
+		// TODO: check better why sometime marginalCost is negative
+		// (hyp: either our optimization algorithm doesn't always find the optimum or we
+		// have an error in the computation of the objective function)
+
+		this.updatedSolution = this.getUpdatedSolution(this.currentSolution, task, time_start, true);
+		// If it was not possible to transport the task because its weight was over the
+		// maximum capacity, we have to surrender the task to the opponent
+		if (this.updatedSolution == null)
+			return null;
+
+		// Estimate the current total cost of the opponent's plan and compute the
+		// opponent's updated solution
+		// With those we can compute another estimate of the lower bound of the
+		// opponent's bid: a lower bound of the opponent's marginal cost
+		Double currentCostOpponent = this.opponent.hasWonTasks() ? this.opponentSolution.computeObjective(false) : 0;
+		this.updatedSolutionOpponent = this.getUpdatedSolution(this.opponentSolution, task, time_start, false);
+		Double updatedCostOpponent = this.updatedSolutionOpponent.computeObjective(false);
+		Double marginalCostOpponent = updatedCostOpponent - currentCostOpponent;
+
+		// Update our lower bound opponent bid estimate with the new information if
+		// necessary
+		opponentBidLowerBound = Math.min(opponentBidLowerBound, marginalCostOpponent);
+
+		Long actualBid = Math.max((long) opponentBidLowerBound, minBid);
+
 		return actualBid;
 	}
-	
-	public VariablesSet getUpdatedSolution(Task auctionedTask, long time_start) {
-		
+
+	public VariablesSet getUpdatedSolution(VariablesSet solution, Task auctionedTask, long time_start,
+			boolean vehicleDependent) {
+
 		// Read the number of iterations
 		final int numIterations = agent.readProperty("num-iterations", Integer.class, 10000);
 
@@ -187,11 +153,13 @@ public class AuctionAgent2 implements AuctionBehavior {
 			System.exit(0);
 		}
 
-		VariablesSet tmpSolution = (VariablesSet) this.currentSolution.clone();
-		tmpSolution.assignTaskRandomly(auctionedTask, this.random);
+		VariablesSet tmpSolution = (VariablesSet) solution.clone();
+		boolean success = tmpSolution.assignTaskRandomly(auctionedTask, this.random);
+		if (!success)
+			return null;
 		double tmpCost;
 		VariablesSet optimalSolution = tmpSolution;
-		double optimalCost = tmpSolution.computeObjective();
+		double optimalCost = tmpSolution.computeObjective(vehicleDependent);
 		long time_current;
 
 		// Iterate the SLS until the termination condition is met
@@ -209,10 +177,10 @@ public class AuctionAgent2 implements AuctionBehavior {
 
 			// Choose the best candidate
 			if (!candidateNeighbors.isEmpty())
-				tmpSolution = localChoice(candidateNeighbors, p);
+				tmpSolution = localChoice(candidateNeighbors, p, vehicleDependent);
 
 			// Computer the objective function of the chosen solution
-			tmpCost = tmpSolution.computeObjective();
+			tmpCost = tmpSolution.computeObjective(vehicleDependent);
 
 			// If its cost is less then the current optimum, update the optimal solution
 			if (tmpCost < optimalCost) {
@@ -243,16 +211,20 @@ public class AuctionAgent2 implements AuctionBehavior {
 //				.append("\n").append("EXECUTION TIME (sec) = ").append((time_end - time_start) / 1000.0).append("\n");
 //
 //		System.out.println(output);
-		
+
 		// Update the optimal solution and return it
 		return optimalSolution;
 	}
 
-
 	@Override
 	public List<Plan> plan(List<Vehicle> vehicles, TaskSet tasks) {
-		
+
 		ArrayList<Task> tasksList = new ArrayList<Task>(tasks);
+
+		// It's possible that the agent didn't win any tasks at the auction
+		// In that case use the empty solution to return a list of empty plans
+		if (tasksList.size() == 0)
+			return this.currentSolution.inferPlans();
 
 		// Read the number of iterations
 		final int numIterations = agent.readProperty("num-iterations", Integer.class, 10000);
@@ -290,7 +262,7 @@ public class AuctionAgent2 implements AuctionBehavior {
 		VariablesSet tmpSolution = initialSolution;
 		double tmpCost;
 		VariablesSet optimalSolution = initialSolution;
-		double optimalCost = initialSolution.computeObjective();
+		double optimalCost = initialSolution.computeObjective(true);
 		long time_current;
 
 		// Iterate the SLS until the termination condition is met
@@ -308,10 +280,10 @@ public class AuctionAgent2 implements AuctionBehavior {
 
 			// Choose the best candidate
 			if (!candidateNeighbors.isEmpty())
-				tmpSolution = localChoice(candidateNeighbors, p);
+				tmpSolution = localChoice(candidateNeighbors, p, true);
 
 			// Computer the objective function of the chosen solution
-			tmpCost = tmpSolution.computeObjective();
+			tmpCost = tmpSolution.computeObjective(true);
 
 			// If its cost is less then the current optimum, update the optimal solution
 			if (tmpCost < optimalCost) {
@@ -333,10 +305,10 @@ public class AuctionAgent2 implements AuctionBehavior {
 
 		// Build the string to output
 		StringBuilder output = new StringBuilder();
-		output.append(tasks.size()).append("\n")
-				.append("COST of the optimal plan = ").append(optimalCost)
-				.append("\n").append("EXECUTION TIME (sec) = ").append((time_end - time_start) / 1000.0).append("\n");
-
+		output.append("AGENT ID = ").append(this.agent.id()).append("\n").append("NUM TASKS WON AT AUCTION = ")
+				.append(tasks.size()).append("\n").append("COST of the optimal plan = ").append(optimalCost)
+				.append("\n").append("TOTAL PROFIT OF THE AGENT = ")
+				.append(this.player.getCurrentTotalProfit() - optimalCost).append("\n");
 		System.out.println(output);
 
 		return optimalSolution.inferPlans();
@@ -348,12 +320,12 @@ public class AuctionAgent2 implements AuctionBehavior {
 	 * instead; 2) given a task t and a time i, try to move the pickup time of t to
 	 * i; 3) given a task t and a time i, try to move the delivery time of t to i;
 	 * 
-	 * @param node     VariablesSet representing the starting point for the
-	 *                 neighbors' search
+	 * @param node VariablesSet representing the starting point for the neighbors'
+	 *             search
 	 * @return List of neighbors of node
 	 */
 	public List<VariablesSet> chooseNeighbors(VariablesSet node) {
-		
+
 		VariablesSet n;
 		List<Vehicle> vehicles = node.getVehicles();
 		ArrayList<Task> tasks = node.getTasks();
@@ -415,7 +387,7 @@ public class AuctionAgent2 implements AuctionBehavior {
 	 *                           the neighbors
 	 * @return VariablesSet the selected neighbor
 	 */
-	public VariablesSet localChoice(List<VariablesSet> candidateNeighbors, double p) {
+	public VariablesSet localChoice(List<VariablesSet> candidateNeighbors, double p, boolean vehicleDependent) {
 
 		// Random sample a Bernoulli(p) distribution to know whether to return the old
 		// solution or the best neighbor
@@ -444,7 +416,7 @@ public class AuctionAgent2 implements AuctionBehavior {
 		// Compute the objective function for every candidate neighbor solution and find
 		// the collection of solutions with equal lowest cost
 		for (VariablesSet candidateNeighbor : candidateNeighbors) {
-			double neighborObjectiveValue = candidateNeighbor.computeObjective();
+			double neighborObjectiveValue = candidateNeighbor.computeObjective(vehicleDependent);
 			if (neighborObjectiveValue < bestObjectiveValue) {
 				bestObjectiveValue = neighborObjectiveValue;
 				bestCandidateNeighbors = new ArrayList<>();
@@ -459,19 +431,19 @@ public class AuctionAgent2 implements AuctionBehavior {
 
 		return bestCandidateNeighbor;
 	}
-	
+
 	private double minEdgeCost() {
 		HashSet<City> visited = new HashSet<>();
 		LinkedList<City> toVisit = new LinkedList<>();
-		
+
 		City currentCity = topology.cities().get(0);
 		toVisit.add(currentCity);
 		visited.add(currentCity);
-		
-		double avgCostPerKm = avgCostPerKm(); 
+
+		double avgCostPerKm = avgCostPerKm();
 		double minDist = Double.POSITIVE_INFINITY;
-		
-		while(!toVisit.isEmpty()) {
+
+		while (!toVisit.isEmpty()) {
 			currentCity = toVisit.poll();
 			for (City neighbor : currentCity.neighbors()) {
 				double dist = currentCity.distanceTo(neighbor);
@@ -483,15 +455,30 @@ public class AuctionAgent2 implements AuctionBehavior {
 				}
 			}
 		}
-			
+
 		return minDist * avgCostPerKm;
 	}
-	
+
+	private double topologyGraphDiameter() {
+		int numCities = this.topology.size();
+		double maxShortestPathLength = 0;
+		for (int i = 0; i < numCities; i++) {
+			City city1 = this.topology.cities().get(i);
+			for (int j = i + 1; j < numCities; j++) {
+				City city2 = this.topology.cities().get(j);
+				double shortestPathLength = city1.distanceTo(city2);
+				if (shortestPathLength > maxShortestPathLength)
+					maxShortestPathLength = shortestPathLength;
+			}
+		}
+		return maxShortestPathLength;
+	}
+
 	private double avgCostPerKm() {
-		int weightSum = 0; 
-		for (Vehicle v: agent.vehicles()) {
+		int weightSum = 0;
+		for (Vehicle v : agent.vehicles()) {
 			weightSum += v.costPerKm();
-		}		
-		return (double)weightSum / agent.vehicles().size();
+		}
+		return (double) weightSum / agent.vehicles().size();
 	}
 }
