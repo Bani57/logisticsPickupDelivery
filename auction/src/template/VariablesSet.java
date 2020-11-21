@@ -354,11 +354,7 @@ public class VariablesSet {
 		return true;
 	}
 
-	public boolean assignTaskRandomly(Task task, Random rng) {
-
-		int maxCapacity = Collections.max(vehicles, new VehicleCapacityComparator()).capacity();
-		if (task.weight > maxCapacity)
-			return false;
+	public void assignTaskRandomly(Task task, Random rng) {
 
 		// Select a random vehicle to assign the task to
 		int vId = rng.nextInt(vehicles.size());
@@ -392,8 +388,6 @@ public class VariablesSet {
 		// nextActionAfterDelivery with a null action
 		this.nextActionAfterPickup.add(new ActionRep(task, ActionName.DELIVER));
 		this.nextActionAfterDelivery.add(null);
-
-		return true;
 	}
 
 	/**

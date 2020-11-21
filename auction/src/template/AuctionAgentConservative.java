@@ -3,6 +3,7 @@ package template;
 import java.io.File;
 //the list of imports
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
@@ -23,6 +24,7 @@ import logist.task.TaskDistribution;
 import logist.task.TaskSet;
 import logist.topology.Topology;
 import logist.topology.Topology.City;
+import template.comparators.VehicleCapacityComparator;
 
 /**
  * A very simple auction agent that assigns all tasks to its first vehicle and
@@ -106,6 +108,12 @@ public class AuctionAgentConservative implements AuctionBehavior {
 
 	@Override
 	public Long askPrice(Task task) {
+		
+		// If it was not possible to transport the task because its weight was over the
+		// maximum capacity, we have to surrender the task to the opponent		
+		int maxCapacity = Collections.max(agent.vehicles(), new VehicleCapacityComparator()).capacity();
+		if (task.weight > maxCapacity)
+			return null;
 
 		long time_start = System.currentTimeMillis();
 
@@ -121,10 +129,6 @@ public class AuctionAgentConservative implements AuctionBehavior {
 		// Compute the absolute and relative cost of adding the task to our plan
 		Double currentCost = this.player.hasWonTasks() ? this.currentSolution.computeObjective(true) : 0;
 		this.updatedSolution = this.getUpdatedSolution(this.currentSolution, task, time_start, true);
-		// If it was not possible to transport the task because its weight was over the
-		// maximum capacity, we have to surrender the task to the opponent
-		if (this.updatedSolution == null)
-			return null;
 		Double updatedCost = this.updatedSolution.computeObjective(true);
 		Double marginalCost = updatedCost - currentCost;
 		Double relativeMarginalCost = marginalCost / updatedCost;
@@ -145,55 +149,72 @@ public class AuctionAgentConservative implements AuctionBehavior {
 		Double relativeGain = this.player.hasWonTasks() ? Math.pow(base, relativeMarginalCost) + minRelativeGain : 1.0;
 		Long tentativeBid = (long) Math.ceil(relativeGain * marginalCost);
 
-		Long randomBid;
+		double randomBid;
 		double totalProfitPlayer = this.player.getCurrentTotalReward() - currentCost;
 		double totalProfitOpponent = this.opponent.getCurrentTotalReward() - currentCostOpponent;
-		// Case when the estimated cost of the new task is above the estimated lower
-		// bound of opponent bids
-		if (marginalCost >= opponentBidLowerBound) {
-			// double chinaMaxReduction = (opponentBidLowerBound - marginalCost) +
-			// (totalProfitPlayer - totalProfitOpponent);
-			double chinaMaxReduction = totalProfitPlayer - marginalCost - totalProfitOpponent + marginalCostOpponent;
-			if (chinaMaxReduction > 0) {
-				// If it is possible to still have the higher profit after bidding below the
-				// marginalCost, be like China and reduce the price to a random value in
-				// (opponentBidLowerBound - chinaMaxReduction, opponentBidLowerBound),
-				// randomBid = (long) (opponentBidLowerBound - Math.random() *
-				// chinaMaxReduction);
-				randomBid = (long) this.sampleExponentialIntervalIncreasing(opponentBidLowerBound - chinaMaxReduction,
-						opponentBidLowerBound);
+		
+		// Case when both the marginalCost and the tentativeBid are lower than the
+		// estimated lower bound of opponent bids
+		if (tentativeBid <= opponentBidLowerBound) {
+			
+			// WE always do switzerland but in two different manners
+			
+			double switzerlandMaxIncrease;
+			if (tentativeBid < marginalCost && marginalCost < opponentBidLowerBound) {
+				// Switzerland but we can start from marginalCost
+				switzerlandMaxIncrease = opponentBidLowerBound - marginalCost;
+				randomBid = this.sampleExponentialIntervalIncreasing(marginalCost,
+						marginalCost + switzerlandMaxIncrease);
 			} else {
-				// Otherwise, this task is estimated to be just too costly for the player
-				// compared to the opponent, bid randomly in (marginalCost, tentativeBid)
-				// randomBid = (long) (Math.random() * (tentativeBid - marginalCost) +
-				// marginalCost);
-				randomBid = (long) this.sampleExponentialIntervalDecreasing(marginalCost, tentativeBid);
-			}
-		} else {
-			// Case when both the marginalCost and the tentativeBid are lower than the
-			// estimated lower bound of opponent bids
-			if (tentativeBid <= opponentBidLowerBound) {
 				// This means that the utility of the task was undervalued, be like Switzerland
 				// and increase the price to a random value in (tentativeBid,
 				// opponentBidLowerBound)
-				double switzerlandMaxIncrease = opponentBidLowerBound - tentativeBid;
-				// randomBid = tentativeBid + (long) (Math.random() * switzerlandMaxIncrease);
-				randomBid = (long) this.sampleExponentialIntervalIncreasing(tentativeBid,
+				switzerlandMaxIncrease = opponentBidLowerBound - tentativeBid;
+				randomBid = this.sampleExponentialIntervalIncreasing(tentativeBid,
 						tentativeBid + switzerlandMaxIncrease);
-			}
-			// Case when the tentativeBid is higher than the estimated lower bound of
-			// opponent bids, but the marginalCost was lower than the bound
-			else {
+//				System.out.println("SWITZERLAND MAX INCREASE = " + switzerlandMaxIncrease);
+//				System.out.println("SWITZERLAND BID = " + randomBid);
+			}			
+		}
+		// Case when the tentativeBid is higher than the estimated lower bound of
+		// opponent bids, but the marginalCost was lower than the bound
+		else {
+			// Case when the estimated cost of the new task is above the estimated lower
+			// bound of opponent bids
+			if (marginalCost >= opponentBidLowerBound) {
+				double chinaMaxReduction = totalProfitPlayer - marginalCost - totalProfitOpponent + marginalCostOpponent;
+				if (chinaMaxReduction > 0) {
+					// If it is possible to still have the higher profit after bidding below the
+					// marginalCost, be like China and reduce the price to a random value in
+					// (opponentBidLowerBound - chinaMaxReduction, opponentBidLowerBound),
+					// randomBid = (long) (opponentBidLowerBound - Math.random() *
+					// chinaMaxReduction);
+					randomBid = this.sampleExponentialIntervalIncreasing(opponentBidLowerBound - chinaMaxReduction,
+							opponentBidLowerBound);
+				} else {
+					// Otherwise, this task is estimated to be just too costly for the player
+					// compared to the opponent, bid randomly in (marginalCost, tentativeBid)
+					// randomBid = (long) (Math.random() * (tentativeBid - marginalCost) +
+					// marginalCost);
+					randomBid =  this.sampleExponentialIntervalDecreasing(
+							Math.min(marginalCost, tentativeBid),
+							Math.max(marginalCost, tentativeBid));
+				}
+//				System.out.println("CHINA MAX REDUCTION = " + chinaMaxReduction);
+//				System.out.println("CHINA BID = " + randomBid);
+			} else {
+				
 				// This means that the utility of the task was overvalued and the competition
 				// might win, be like the USA and offer a carefully picked discount to beat the
 				// competition, while still having profit, by selecting a random value in
 				// (marginalCost, opponentBidLowerBound)
 				double usaMinDiscount = tentativeBid - opponentBidLowerBound;
 				double usaMaxDiscount = tentativeBid - marginalCost;
-				// randomBid = tentativeBid - (long) ((Math.random() * (usaMaxDiscount -
-				// usaMinDiscount)) + usaMinDiscount);
-				randomBid = (long) this.sampleExponentialIntervalIncreasing(tentativeBid - usaMaxDiscount,
+				randomBid = this.sampleExponentialIntervalIncreasing(tentativeBid - usaMaxDiscount,
 						tentativeBid - usaMinDiscount);
+//				System.out.println("USA MIN DISCOUNT = " + usaMinDiscount);
+//				System.out.println("USA MAX DISCOUNT = " + usaMaxDiscount);
+//				System.out.println("USA BID = " + randomBid);
 			}
 		}
 
@@ -202,7 +223,7 @@ public class AuctionAgentConservative implements AuctionBehavior {
 //		if (totalProfitPlayer - marginalCost + randomBid < 0)
 //			randomBid = (long) (marginalCost - totalProfitPlayer);
 
-		Long actualBid = Math.max(randomBid, minBid);
+		Long actualBid = Math.max((long)Math.ceil(randomBid), minBid);
 
 		return actualBid;
 	}
@@ -221,9 +242,7 @@ public class AuctionAgentConservative implements AuctionBehavior {
 		}
 
 		VariablesSet tmpSolution = (VariablesSet) solution.clone();
-		boolean success = tmpSolution.assignTaskRandomly(auctionedTask, this.random);
-		if (!success)
-			return null;
+		tmpSolution.assignTaskRandomly(auctionedTask, this.random);
 		double tmpCost;
 		VariablesSet optimalSolution = tmpSolution;
 		double optimalCost = tmpSolution.computeObjective(vehicleDependent);
@@ -236,7 +255,7 @@ public class AuctionAgentConservative implements AuctionBehavior {
 
 			// If the execution time is close to the timeout threshold by less than half a
 			// second, stop the execution of the algorithm
-			if (time_current - time_start > timeout_bid / 2 - 500)
+			if (time_current - time_start > timeout_bid / 2 - 250)
 				break;
 
 			// Select the candidate neighbors

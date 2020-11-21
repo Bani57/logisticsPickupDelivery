@@ -3,6 +3,7 @@ package template;
 import java.io.File;
 //the list of imports
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
@@ -23,6 +24,7 @@ import logist.task.TaskDistribution;
 import logist.task.TaskSet;
 import logist.topology.Topology;
 import logist.topology.Topology.City;
+import template.comparators.VehicleCapacityComparator;
 
 /**
  * A very simple auction agent that assigns all tasks to its first vehicle and
@@ -97,18 +99,24 @@ public class AuctionDummyOpponentMatcher implements AuctionBehavior {
 		this.player.updatePlayerStatus(previous, winner == agent.id(), bids[agent.id()]);
 		this.opponent.updatePlayerStatus(previous, winner != agent.id(), bids[this.opponent.getId()]);
 
-		if (winner == agent.id()) {
+		if (winner == agent.id()) 
 			this.currentSolution = this.updatedSolution;
-		} else {
+		else
 			this.opponentSolution = this.updatedSolutionOpponent;
-		}
+		
 	}
 
 	@Override
 	public Long askPrice(Task task) {
+		
+		// If it was not possible to transport the task because its weight was over the
+		// maximum capacity, we have to surrender the task to the opponent		
+		int maxCapacity = Collections.max(agent.vehicles(), new VehicleCapacityComparator()).capacity();
+		if (task.weight > maxCapacity)
+			return null;
 
 		long time_start = System.currentTimeMillis();
-		long time_current;
+		this.updatedSolution = this.getUpdatedSolution(this.currentSolution, task, time_start, true);
 
 		double opponentBidLowerBound = this.opponent.estimateTaskPriceLowerBound(task, this.topologyDiameter);
 
@@ -116,12 +124,8 @@ public class AuctionDummyOpponentMatcher implements AuctionBehavior {
 		// (hyp: either our optimization algorithm doesn't always find the optimum or we
 		// have an error in the computation of the objective function)
 
-		this.updatedSolution = this.getUpdatedSolution(this.currentSolution, task, time_start, true);
-		// If it was not possible to transport the task because its weight was over the
-		// maximum capacity, we have to surrender the task to the opponent
-		if (this.updatedSolution == null)
-			return null;
-
+		time_start = System.currentTimeMillis();
+		
 		// Estimate the current total cost of the opponent's plan and compute the
 		// opponent's updated solution
 		// With those we can compute another estimate of the lower bound of the
@@ -154,9 +158,7 @@ public class AuctionDummyOpponentMatcher implements AuctionBehavior {
 		}
 
 		VariablesSet tmpSolution = (VariablesSet) solution.clone();
-		boolean success = tmpSolution.assignTaskRandomly(auctionedTask, this.random);
-		if (!success)
-			return null;
+		tmpSolution.assignTaskRandomly(auctionedTask, this.random);
 		double tmpCost;
 		VariablesSet optimalSolution = tmpSolution;
 		double optimalCost = tmpSolution.computeObjective(vehicleDependent);
@@ -169,7 +171,7 @@ public class AuctionDummyOpponentMatcher implements AuctionBehavior {
 
 			// If the execution time is close to the timeout threshold by less than half a
 			// second, stop the execution of the algorithm
-			if (time_current - time_start > timeout_bid - 500)
+			if (time_current - time_start > timeout_bid / 2 - 250)
 				break;
 
 			// Select the candidate neighbors

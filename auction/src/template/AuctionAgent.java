@@ -3,6 +3,7 @@ package template;
 import java.io.File;
 //the list of imports
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
@@ -23,6 +24,7 @@ import logist.task.TaskDistribution;
 import logist.task.TaskSet;
 import logist.topology.Topology;
 import logist.topology.Topology.City;
+import template.comparators.VehicleCapacityComparator;
 
 /**
  * A very simple auction agent that assigns all tasks to its first vehicle and
@@ -109,6 +111,12 @@ public class AuctionAgent implements AuctionBehavior {
 
 	@Override
 	public Long askPrice(Task task) {
+		
+		// If it was not possible to transport the task because its weight was over the
+		// maximum capacity, we have to surrender the task to the opponent		
+		int maxCapacity = Collections.max(agent.vehicles(), new VehicleCapacityComparator()).capacity();
+		if (task.weight > maxCapacity)
+			return null;
 
 		long time_start = System.currentTimeMillis();
 
@@ -127,11 +135,6 @@ public class AuctionAgent implements AuctionBehavior {
 		// Compute the absolute and relative cost of adding the task to our plan
 		Double currentCost = this.player.hasWonTasks() ? this.currentSolution.computeObjective(true) : 0;
 		this.updatedSolution = this.getUpdatedSolution(this.currentSolution, task, time_start, true);
-		
-		// If it was not possible to transport the task because its weight was over the
-		// maximum capacity, we have to surrender the task to the opponent
-		if (this.updatedSolution == null)
-			return null;
 				
 		Double updatedCost = this.updatedSolution.computeObjective(true);
 		Double marginalCost = updatedCost - currentCost;
@@ -255,9 +258,7 @@ public class AuctionAgent implements AuctionBehavior {
 		}
 
 		VariablesSet tmpSolution = (VariablesSet) solution.clone();
-		boolean success = tmpSolution.assignTaskRandomly(auctionedTask, this.random);
-		if (!success)
-			return null;
+		tmpSolution.assignTaskRandomly(auctionedTask, this.random);
 		double tmpCost;
 		VariablesSet optimalSolution = tmpSolution;
 		double optimalCost = tmpSolution.computeObjective(vehicleDependent);
