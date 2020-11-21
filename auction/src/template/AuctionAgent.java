@@ -145,8 +145,12 @@ public class AuctionAgent implements AuctionBehavior {
 		Double updatedCostOpponent = this.updatedSolutionOpponent.computeObjective(false);
 		Double marginalCostOpponent = updatedCostOpponent - currentCostOpponent;
 
+		Double expectedFutureDissimilarity = this.player.expectedFutureDissimilarity(task, topologyDiameter);
 		// Compute the bid we are asking for the task
-		Double relativeGain = this.player.hasWonTasks() ? Math.pow(base, relativeMarginalCost) + minRelativeGain : 1.0;
+		Double relativeGain = this.player.hasWonTasks() 
+				? Math.pow(base, relativeMarginalCost) + minRelativeGain 
+				: expectedFutureDissimilarity;
+		System.out.println("Future diss: " + expectedFutureDissimilarity);
 		Long tentativeBid = (long) Math.ceil(relativeGain * marginalCost);
 
 		Long randomBid;
@@ -208,8 +212,8 @@ public class AuctionAgent implements AuctionBehavior {
 
 		// totalProfitPlayer - marginalCost + randomBid > 0
 		// <=> randomBid > marginalCost - totalProfitPlayer
-		if (totalProfitPlayer - marginalCost + randomBid < 0)
-			randomBid = (long) (marginalCost - totalProfitPlayer);
+//		if (totalProfitPlayer - marginalCost + randomBid < 0)
+//			randomBid = (long) (marginalCost - totalProfitPlayer);
 
 		Long actualBid = Math.max(randomBid, minBid);
 
@@ -224,7 +228,7 @@ public class AuctionAgent implements AuctionBehavior {
 			boolean vehicleDependent) {
 
 		// Read the number of iterations
-		final int numIterations = agent.readProperty("num-iterations", Integer.class, 10000);
+		final int numIterations = agent.readProperty("num-iterations", Integer.class, 5000);
 
 		// Read p, it has to be between 0 and 1
 		final double p = agent.readProperty("p", Double.class, 0.9);
@@ -319,11 +323,11 @@ public class AuctionAgent implements AuctionBehavior {
 		// Read initial solution id, valid values go from 1 to 3.
 		// @see template.VariablesSet#init() to know more about the 3 different initial
 		// solutions.
-		int initialSolutionId = agent.readProperty("initial-solution-id", Integer.class, 1);
-		if (initialSolutionId != 1 && initialSolutionId != 2 && initialSolutionId != 3) {
-			System.out.println("The initial solution id should be either 1, 2 or 3");
-			System.exit(0);
-		}
+//		int initialSolutionId = agent.readProperty("initial-solution-id", Integer.class, 1);
+//		if (initialSolutionId != 1 && initialSolutionId != 2 && initialSolutionId != 3) {
+//			System.out.println("The initial solution id should be either 1, 2 or 3");
+//			System.exit(0);
+//		}
 
 		long time_start = System.currentTimeMillis();
 

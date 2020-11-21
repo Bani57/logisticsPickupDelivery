@@ -198,8 +198,8 @@ public class AuctionAgentConservative implements AuctionBehavior {
 
 		// totalProfitPlayer - marginalCost + randomBid > 0
 		// <=> randomBid > marginalCost - totalProfitPlayer
-		if (totalProfitPlayer - marginalCost + randomBid < 0)
-			randomBid = (long) (marginalCost - totalProfitPlayer);
+//		if (totalProfitPlayer - marginalCost + randomBid < 0)
+//			randomBid = (long) (marginalCost - totalProfitPlayer);
 
 		Long actualBid = Math.max(randomBid, minBid);
 
@@ -210,7 +210,7 @@ public class AuctionAgentConservative implements AuctionBehavior {
 			boolean vehicleDependent) {
 
 		// Read the number of iterations
-		final int numIterations = agent.readProperty("num-iterations", Integer.class, 10000);
+		final int numIterations = agent.readProperty("num-iterations", Integer.class, 5000);
 
 		// Read p, it has to be between 0 and 1
 		final double p = agent.readProperty("p", Double.class, 0.9);

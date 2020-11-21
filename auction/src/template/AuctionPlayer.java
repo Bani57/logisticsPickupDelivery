@@ -100,7 +100,7 @@ public class AuctionPlayer {
 
 	}
 
-	private double expectedFutureDissimilarity(Task auctionTask, double topologyDiameter) {
+	public double expectedFutureDissimilarity(Task auctionTask, double topologyDiameter) {
 		AuctionPlayer futurePlayer = new AuctionPlayer(this.id, this.topology, this.taskDistribution,
 				new ArrayList<>(this.wonTasks), this.currentReward, new ArrayList<>(pastBids), this.meanBid,
 				this.bidStd);
@@ -113,13 +113,12 @@ public class AuctionPlayer {
 		for (City from : this.topology.cities()) {
 			for (City to : this.topology.cities()) {
 				if (!from.equals(to)) {
-					futureTaskProbability = this.taskDistribution.probability(from, to);
+					futureTaskProbability = this.taskDistribution.probability(from, to) / this.topology.size();
 					futureTaskDissimilarity = futurePlayer.computeDissimilarityOfTask(from, to, topologyDiameter);
 					expectedFutureDissimilarity += futureTaskProbability * futureTaskDissimilarity;
 				}
 			}
 		}
-
 		return expectedFutureDissimilarity;
 	}
 
