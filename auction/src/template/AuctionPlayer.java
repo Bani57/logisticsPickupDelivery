@@ -89,7 +89,9 @@ public class AuctionPlayer {
 			relativeDistanceToTaskCity = taskPickupCity.distanceTo(cityInPath) / topologyDiameter;
 			if (relativeDistanceToTaskCity < minRelativeDistanceToTaskPickupCity)
 				minRelativeDistanceToTaskPickupCity = relativeDistanceToTaskCity;
-
+		}
+		citiesInPath.add(taskPickupCity);
+		for (City cityInPath : citiesInPath) {
 			relativeDistanceToTaskCity = taskDeliveryCity.distanceTo(cityInPath) / topologyDiameter;
 			if (relativeDistanceToTaskCity < minRelativeDistanceToTaskDeliveryCity)
 				minRelativeDistanceToTaskDeliveryCity = relativeDistanceToTaskCity;

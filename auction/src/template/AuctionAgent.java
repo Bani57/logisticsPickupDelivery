@@ -155,7 +155,7 @@ public class AuctionAgent implements AuctionBehavior {
 		// Compute the bid we are asking for the task
 		Double relativeGain = this.player.hasWonTasks() 
 				? Math.pow(base, relativeMarginalCost) + minRelativeGain 
-				: 0.5;
+				: Math.sqrt(expectedFutureDissimilarity);
 		System.out.println("Future diss: " + expectedFutureDissimilarity);
 		double tentativeBid =  relativeGain * marginalCost;
 
@@ -248,7 +248,7 @@ public class AuctionAgent implements AuctionBehavior {
 			boolean vehicleDependent) {
 
 		// Read the number of iterations
-		final int numIterations = agent.readProperty("num-iterations", Integer.class, 5000);
+//		final int numIterations = agent.readProperty("num-iterations", Integer.class, 5000);
 
 		// Read p, it has to be between 0 and 1
 		final double p = agent.readProperty("p", Double.class, 0.9);
@@ -265,7 +265,7 @@ public class AuctionAgent implements AuctionBehavior {
 		long time_current;
 
 		// Iterate the SLS until the termination condition is met
-		for (int count = 0; count < numIterations; count++) {
+		while(true) {
 
 			time_current = System.currentTimeMillis();
 
@@ -329,7 +329,7 @@ public class AuctionAgent implements AuctionBehavior {
 			return this.currentSolution.inferPlans();
 
 		// Read the number of iterations
-		final int numIterations = agent.readProperty("num-iterations", Integer.class, 10000);
+//		final int numIterations = agent.readProperty("num-iterations", Integer.class, 10000);
 
 		// Read p, it has to be between 0 and 1
 		final double p = agent.readProperty("p", Double.class, 1.0);
@@ -370,7 +370,7 @@ public class AuctionAgent implements AuctionBehavior {
 		long time_current;
 
 		// Iterate the SLS until the termination condition is met
-		for (int count = 0; count < numIterations; count++) {
+		while(true) {
 
 			time_current = System.currentTimeMillis();
 
