@@ -149,73 +149,87 @@ public class AuctionAgent implements AuctionBehavior {
 		// Compute the bid we are asking for the task
 		Double relativeGain = this.player.hasWonTasks() 
 				? Math.pow(base, relativeMarginalCost) + minRelativeGain 
-				: expectedFutureDissimilarity;
+				: 0.5;
 		System.out.println("Future diss: " + expectedFutureDissimilarity);
-		Long tentativeBid = (long) Math.ceil(relativeGain * marginalCost);
+		double tentativeBid =  relativeGain * marginalCost;
 
-		Long randomBid;
+		double randomBid;
 		double totalProfitPlayer = this.player.getCurrentTotalReward() - currentCost;
 		double totalProfitOpponent = this.opponent.getCurrentTotalReward() - currentCostOpponent;
-		// Case when the estimated cost of the new task is above the estimated lower
-		// bound of opponent bids
-		if (marginalCost >= opponentBidLowerBound) {
-			double chinaMaxReduction = totalProfitPlayer - marginalCost - totalProfitOpponent + marginalCostOpponent;
-			if (chinaMaxReduction > 0) {
-				// If it is possible to still have the higher profit after bidding below the
-				// marginalCost, be like China and reduce the price to a random value in
-				// (opponentBidLowerBound - chinaMaxReduction, opponentBidLowerBound),
-				// randomBid = (long) (opponentBidLowerBound - Math.random() *
-				// chinaMaxReduction);
-				randomBid = (long) this.sampleExponentialIntervalIncreasing(opponentBidLowerBound - chinaMaxReduction,
-						opponentBidLowerBound);
+		
+		// Case when both the marginalCost and the tentativeBid are lower than the
+		// estimated lower bound of opponent bids
+		if (tentativeBid <= opponentBidLowerBound) {
+			
+			// WE always do switzerland but in two different manners
+			
+			double switzerlandMaxIncrease;
+			if (tentativeBid < marginalCost && marginalCost < opponentBidLowerBound) {
+				// Switzerland but we can start from marginalCost
+				switzerlandMaxIncrease = opponentBidLowerBound - marginalCost;
+				randomBid = this.sampleExponentialIntervalIncreasing(marginalCost,
+						marginalCost + switzerlandMaxIncrease);
 			} else {
-				// Otherwise, this task is estimated to be just too costly for the player
-				// compared to the opponent, bid randomly in (marginalCost, tentativeBid)
-				// randomBid = (long) (Math.random() * (tentativeBid - marginalCost) +
-				// marginalCost);
-				randomBid = (long) this.sampleExponentialIntervalDecreasing(marginalCost, tentativeBid);
-			}
-			System.out.println("CHINA MAX REDUCTION = " + chinaMaxReduction);
-			System.out.println("CHINA BID = " + randomBid);
-		} else {
-			// Case when both the marginalCost and the tentativeBid are lower than the
-			// estimated lower bound of opponent bids
-			if (tentativeBid <= opponentBidLowerBound) {
 				// This means that the utility of the task was undervalued, be like Switzerland
 				// and increase the price to a random value in (tentativeBid,
 				// opponentBidLowerBound)
-				double switzerlandMaxIncrease = opponentBidLowerBound - tentativeBid;
-				// randomBid = tentativeBid + (long) (Math.random() * switzerlandMaxIncrease);
-				randomBid = (long) this.sampleExponentialIntervalIncreasing(tentativeBid,
+				switzerlandMaxIncrease = opponentBidLowerBound - tentativeBid;
+				randomBid = this.sampleExponentialIntervalIncreasing(tentativeBid,
 						tentativeBid + switzerlandMaxIncrease);
-				System.out.println("SWITZERLAND MAX INCREASE = " + switzerlandMaxIncrease);
-				System.out.println("SWITZERLAND BID = " + randomBid);
-			}
-			// Case when the tentativeBid is higher than the estimated lower bound of
-			// opponent bids, but the marginalCost was lower than the bound
-			else {
+//				System.out.println("SWITZERLAND MAX INCREASE = " + switzerlandMaxIncrease);
+//				System.out.println("SWITZERLAND BID = " + randomBid);
+			}			
+		}
+		// Case when the tentativeBid is higher than the estimated lower bound of
+		// opponent bids, but the marginalCost was lower than the bound
+		else {
+			// Case when the estimated cost of the new task is above the estimated lower
+			// bound of opponent bids
+			if (marginalCost >= opponentBidLowerBound) {
+				double chinaMaxReduction = totalProfitPlayer - marginalCost - totalProfitOpponent + marginalCostOpponent;
+				if (chinaMaxReduction > 0) {
+					// If it is possible to still have the higher profit after bidding below the
+					// marginalCost, be like China and reduce the price to a random value in
+					// (opponentBidLowerBound - chinaMaxReduction, opponentBidLowerBound),
+					// randomBid = (long) (opponentBidLowerBound - Math.random() *
+					// chinaMaxReduction);
+					randomBid = this.sampleExponentialIntervalIncreasing(opponentBidLowerBound - chinaMaxReduction,
+							opponentBidLowerBound);
+				} else {
+					// Otherwise, this task is estimated to be just too costly for the player
+					// compared to the opponent, bid randomly in (marginalCost, tentativeBid)
+					// randomBid = (long) (Math.random() * (tentativeBid - marginalCost) +
+					// marginalCost);
+					randomBid =  this.sampleExponentialIntervalDecreasing(
+							Math.min(marginalCost, tentativeBid),
+							Math.max(marginalCost, tentativeBid));
+				}
+//				System.out.println("CHINA MAX REDUCTION = " + chinaMaxReduction);
+//				System.out.println("CHINA BID = " + randomBid);
+			} else {
+				
 				// This means that the utility of the task was overvalued and the competition
 				// might win, be like the USA and offer a carefully picked discount to beat the
 				// competition, while still having profit, by selecting a random value in
 				// (marginalCost, opponentBidLowerBound)
 				double usaMinDiscount = tentativeBid - opponentBidLowerBound;
 				double usaMaxDiscount = tentativeBid - marginalCost;
-				// randomBid = tentativeBid - (long) ((Math.random() * (usaMaxDiscount -
-				// usaMinDiscount)) + usaMinDiscount);
-				randomBid = (long) this.sampleExponentialIntervalIncreasing(tentativeBid - usaMaxDiscount,
+				randomBid = this.sampleExponentialIntervalIncreasing(tentativeBid - usaMaxDiscount,
 						tentativeBid - usaMinDiscount);
-				System.out.println("USA MIN DISCOUNT = " + usaMinDiscount);
-				System.out.println("USA MAX DISCOUNT = " + usaMaxDiscount);
-				System.out.println("USA BID = " + randomBid);
+//				System.out.println("USA MIN DISCOUNT = " + usaMinDiscount);
+//				System.out.println("USA MAX DISCOUNT = " + usaMaxDiscount);
+//				System.out.println("USA BID = " + randomBid);
 			}
 		}
+		
+		
 
 		// totalProfitPlayer - marginalCost + randomBid > 0
 		// <=> randomBid > marginalCost - totalProfitPlayer
 //		if (totalProfitPlayer - marginalCost + randomBid < 0)
 //			randomBid = (long) (marginalCost - totalProfitPlayer);
 
-		Long actualBid = Math.max(randomBid, minBid);
+		Long actualBid = Math.max((long)Math.ceil(randomBid), minBid);
 
 		System.out
 				.println("Task: " + task.toString() + "\nMarginal cost: " + marginalCost + "\nRelative marginal cost: "
