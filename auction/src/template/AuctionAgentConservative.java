@@ -108,7 +108,6 @@ public class AuctionAgentConservative implements AuctionBehavior {
 	public Long askPrice(Task task) {
 
 		long time_start = System.currentTimeMillis();
-		long time_current;
 
 		// Parameters of the bid computation
 		Double maxRelativeGain = 0.8;
@@ -130,6 +129,8 @@ public class AuctionAgentConservative implements AuctionBehavior {
 		Double marginalCost = updatedCost - currentCost;
 		Double relativeMarginalCost = marginalCost / updatedCost;
 
+		time_start = System.currentTimeMillis();
+		
 		// Estimate the current total cost of the opponent's plan and compute the
 		// opponent's updated solution
 		// With those we can compute another estimate of the lower bound of the
@@ -235,7 +236,7 @@ public class AuctionAgentConservative implements AuctionBehavior {
 
 			// If the execution time is close to the timeout threshold by less than half a
 			// second, stop the execution of the algorithm
-			if (time_current - time_start > timeout_bid - 500)
+			if (time_current - time_start > timeout_bid / 2 - 500)
 				break;
 
 			// Select the candidate neighbors

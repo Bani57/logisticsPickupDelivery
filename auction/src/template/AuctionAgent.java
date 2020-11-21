@@ -111,7 +111,6 @@ public class AuctionAgent implements AuctionBehavior {
 	public Long askPrice(Task task) {
 
 		long time_start = System.currentTimeMillis();
-		long time_current;
 
 		double opponentBidLowerBound = this.opponent.estimateTaskPriceLowerBound(task, this.topologyDiameter);
 		System.out.println("Opponent bid lower bound estimate: " + opponentBidLowerBound);
@@ -128,13 +127,17 @@ public class AuctionAgent implements AuctionBehavior {
 		// Compute the absolute and relative cost of adding the task to our plan
 		Double currentCost = this.player.hasWonTasks() ? this.currentSolution.computeObjective(true) : 0;
 		this.updatedSolution = this.getUpdatedSolution(this.currentSolution, task, time_start, true);
+		
 		// If it was not possible to transport the task because its weight was over the
 		// maximum capacity, we have to surrender the task to the opponent
 		if (this.updatedSolution == null)
 			return null;
+				
 		Double updatedCost = this.updatedSolution.computeObjective(true);
 		Double marginalCost = updatedCost - currentCost;
 		Double relativeMarginalCost = marginalCost / updatedCost;
+
+		time_start = System.currentTimeMillis();
 
 		// Estimate the current total cost of the opponent's plan and compute the
 		// opponent's updated solution
@@ -267,7 +270,7 @@ public class AuctionAgent implements AuctionBehavior {
 
 			// If the execution time is close to the timeout threshold by less than half a
 			// second, stop the execution of the algorithm
-			if (time_current - time_start > timeout_bid - 500)
+			if (time_current - time_start > timeout_bid / 2 - 250)
 				break;
 
 			// Select the candidate neighbors
