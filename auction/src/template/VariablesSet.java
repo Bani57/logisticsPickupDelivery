@@ -964,6 +964,39 @@ public class VariablesSet {
 		return this.tasks;
 	}
 
+	public void setTasks(ArrayList<Task> newTasks) {
+		int numTasks = newTasks.size();
+		int numVehicles = this.vehicles.size();
+		int taskIdx;
+		
+		for (int j = 0; j < numVehicles; j++) {
+			ActionRep oldNextAction = this.getNextAction(j);
+			if (oldNextAction != null) {
+				taskIdx = this.getTaskIdx(oldNextAction.getTask().id);
+				this.setNextAction(j, new ActionRep(newTasks.get(taskIdx), oldNextAction.getAction()));
+			}
+		}
+		
+		for (int i = 0; i < numTasks; i++) {
+			this.tasks.set(i, newTasks.get(i));
+
+			ActionRep oldNextActionAfterPickup = this.getNextActionAfterPickup(i);
+			if (oldNextActionAfterPickup != null)
+			{
+				taskIdx = this.getTaskIdx(oldNextActionAfterPickup.getTask().id);
+				this.setNextActionAfterPickup(i, new ActionRep(newTasks.get(taskIdx), oldNextActionAfterPickup.getAction()));
+			}
+
+			ActionRep oldNextActionAfterDelivery = this.getNextActionAfterDelivery(i);
+			if (oldNextActionAfterDelivery != null)
+			{
+				taskIdx = this.getTaskIdx(oldNextActionAfterDelivery.getTask().id);
+				this.setNextActionAfterDelivery(i, new ActionRep(newTasks.get(taskIdx), oldNextActionAfterDelivery.getAction()));
+			}
+		}
+
+	}
+
 	public Integer getTaskIdx(int tId) {
 		return taskIdx.get(tId);
 	}

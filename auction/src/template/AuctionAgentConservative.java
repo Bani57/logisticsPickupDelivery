@@ -203,8 +203,6 @@ public class AuctionAgentConservative implements AuctionBehavior {
 
 		Long actualBid = Math.max(randomBid, minBid);
 
-		System.out.println(totalProfitPlayer);
-
 		return actualBid;
 	}
 
@@ -295,7 +293,7 @@ public class AuctionAgentConservative implements AuctionBehavior {
 			return this.currentSolution.inferPlans();
 
 		// Read the number of iterations
-		final int numIterations = 100000; // agent.readProperty("num-iterations", Integer.class, 10000);
+		final int numIterations = agent.readProperty("num-iterations", Integer.class, 10000);
 
 		// Read p, it has to be between 0 and 1
 		final double p = agent.readProperty("p", Double.class, 1.0);
@@ -303,39 +301,50 @@ public class AuctionAgentConservative implements AuctionBehavior {
 			System.out.println("The parameter p should be between 0.0 and 1.0");
 			System.exit(0);
 		}
+		
+		int numWonTasks = tasksList.size();
+//		for(int i=0; i<numWonTasks; i++)
+//		{
+//			System.out.println(tasksList.get(i) + " " + this.currentSolution.getTasks().get(i));
+//		}
+		this.currentSolution.setTasks(tasksList);
+//		for(int i=0; i<numWonTasks; i++)
+//		{
+//			System.out.println(tasksList.get(i) + " " + this.currentSolution.getTasks().get(i));
+//		}
 
-		// Read initial solution id, valid values go from 1 to 3.
-		// @see template.VariablesSet#init() to know more about the 3 different initial
-		// solutions.
-		int initialSolutionId = agent.readProperty("initial-solution-id", Integer.class, 1);
-		if (initialSolutionId != 1 && initialSolutionId != 2 && initialSolutionId != 3) {
-			System.out.println("The initial solution id should be either 1, 2 or 3");
-			System.exit(0);
-		}
+//		// Read initial solution id, valid values go from 1 to 3.
+//		// @see template.VariablesSet#init() to know more about the 3 different initial
+//		// solutions.
+//		int initialSolutionId = agent.readProperty("initial-solution-id", Integer.class, 1);
+//		if (initialSolutionId != 1 && initialSolutionId != 2 && initialSolutionId != 3) {
+//			System.out.println("The initial solution id should be either 1, 2 or 3");
+//			System.exit(0);
+//		}
 
 		long time_start = System.currentTimeMillis();
 
-		// Find an initial solution
-		VariablesSet initialSolution = new VariablesSet(vehicles, tasksList);
-		boolean success = initialSolution.init(this.topology, initialSolutionId);
+//		// Find an initial solution
+//		VariablesSet initialSolution = new VariablesSet(vehicles, tasksList);
+//		boolean success = initialSolution.init(this.topology, initialSolutionId);
+//
+////		// TODO: Find a way to keep the task ordering from this.currentSolution and not have to rebuild the plan from an initial solution
+////		VariablesSet initialSolution = (VariablesSet) this.currentSolution.clone();
+//
+//		// If the problem has no solution (e.g. there is a task whose weight is higher
+//		// than each vehicle's capacity),
+//		// than exit
+//		if (!success) {
+//			System.out.println("The problem has no solution");
+//			System.exit(0);
+//		}
 
-//		// TODO: Find a way to keep the task ordering from this.currentSolution and not have to rebuild the plan from an initial solution
-//		VariablesSet initialSolution = (VariablesSet) this.currentSolution.clone();
-
-		// If the problem has no solution (e.g. there is a task whose weight is higher
-		// than each vehicle's capacity),
-		// than exit
-		if (!success) {
-			System.out.println("The problem has no solution");
-			System.exit(0);
-		}
-
-		VariablesSet tmpSolution = initialSolution;
+		VariablesSet tmpSolution = (VariablesSet) this.currentSolution.clone();  //initialSolution;
 		double tmpCost;
-		VariablesSet optimalSolution = initialSolution;
-		double optimalCost = initialSolution.computeObjective(true);
+		VariablesSet optimalSolution = (VariablesSet) this.currentSolution.clone(); //initialSolution;
+		double optimalCost = this.currentSolution.computeObjective(true); // initialSolution.computeObjective(true);
 		long time_current;
-
+		
 		// Iterate the SLS until the termination condition is met
 		for (int count = 0; count < numIterations; count++) {
 

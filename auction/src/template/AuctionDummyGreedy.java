@@ -231,22 +231,24 @@ public class AuctionDummyGreedy implements AuctionBehavior {
 
 		long time_start = System.currentTimeMillis();
 
-		// Find an initial solution
-		VariablesSet initialSolution = new VariablesSet(vehicles, tasksList);
-		boolean success = initialSolution.init(this.topology, initialSolutionId);
+//		// Find an initial solution
+//		VariablesSet initialSolution = new VariablesSet(vehicles, tasksList);
+//		boolean success = initialSolution.init(this.topology, initialSolutionId);
+//
+//		// If the problem has no solution (e.g. there is a task whose weight is higher
+//		// than each vehicle's capacity),
+//		// than exit
+//		if (!success) {
+//			System.out.println("The problem has no solution");
+//			System.exit(0);
+//		}
 
-		// If the problem has no solution (e.g. there is a task whose weight is higher
-		// than each vehicle's capacity),
-		// than exit
-		if (!success) {
-			System.out.println("The problem has no solution");
-			System.exit(0);
-		}
+		this.currentSolution.setTasks(tasksList);
 
-		VariablesSet tmpSolution = initialSolution;
+		VariablesSet tmpSolution = (VariablesSet) this.currentSolution.clone(); //initialSolution;
 		double tmpCost;
-		VariablesSet optimalSolution = initialSolution;
-		double optimalCost = initialSolution.computeObjective(true);
+		VariablesSet optimalSolution = (VariablesSet) this.currentSolution.clone();
+		double optimalCost = this.currentSolution.computeObjective(true);
 		long time_current;
 
 		// Iterate the SLS until the termination condition is met
