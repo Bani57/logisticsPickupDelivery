@@ -1,0 +1,10 @@
+### auction.xml ###
+     Agents       | Win - Draw - Lose |  auction_main_38  |      auction     
+ auction_main_38  |     1 - 0 - 1     |         -         | WIN (3180 : 124) 
+     auction      |     1 - 0 - 1     | WIN (2566 : 479)  |         -        
+
+First company results
+  # wins   : 2
+  # draws  : 0
+  # losses : 0
+

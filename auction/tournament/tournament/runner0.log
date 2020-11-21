@@ -1,0 +1,686 @@
+09:33:33.929 FINE | Run command: java -Xmx1024m -classpath /home/oraziorillo/Documents/projects/github/logist_simulation_workspace/logist/logist.jar logist.LogistPlatform -o tournament/tournament/auction-auction_main_38-auction.xml -a tournament/tournament/agents.xml config/auction.xml auction_main_38 auction
+09:33:34.203 CONFIG | Reading config/auction.xml
+09:33:34.479 CONFIG | Reading config/settings_auction.xml
+09:33:34.528 CONFIG | Reading config/topology/england.xml
+09:33:34.550 CONFIG | Reading tournament/tournament/agents.xml
+09:33:34.593 CONFIG | Reading config/settings_auction.xml
+09:33:34.672 CONFIG | Reading config/settings_auction.xml
+09:33:34.685 CONFIG | Setup
+09:33:34.766 CONFIG | Opponent bid lower bound estimate: 0.0
+09:33:39.291 CONFIG | Future diss: 0.2551514879110535
+09:33:39.291 CONFIG | Task: (Task 0, 3 kg, 69479 CHF, Cardiff -> Sheffield)
+09:33:39.291 CONFIG | Marginal cost: 2191.0
+09:33:39.291 CONFIG | Relative marginal cost: 1.0
+09:33:39.291 CONFIG | Tentative bid: 1106.7293570872428
+09:33:39.291 CONFIG | Bid: 1747
+09:33:43.842 CONFIG | Finished to compute neighbours
+09:33:43.876 CONFIG | The plan was generated in 4550 milliseconds.
+09:33:43.906 CONFIG | The total cost of the plan is 2766.0
+09:33:43.933 CONFIG | Opponent bids: 2767
+09:33:43.934 CONFIG | WON AUCTION
+09:33:43.934 CONFIG | 
+09:33:43.940 CONFIG | Opponent bid lower bound estimate: 2767.0
+09:33:48.486 CONFIG | Future diss: 0.14373507730216223
+09:33:48.486 CONFIG | Task: (Task 1, 3 kg, 47516 CHF, Manchester -> Norwich)
+09:33:48.486 CONFIG | Marginal cost: 2382.0
+09:33:48.487 CONFIG | Relative marginal cost: 0.5208834463153291
+09:33:48.487 CONFIG | Tentative bid: 3519.1374314687932
+09:33:48.487 CONFIG | Bid: 2567
+09:33:48.493 CONFIG | Our ID is 1
+09:33:48.493 CONFIG | Bids
+09:33:48.494 CONFIG | [1747, 2767]
+09:33:53.043 CONFIG | Finished to compute neighbours
+09:33:53.043 CONFIG | The plan was generated in 4550 milliseconds.
+09:33:53.043 CONFIG | The total cost of the plan is 3279.0
+09:33:53.043 CONFIG | Opponent bids: 3280
+09:33:53.043 CONFIG | WON AUCTION
+09:33:53.043 CONFIG | 
+09:33:53.044 CONFIG | Opponent bid lower bound estimate: 2374.160031655143
+09:33:57.596 CONFIG | Future diss: 0.14373507730216223
+09:33:57.596 CONFIG | Task: (Task 2, 3 kg, 68638 CHF, Cardiff -> Manchester)
+09:33:57.596 CONFIG | Marginal cost: 0.0
+09:33:57.596 CONFIG | Relative marginal cost: 0.0
+09:33:57.596 CONFIG | Tentative bid: 0.0
+09:33:57.596 CONFIG | Bid: 1482
+09:33:57.601 CONFIG | Our ID is 1
+09:33:57.601 CONFIG | Bids
+09:33:57.601 CONFIG | [2567, 3280]
+09:34:02.147 CONFIG | Finished to compute neighbours
+09:34:02.147 CONFIG | The plan was generated in 4550 milliseconds.
+09:34:02.147 CONFIG | The total cost of the plan is 2789.5
+09:34:02.149 CONFIG | Opponent bids: 2790
+09:34:02.150 CONFIG | WON AUCTION
+09:34:02.150 CONFIG | 
+09:34:02.150 CONFIG | Opponent bid lower bound estimate: 2407.4690681904945
+09:34:06.707 CONFIG | Future diss: 0.08674284217495169
+09:34:06.707 CONFIG | Task: (Task 3, 3 kg, 55553 CHF, Sheffield -> Portsmouth)
+09:34:06.707 CONFIG | Marginal cost: 748.0
+09:34:06.707 CONFIG | Relative marginal cost: 0.14057507987220447
+09:34:06.707 CONFIG | Tentative bid: 948.6901561998518
+09:34:06.707 CONFIG | Bid: 1905
+09:34:06.707 CONFIG | Our ID is 1
+09:34:06.707 CONFIG | Bids
+09:34:06.707 CONFIG | [1482, 2790]
+09:34:11.257 CONFIG | Finished to compute neighbours
+09:34:11.257 CONFIG | The plan was generated in 4550 milliseconds.
+09:34:11.257 CONFIG | The total cost of the plan is 3031.0
+09:34:11.259 CONFIG | Opponent bids: 3032
+09:34:11.259 CONFIG | WON AUCTION
+09:34:11.260 CONFIG | 
+09:34:11.262 CONFIG | Opponent bid lower bound estimate: 2526.269041326523
+09:34:15.811 CONFIG | Future diss: 0.080644131438475
+09:34:15.811 CONFIG | Task: (Task 4, 3 kg, 41305 CHF, Liverpool -> Norwich)
+09:34:15.812 CONFIG | Marginal cost: 0.0
+09:34:15.812 CONFIG | Relative marginal cost: 0.0
+09:34:15.812 CONFIG | Tentative bid: 0.0
+09:34:15.812 CONFIG | Bid: 705
+09:34:15.812 CONFIG | Our ID is 1
+09:34:15.812 CONFIG | Bids
+09:34:15.812 CONFIG | [1905, 3032]
+09:34:20.362 CONFIG | Finished to compute neighbours
+09:34:20.362 CONFIG | The plan was generated in 4550 milliseconds.
+09:34:20.362 CONFIG | The total cost of the plan is 3626.0
+09:34:20.368 CONFIG | Opponent bids: 3627
+09:34:20.368 CONFIG | WON AUCTION
+09:34:20.368 CONFIG | 
+09:34:20.368 CONFIG | Opponent bid lower bound estimate: 2455.99140971052
+09:34:24.915 CONFIG | Future diss: 0.06969647107779359
+09:34:24.916 CONFIG | Task: (Task 5, 3 kg, 85625 CHF, Norwich -> London)
+09:34:24.916 CONFIG | Marginal cost: 201.0
+09:34:24.916 CONFIG | Relative marginal cost: 0.03639985512495473
+09:34:24.916 CONFIG | Tentative bid: 244.66830425898118
+09:34:24.916 CONFIG | Bid: 1036
+09:34:24.916 CONFIG | Our ID is 1
+09:34:24.916 CONFIG | Bids
+09:34:24.917 CONFIG | [705, 3627]
+09:34:29.466 CONFIG | Finished to compute neighbours
+09:34:29.467 CONFIG | The plan was generated in 4550 milliseconds.
+09:34:29.467 CONFIG | The total cost of the plan is 575.0
+09:34:29.469 CONFIG | Opponent bids: 699
+09:34:29.469 CONFIG | LOST AUCTION
+09:34:29.469 CONFIG | 
+09:34:29.469 CONFIG | Opponent bid lower bound estimate: 1482.1924794143583
+09:34:34.020 CONFIG | Future diss: 0.06969647107779359
+09:34:34.021 CONFIG | Task: (Task 6, 3 kg, 64503 CHF, Cardiff -> London)
+09:34:34.219 CONFIG | Marginal cost: 0.0
+09:34:34.219 CONFIG | Relative marginal cost: 0.0
+09:34:34.219 CONFIG | Tentative bid: 0.0
+09:34:34.219 CONFIG | Bid: 1299
+09:34:34.220 CONFIG | Our ID is 1
+09:34:34.220 CONFIG | Bids
+09:34:34.220 CONFIG | [1036, 699]
+09:34:34.220 CONFIG | We have won task 5
+09:34:38.572 CONFIG | Finished to compute neighbours
+09:34:38.572 CONFIG | The plan was generated in 4550 milliseconds.
+09:34:38.572 CONFIG | The total cost of the plan is 2905.0
+09:34:38.575 CONFIG | Opponent bids: 2323
+09:34:38.575 CONFIG | WON AUCTION
+09:34:38.575 CONFIG | 
+09:34:38.575 CONFIG | Opponent bid lower bound estimate: 1414.9091298210778
+09:34:43.126 CONFIG | Future diss: 0.06969647107779359
+09:34:43.127 CONFIG | Task: (Task 7, 3 kg, 68101 CHF, London -> Manchester)
+09:34:43.127 CONFIG | Marginal cost: 0.0
+09:34:43.127 CONFIG | Relative marginal cost: 0.0
+09:34:43.127 CONFIG | Tentative bid: 0.0
+09:34:43.127 CONFIG | Bid: 252
+09:34:43.130 CONFIG | Our ID is 1
+09:34:43.131 CONFIG | Bids
+09:34:43.134 CONFIG | [1299, 2323]
+09:34:47.680 CONFIG | Finished to compute neighbours
+09:34:47.680 CONFIG | The plan was generated in 4550 milliseconds.
+09:34:47.681 CONFIG | The total cost of the plan is 1639.5
+09:34:47.684 CONFIG | Opponent bids: 1104
+09:34:47.684 CONFIG | WON AUCTION
+09:34:47.684 CONFIG | 
+09:34:47.684 CONFIG | Opponent bid lower bound estimate: 1502.4516490669828
+09:34:52.235 CONFIG | Future diss: 0.02912726990756956
+09:34:52.242 CONFIG | Task: (Task 8, 3 kg, 41269 CHF, Plymouth -> Birmingham)
+09:34:52.242 CONFIG | Marginal cost: 2448.0
+09:34:52.242 CONFIG | Relative marginal cost: 0.3150984682713348
+09:34:52.242 CONFIG | Tentative bid: 3328.364119607862
+09:34:52.242 CONFIG | Bid: 173
+09:34:52.242 CONFIG | Our ID is 1
+09:34:52.242 CONFIG | Bids
+09:34:52.242 CONFIG | [252, 1104]
+09:34:56.787 CONFIG | Finished to compute neighbours
+09:34:56.788 CONFIG | The plan was generated in 4551 milliseconds.
+09:34:56.788 CONFIG | The total cost of the plan is 2389.0
+09:34:56.788 CONFIG | Opponent bids: 1807
+09:34:56.789 CONFIG | WON AUCTION
+09:34:56.789 CONFIG | 
+09:34:56.789 CONFIG | Opponent bid lower bound estimate: 1229.8135757232267
+09:35:01.341 CONFIG | Future diss: 0.02912726990756956
+09:35:01.343 CONFIG | Task: (Task 9, 3 kg, 75780 CHF, Portsmouth -> Plymouth)
+09:35:01.343 CONFIG | Marginal cost: 0.0
+09:35:01.343 CONFIG | Relative marginal cost: 0.0
+09:35:01.343 CONFIG | Tentative bid: 0.0
+09:35:01.343 CONFIG | Bid: 903
+09:35:01.350 CONFIG | Our ID is 1
+09:35:01.350 CONFIG | Bids
+09:35:01.350 CONFIG | [173, 1807]
+09:35:05.900 CONFIG | Finished to compute neighbours
+09:35:05.900 CONFIG | The plan was generated in 4550 milliseconds.
+09:35:05.900 CONFIG | The total cost of the plan is 1799.0
+09:35:05.907 CONFIG | Opponent bids: 1217
+09:35:05.907 CONFIG | WON AUCTION
+09:35:05.907 CONFIG | 
+09:35:05.907 CONFIG | Opponent bid lower bound estimate: 1007.118530914491
+09:35:10.459 CONFIG | Future diss: 0.02912726990756956
+09:35:10.459 CONFIG | Task: (Task 10, 3 kg, 85625 CHF, Birmingham -> Cardiff)
+09:35:10.459 CONFIG | Marginal cost: 992.0
+09:35:10.459 CONFIG | Relative marginal cost: 0.1132290834379637
+09:35:10.459 CONFIG | Tentative bid: 1244.622343409278
+09:35:10.459 CONFIG | Bid: 994
+09:35:10.463 CONFIG | Our ID is 1
+09:35:10.464 CONFIG | Bids
+09:35:10.465 CONFIG | [903, 1217]
+09:35:15.015 CONFIG | Finished to compute neighbours
+09:35:15.015 CONFIG | The plan was generated in 4550 milliseconds.
+09:35:15.015 CONFIG | The total cost of the plan is 1740.0
+09:35:15.016 CONFIG | Opponent bids: 1158
+09:35:15.016 CONFIG | WON AUCTION
+09:35:15.016 CONFIG | 
+09:35:15.018 CONFIG | Opponent bid lower bound estimate: 1027.2237837090347
+09:35:19.572 CONFIG | Future diss: 0.02912726990756956
+09:35:19.572 CONFIG | Task: (Task 11, 3 kg, 55553 CHF, Portsmouth -> Sheffield)
+09:35:19.572 CONFIG | Marginal cost: 1789.0
+09:35:19.573 CONFIG | Relative marginal cost: 0.1695734597156398
+09:35:19.573 CONFIG | Tentative bid: 2295.21952522826
+09:35:19.574 CONFIG | Bid: 173
+09:35:19.577 CONFIG | Our ID is 1
+09:35:19.578 CONFIG | Bids
+09:35:19.578 CONFIG | [994, 1158]
+09:35:24.124 CONFIG | Finished to compute neighbours
+09:35:24.124 CONFIG | The plan was generated in 4550 milliseconds.
+09:35:24.124 CONFIG | The total cost of the plan is 2364.0
+09:35:24.131 CONFIG | Opponent bids: 1782
+09:35:24.132 CONFIG | WON AUCTION
+09:35:24.132 CONFIG | 
+09:35:24.132 CONFIG | Opponent bid lower bound estimate: 1457.9961356875347
+09:35:28.677 CONFIG | Future diss: 0.02912726990756956
+09:35:28.677 CONFIG | Task: (Task 12, 3 kg, 68638 CHF, Cardiff -> Manchester)
+09:35:28.677 CONFIG | Marginal cost: 0.0
+09:35:28.677 CONFIG | Relative marginal cost: 0.0
+09:35:28.677 CONFIG | Tentative bid: 0.0
+09:35:28.677 CONFIG | Bid: 961
+09:35:28.678 CONFIG | Our ID is 1
+09:35:28.678 CONFIG | Bids
+09:35:28.678 CONFIG | [173, 1782]
+09:35:33.228 CONFIG | Finished to compute neighbours
+09:35:33.228 CONFIG | The plan was generated in 4550 milliseconds.
+09:35:33.228 CONFIG | The total cost of the plan is 2789.5
+09:35:33.228 CONFIG | Opponent bids: 2207
+09:35:33.228 CONFIG | WON AUCTION
+09:35:33.228 CONFIG | 
+09:35:33.228 CONFIG | Opponent bid lower bound estimate: 1766.1836957849152
+09:35:37.780 CONFIG | Future diss: 0.006000473758291286
+09:35:37.780 CONFIG | Task: (Task 13, 3 kg, 69390 CHF, Newcastle -> Manchester)
+09:35:37.780 CONFIG | Marginal cost: 0.0
+09:35:37.781 CONFIG | Relative marginal cost: 0.0
+09:35:37.781 CONFIG | Tentative bid: 0.0
+09:35:37.781 CONFIG | Bid: 667
+09:35:37.781 CONFIG | Our ID is 1
+09:35:37.781 CONFIG | Bids
+09:35:37.781 CONFIG | [961, 2207]
+09:35:42.331 CONFIG | Finished to compute neighbours
+09:35:42.331 CONFIG | The plan was generated in 4550 milliseconds.
+09:35:42.331 CONFIG | The total cost of the plan is 3343.5
+09:35:42.331 CONFIG | Opponent bids: 2761
+09:35:42.331 CONFIG | WON AUCTION
+09:35:42.331 CONFIG | 
+09:35:42.334 CONFIG | Opponent bid lower bound estimate: 1255.9323712546848
+09:35:46.883 CONFIG | Future diss: 0.006000473758291286
+09:35:46.883 CONFIG | Task: (Task 14, 3 kg, 48501 CHF, Portsmouth -> Liverpool)
+09:35:46.883 CONFIG | Marginal cost: 197.0
+09:35:46.883 CONFIG | Relative marginal cost: 0.01833069693868056
+09:35:46.884 CONFIG | Tentative bid: 238.1045847112437
+09:35:46.884 CONFIG | Bid: 790
+09:35:46.884 CONFIG | Our ID is 1
+09:35:46.884 CONFIG | Bids
+09:35:46.884 CONFIG | [667, 2761]
+09:35:51.434 CONFIG | Finished to compute neighbours
+09:35:51.434 CONFIG | The plan was generated in 4550 milliseconds.
+09:35:51.434 CONFIG | The total cost of the plan is 2561.0
+09:35:51.434 CONFIG | Opponent bids: 1979
+09:35:51.434 CONFIG | WON AUCTION
+09:35:51.434 CONFIG | 
+09:35:51.434 CONFIG | Opponent bid lower bound estimate: 1264.9521740726545
+09:35:55.987 CONFIG | Future diss: 0.006000473758291286
+09:35:55.989 CONFIG | Task: (Task 15, 3 kg, 85840 CHF, Sheffield -> Liverpool)
+09:35:55.989 CONFIG | Marginal cost: 545.5
+09:35:55.990 CONFIG | Relative marginal cost: 0.0483063980518043
+09:35:55.990 CONFIG | Tentative bid: 667.126798756413
+09:35:55.990 CONFIG | Bid: 1194
+09:35:55.990 CONFIG | Our ID is 1
+09:35:55.990 CONFIG | Bids
+09:35:55.990 CONFIG | [790, 1979]
+09:36:00.539 CONFIG | Finished to compute neighbours
+09:36:00.539 CONFIG | The plan was generated in 4550 milliseconds.
+09:36:00.539 CONFIG | The total cost of the plan is 2185.0
+09:36:00.539 CONFIG | Opponent bids: 1603
+09:36:00.539 CONFIG | WON AUCTION
+09:36:00.539 CONFIG | 
+09:36:00.539 CONFIG | Opponent bid lower bound estimate: 805.0890883921992
+09:36:05.091 CONFIG | Future diss: 0.006000473758291286
+09:36:05.092 CONFIG | Task: (Task 16, 3 kg, 85088 CHF, London -> Birmingham)
+09:36:05.092 CONFIG | Marginal cost: 0.0
+09:36:05.092 CONFIG | Relative marginal cost: 0.0
+09:36:05.092 CONFIG | Tentative bid: 0.0
+09:36:05.092 CONFIG | Bid: 268
+09:36:05.092 CONFIG | Our ID is 1
+09:36:05.092 CONFIG | Bids
+09:36:05.092 CONFIG | [1194, 1603]
+09:36:09.641 CONFIG | Finished to compute neighbours
+09:36:09.641 CONFIG | The plan was generated in 4550 milliseconds.
+09:36:09.641 CONFIG | The total cost of the plan is 1165.0
+09:36:09.641 CONFIG | Opponent bids: 672
+09:36:09.641 CONFIG | WON AUCTION
+09:36:09.641 CONFIG | 
+09:36:09.642 CONFIG | Opponent bid lower bound estimate: 604.8846797180572
+09:36:14.194 CONFIG | Future diss: 0.006000473758291286
+09:36:14.195 CONFIG | Task: (Task 17, 3 kg, 72236 CHF, Portsmouth -> Norwich)
+09:36:14.195 CONFIG | Marginal cost: 1150.0
+09:36:14.195 CONFIG | Relative marginal cost: 0.09242515571629496
+09:36:14.195 CONFIG | Tentative bid: 1431.0571183931897
+09:36:14.195 CONFIG | Bid: 173
+09:36:14.196 CONFIG | Our ID is 1
+09:36:14.197 CONFIG | Bids
+09:36:14.197 CONFIG | [268, 672]
+09:36:18.747 CONFIG | Finished to compute neighbours
+09:36:18.747 CONFIG | The plan was generated in 4550 milliseconds.
+09:36:18.747 CONFIG | The total cost of the plan is 1898.0
+09:36:18.747 CONFIG | Opponent bids: 1316
+09:36:18.747 CONFIG | WON AUCTION
+09:36:18.747 CONFIG | 
+09:36:18.747 CONFIG | Opponent bid lower bound estimate: 978.2311905721522
+09:36:23.298 CONFIG | Future diss: 0.006000473758291286
+09:36:23.298 CONFIG | Task: (Task 18, 3 kg, 41806 CHF, Plymouth -> Norwich)
+09:36:23.298 CONFIG | Marginal cost: 2189.5
+09:36:23.298 CONFIG | Relative marginal cost: 0.1496377802077638
+09:36:23.298 CONFIG | Tentative bid: 2786.9324196006564
+09:36:23.298 CONFIG | Bid: 173
+09:36:23.298 CONFIG | Our ID is 1
+09:36:23.298 CONFIG | Bids
+09:36:23.298 CONFIG | [173, 1316]
+09:36:27.848 CONFIG | Finished to compute neighbours
+09:36:28.002 CONFIG | The plan was generated in 4550 milliseconds.
+09:36:28.002 CONFIG | The total cost of the plan is 2374.0
+09:36:28.002 CONFIG | Opponent bids: 1792
+09:36:28.002 CONFIG | WON AUCTION
+09:36:28.002 CONFIG | 
+09:36:28.002 CONFIG | Opponent bid lower bound estimate: 1463.2260516020374
+09:36:32.400 CONFIG | Future diss: 0.0
+09:36:32.400 CONFIG | Task: (Task 19, 3 kg, 62087 CHF, Cardiff -> Leeds)
+09:36:32.400 CONFIG | Marginal cost: -1213.0
+09:36:32.400 CONFIG | Relative marginal cost: -0.09039421715478053
+09:36:32.400 CONFIG | Tentative bid: -1405.1443634239506
+09:36:32.401 CONFIG | Bid: 173
+09:36:32.406 CONFIG | Our ID is 1
+09:36:32.406 CONFIG | Bids
+09:36:32.406 CONFIG | [173, 1792]
+09:36:36.951 CONFIG | Finished to compute neighbours
+09:36:36.951 CONFIG | The plan was generated in 4550 milliseconds.
+09:36:36.951 CONFIG | The total cost of the plan is 2972.5
+09:36:36.953 CONFIG | Opponent bids: 2390
+09:36:36.953 CONFIG | WON AUCTION
+09:36:36.953 CONFIG | 
+09:37:16.855 CONFIG | AGENT ID = 0
+09:37:16.856 CONFIG | NUM TASKS WON AT AUCTION = 19
+09:37:16.856 CONFIG | COST of the optimal plan = 13419.0
+09:37:16.856 CONFIG | TOTAL PROFIT OF THE AGENT = 3180.0
+09:37:16.856 CONFIG | 
+09:37:16.862 CONFIG | Our ID is 1
+09:37:16.862 CONFIG | Bids
+09:37:16.862 CONFIG | [173, 2390]
+09:37:56.763 CONFIG | Finished to compute neighbours
+09:37:56.763 CONFIG | The plan was generated in 39900 milliseconds.
+09:37:56.764 CONFIG | The total cost of the plan is 575.0
+09:37:56.783 CONFIG | Wrote tournament/tournament/auction-auction_main_38-auction.xml
+09:37:56.814 INFO | LogistPlatform finished successfully!
+09:37:56.892 FINE | Run command: java -Xmx1024m -classpath /home/oraziorillo/Documents/projects/github/logist_simulation_workspace/logist/logist.jar logist.LogistPlatform -o tournament/tournament/auction-auction-auction_main_38.xml -a tournament/tournament/agents.xml config/auction.xml auction auction_main_38
+09:37:57.104 CONFIG | Reading config/auction.xml
+09:37:57.405 CONFIG | Reading config/settings_auction.xml
+09:37:57.484 CONFIG | Reading config/topology/england.xml
+09:37:57.521 CONFIG | Reading tournament/tournament/agents.xml
+09:37:57.585 CONFIG | Reading config/settings_auction.xml
+09:37:57.594 CONFIG | Setup
+09:37:57.605 CONFIG | Reading config/settings_auction.xml
+09:38:02.201 CONFIG | Finished to compute neighbours
+09:38:02.212 CONFIG | The plan was generated in 4550 milliseconds.
+09:38:02.221 CONFIG | The total cost of the plan is 2191.0
+09:38:02.250 CONFIG | Opponent bid lower bound estimate: 0.0
+09:38:06.786 CONFIG | Future diss: 0.2551514879110535
+09:38:06.786 CONFIG | Task: (Task 0, 3 kg, 69479 CHF, Cardiff -> Sheffield)
+09:38:06.786 CONFIG | Marginal cost: 2766.0
+09:38:06.786 CONFIG | Relative marginal cost: 1.0
+09:38:06.787 CONFIG | Tentative bid: 1397.1763586048899
+09:38:06.787 CONFIG | Bid: 2606
+09:38:06.795 CONFIG | Our ID is 0
+09:38:06.795 CONFIG | Bids
+09:38:06.795 CONFIG | [2192, 2606]
+09:38:06.796 CONFIG | We have won task 0
+09:38:11.347 CONFIG | Finished to compute neighbours
+09:38:11.347 CONFIG | The plan was generated in 4551 milliseconds.
+09:38:11.347 CONFIG | The total cost of the plan is 4573.0
+09:38:11.351 CONFIG | Opponent bids: 2192
+09:38:11.352 CONFIG | LOST AUCTION
+09:38:11.352 CONFIG | 
+09:38:11.354 CONFIG | Opponent bid lower bound estimate: 2192.0
+09:38:15.904 CONFIG | Future diss: 0.2138215796195414
+09:38:15.904 CONFIG | Task: (Task 1, 3 kg, 47516 CHF, Manchester -> Norwich)
+09:38:15.904 CONFIG | Marginal cost: 3279.0
+09:38:15.904 CONFIG | Relative marginal cost: 1.0
+09:38:15.904 CONFIG | Tentative bid: 1516.237325235779
+09:38:15.904 CONFIG | Bid: 1880
+09:38:15.905 CONFIG | Our ID is 0
+09:38:15.905 CONFIG | Bids
+09:38:15.905 CONFIG | [2501, 1880]
+09:38:20.455 CONFIG | Finished to compute neighbours
+09:38:20.455 CONFIG | The plan was generated in 4550 milliseconds.
+09:38:20.455 CONFIG | The total cost of the plan is 2933.5
+09:38:20.458 CONFIG | Opponent bids: 2501
+09:38:20.458 CONFIG | WON AUCTION
+09:38:20.458 CONFIG | 
+09:38:20.458 CONFIG | Opponent bid lower bound estimate: 2035.5063828727427
+09:38:25.008 CONFIG | Future diss: 0.184298177540397
+09:38:25.008 CONFIG | Task: (Task 2, 3 kg, 68638 CHF, Cardiff -> Manchester)
+09:38:25.008 CONFIG | Marginal cost: 1150.0
+09:38:25.008 CONFIG | Relative marginal cost: 0.25965229171370513
+09:38:25.008 CONFIG | Tentative bid: 1529.265963873892
+09:38:25.008 CONFIG | Bid: 1944
+09:38:25.009 CONFIG | Our ID is 0
+09:38:25.010 CONFIG | Bids
+09:38:25.010 CONFIG | [760, 1944]
+09:38:25.010 CONFIG | We have won task 2
+09:38:29.561 CONFIG | Finished to compute neighbours
+09:38:29.561 CONFIG | The plan was generated in 4551 milliseconds.
+09:38:29.566 CONFIG | The total cost of the plan is 4372.0
+09:38:29.567 CONFIG | Opponent bids: 760
+09:38:29.567 CONFIG | LOST AUCTION
+09:38:29.567 CONFIG | 
+09:38:29.569 CONFIG | Opponent bid lower bound estimate: 754.1709390100126
+09:38:34.116 CONFIG | Future diss: 0.1156496703221625
+09:38:34.116 CONFIG | Task: (Task 3, 3 kg, 55553 CHF, Sheffield -> Portsmouth)
+09:38:34.116 CONFIG | Marginal cost: 1467.0
+09:38:34.116 CONFIG | Relative marginal cost: 0.309102402022756
+09:38:34.117 CONFIG | Tentative bid: 1989.7836998827117
+09:38:34.117 CONFIG | Bid: 1786
+09:38:34.118 CONFIG | Our ID is 0
+09:38:34.118 CONFIG | Bids
+09:38:34.118 CONFIG | [1509, 1786]
+09:38:34.119 CONFIG | We have won task 3
+09:38:38.668 CONFIG | Finished to compute neighbours
+09:38:38.668 CONFIG | The plan was generated in 4550 milliseconds.
+09:38:38.668 CONFIG | The total cost of the plan is 5321.0
+09:38:38.684 CONFIG | Opponent bids: 1509
+09:38:38.684 CONFIG | LOST AUCTION
+09:38:38.684 CONFIG | 
+09:38:38.685 CONFIG | Opponent bid lower bound estimate: 711.4431082956136
+09:38:43.236 CONFIG | Future diss: 0.19388944036839148
+09:38:43.237 CONFIG | Task: (Task 4, 3 kg, 41305 CHF, Liverpool -> Norwich)
+09:38:43.237 CONFIG | Marginal cost: 347.0
+09:38:43.237 CONFIG | Relative marginal cost: 0.09569773855488141
+09:38:43.237 CONFIG | Tentative bid: 432.363785337765
+09:38:43.237 CONFIG | Bid: 460
+09:38:43.238 CONFIG | Our ID is 0
+09:38:43.238 CONFIG | Bids
+09:38:43.238 CONFIG | [1053, 460]
+09:38:47.789 CONFIG | Finished to compute neighbours
+09:38:47.789 CONFIG | The plan was generated in 4551 milliseconds.
+09:38:47.789 CONFIG | The total cost of the plan is 5522.0
+09:38:47.790 CONFIG | Opponent bids: 1053
+09:38:47.790 CONFIG | WON AUCTION
+09:38:47.790 CONFIG | 
+09:38:47.791 CONFIG | Opponent bid lower bound estimate: 699.4849773866807
+09:38:52.342 CONFIG | Future diss: 0.14696959910540264
+09:38:52.342 CONFIG | Task: (Task 5, 3 kg, 85625 CHF, Norwich -> London)
+09:38:52.342 CONFIG | Marginal cost: 0.0
+09:38:52.342 CONFIG | Relative marginal cost: 0.0
+09:38:52.342 CONFIG | Tentative bid: 0.0
+09:38:52.342 CONFIG | Bid: 565
+09:38:52.343 CONFIG | Our ID is 0
+09:38:52.343 CONFIG | Bids
+09:38:52.343 CONFIG | [1145, 565]
+09:38:56.893 CONFIG | Finished to compute neighbours
+09:38:56.893 CONFIG | The plan was generated in 4550 milliseconds.
+09:38:56.893 CONFIG | The total cost of the plan is 4372.0
+09:38:56.895 CONFIG | Opponent bids: 1145
+09:38:56.895 CONFIG | WON AUCTION
+09:38:56.895 CONFIG | 
+09:38:56.895 CONFIG | Opponent bid lower bound estimate: 344.717448511457
+09:39:01.447 CONFIG | Future diss: 0.11744619702625822
+09:39:01.447 CONFIG | Task: (Task 6, 3 kg, 64503 CHF, Cardiff -> London)
+09:39:01.447 CONFIG | Marginal cost: 1150.0
+09:39:01.447 CONFIG | Relative marginal cost: 0.24078726968174205
+09:39:01.447 CONFIG | Tentative bid: 1517.796776485845
+09:39:01.447 CONFIG | Bid: 1492
+09:39:01.451 CONFIG | Our ID is 0
+09:39:01.451 CONFIG | Bids
+09:39:01.451 CONFIG | [452, 1492]
+09:39:01.451 CONFIG | We have won task 6
+09:39:05.999 CONFIG | Finished to compute neighbours
+09:39:05.999 CONFIG | The plan was generated in 4550 milliseconds.
+09:39:06.000 CONFIG | The total cost of the plan is 4372.0
+09:39:06.015 CONFIG | Opponent bids: 452
+09:39:06.016 CONFIG | LOST AUCTION
+09:39:06.016 CONFIG | 
+09:39:06.017 CONFIG | Opponent bid lower bound estimate: -63.77893957494703
+09:39:10.569 CONFIG | Future diss: 0.14696959910540264
+09:39:10.570 CONFIG | Task: (Task 7, 3 kg, 68101 CHF, London -> Manchester)
+09:39:10.570 CONFIG | Marginal cost: 0.0
+09:39:10.570 CONFIG | Relative marginal cost: 0.0
+09:39:10.570 CONFIG | Tentative bid: 0.0
+09:39:10.570 CONFIG | Bid: 173
+09:39:10.573 CONFIG | Our ID is 0
+09:39:10.573 CONFIG | Bids
+09:39:10.573 CONFIG | [1052, 173]
+09:39:15.123 CONFIG | Finished to compute neighbours
+09:39:15.123 CONFIG | The plan was generated in 4550 milliseconds.
+09:39:15.123 CONFIG | The total cost of the plan is 6744.5
+09:39:15.124 CONFIG | Opponent bids: 1052
+09:39:15.124 CONFIG | WON AUCTION
+09:39:15.124 CONFIG | 
+09:39:15.124 CONFIG | Opponent bid lower bound estimate: 453.7232854768313
+09:39:19.676 CONFIG | Future diss: 0.07863348328017764
+09:39:19.676 CONFIG | Task: (Task 8, 3 kg, 41269 CHF, Plymouth -> Birmingham)
+09:39:19.676 CONFIG | Marginal cost: 1224.0
+09:39:19.676 CONFIG | Relative marginal cost: 0.25237113402061856
+09:39:19.676 CONFIG | Tentative bid: 1622.9465724330068
+09:39:19.676 CONFIG | Bid: 1368
+09:39:19.676 CONFIG | Our ID is 0
+09:39:19.677 CONFIG | Bids
+09:39:19.677 CONFIG | [2344, 1368]
+09:39:24.227 CONFIG | Finished to compute neighbours
+09:39:24.227 CONFIG | The plan was generated in 4550 milliseconds.
+09:39:24.227 CONFIG | The total cost of the plan is 5222.0
+09:39:24.230 CONFIG | Opponent bids: 2344
+09:39:24.231 CONFIG | WON AUCTION
+09:39:24.231 CONFIG | 
+09:39:24.233 CONFIG | Opponent bid lower bound estimate: 348.813092454272
+09:39:28.785 CONFIG | Future diss: 0.06861912811850429
+09:39:28.786 CONFIG | Task: (Task 9, 3 kg, 75780 CHF, Portsmouth -> Plymouth)
+09:39:28.786 CONFIG | Marginal cost: 1224.0
+09:39:28.786 CONFIG | Relative marginal cost: 0.20151465261771484
+09:39:28.786 CONFIG | Tentative bid: 1590.3956832280767
+09:39:28.788 CONFIG | Bid: 1537
+09:39:28.789 CONFIG | Our ID is 0
+09:39:28.789 CONFIG | Bids
+09:39:28.789 CONFIG | [901, 1537]
+09:39:28.789 CONFIG | We have won task 9
+09:39:33.344 CONFIG | Finished to compute neighbours
+09:39:33.345 CONFIG | The plan was generated in 4555 milliseconds.
+09:39:33.345 CONFIG | The total cost of the plan is 5222.0
+09:39:33.349 CONFIG | Opponent bids: 901
+09:39:33.349 CONFIG | LOST AUCTION
+09:39:33.349 CONFIG | 
+09:39:33.349 CONFIG | Opponent bid lower bound estimate: 164.15187231371672
+09:39:37.901 CONFIG | Future diss: 0.06197190310716176
+09:39:37.902 CONFIG | Task: (Task 10, 3 kg, 85625 CHF, Birmingham -> Cardiff)
+09:39:37.903 CONFIG | Marginal cost: 1150.0
+09:39:37.903 CONFIG | Relative marginal cost: 0.19166666666666668
+09:39:37.903 CONFIG | Tentative bid: 1488.406164352927
+09:39:37.903 CONFIG | Bid: 1203
+09:39:37.903 CONFIG | Our ID is 0
+09:39:37.903 CONFIG | Bids
+09:39:37.903 CONFIG | [660, 1203]
+09:39:37.903 CONFIG | We have won task 10
+09:39:42.453 CONFIG | Finished to compute neighbours
+09:39:42.453 CONFIG | The plan was generated in 4551 milliseconds.
+09:39:42.453 CONFIG | The total cost of the plan is 5970.0
+09:39:42.457 CONFIG | Opponent bids: 660
+09:39:42.457 CONFIG | LOST AUCTION
+09:39:42.457 CONFIG | 
+09:39:42.457 CONFIG | Opponent bid lower bound estimate: -72.87499676275021
+09:39:47.006 CONFIG | Future diss: 0.0457888500805854
+09:39:47.006 CONFIG | Task: (Task 11, 3 kg, 55553 CHF, Portsmouth -> Sheffield)
+09:39:47.006 CONFIG | Marginal cost: 372.0
+09:39:47.006 CONFIG | Relative marginal cost: 0.07123707391803906
+09:39:47.006 CONFIG | Tentative bid: 459.0660431807963
+09:39:47.007 CONFIG | Bid: 390
+09:39:47.008 CONFIG | Our ID is 0
+09:39:47.008 CONFIG | Bids
+09:39:47.008 CONFIG | [839, 390]
+09:39:51.558 CONFIG | Finished to compute neighbours
+09:39:51.559 CONFIG | The plan was generated in 4551 milliseconds.
+09:39:51.559 CONFIG | The total cost of the plan is 5222.0
+09:39:51.562 CONFIG | Opponent bids: 839
+09:39:51.562 CONFIG | WON AUCTION
+09:39:51.562 CONFIG | 
+09:39:51.562 CONFIG | Opponent bid lower bound estimate: -76.27386761892868
+09:39:56.113 CONFIG | Future diss: 0.02912726990756956
+09:39:56.113 CONFIG | Task: (Task 12, 3 kg, 68638 CHF, Cardiff -> Manchester)
+09:39:56.113 CONFIG | Marginal cost: 1819.0
+09:39:56.113 CONFIG | Relative marginal cost: 0.25834398522937085
+09:39:56.113 CONFIG | Tentative bid: 2417.636505398525
+09:39:56.113 CONFIG | Bid: 1910
+09:39:56.114 CONFIG | Our ID is 0
+09:39:56.114 CONFIG | Bids
+09:39:56.114 CONFIG | [825, 1910]
+09:39:56.114 CONFIG | We have won task 12
+09:40:00.664 CONFIG | Finished to compute neighbours
+09:40:00.664 CONFIG | The plan was generated in 4550 milliseconds.
+09:40:00.665 CONFIG | The total cost of the plan is 6207.0
+09:40:00.667 CONFIG | Opponent bids: 825
+09:40:00.668 CONFIG | LOST AUCTION
+09:40:00.668 CONFIG | 
+09:40:00.668 CONFIG | Opponent bid lower bound estimate: 165.64527498519936
+09:40:05.221 CONFIG | Future diss: 0.022662053931307134
+09:40:05.221 CONFIG | Task: (Task 13, 3 kg, 69390 CHF, Newcastle -> Manchester)
+09:40:05.221 CONFIG | Marginal cost: 985.0
+09:40:05.221 CONFIG | Relative marginal cost: 0.1586917995811181
+09:40:05.221 CONFIG | Tentative bid: 1258.2761339014432
+09:40:05.221 CONFIG | Bid: 1193
+09:40:05.224 CONFIG | Our ID is 0
+09:40:05.224 CONFIG | Bids
+09:40:05.224 CONFIG | [1078, 1193]
+09:40:05.224 CONFIG | We have won task 13
+09:40:09.772 CONFIG | Finished to compute neighbours
+09:40:09.772 CONFIG | The plan was generated in 4550 milliseconds.
+09:40:09.772 CONFIG | The total cost of the plan is 6955.0
+09:40:09.777 CONFIG | Opponent bids: 1078
+09:40:09.777 CONFIG | LOST AUCTION
+09:40:09.777 CONFIG | 
+09:40:09.777 CONFIG | Opponent bid lower bound estimate: 5.212283795567657
+09:40:14.326 CONFIG | Future diss: 0.0457888500805854
+09:40:14.326 CONFIG | Task: (Task 14, 3 kg, 48501 CHF, Portsmouth -> Liverpool)
+09:40:14.526 CONFIG | Marginal cost: 0.0
+09:40:14.526 CONFIG | Relative marginal cost: 0.0
+09:40:14.526 CONFIG | Tentative bid: 0.0
+09:40:14.527 CONFIG | Bid: 173
+09:40:14.527 CONFIG | Our ID is 0
+09:40:14.527 CONFIG | Bids
+09:40:14.527 CONFIG | [843, 173]
+09:40:18.878 CONFIG | Finished to compute neighbours
+09:40:18.878 CONFIG | The plan was generated in 4551 milliseconds.
+09:40:18.878 CONFIG | The total cost of the plan is 6207.0
+09:40:18.879 CONFIG | Opponent bids: 843
+09:40:18.881 CONFIG | WON AUCTION
+09:40:18.881 CONFIG | 
+09:40:18.881 CONFIG | Opponent bid lower bound estimate: 8.360730403000503
+09:40:23.432 CONFIG | Future diss: 0.0457888500805854
+09:40:23.432 CONFIG | Task: (Task 15, 3 kg, 85840 CHF, Sheffield -> Liverpool)
+09:40:23.433 CONFIG | Marginal cost: 0.0
+09:40:23.433 CONFIG | Relative marginal cost: 0.0
+09:40:23.433 CONFIG | Tentative bid: 0.0
+09:40:23.433 CONFIG | Bid: 173
+09:40:23.433 CONFIG | Our ID is 0
+09:40:23.433 CONFIG | Bids
+09:40:23.433 CONFIG | [2447, 173]
+09:40:27.984 CONFIG | Finished to compute neighbours
+09:40:27.984 CONFIG | The plan was generated in 4551 milliseconds.
+09:40:27.987 CONFIG | The total cost of the plan is 6207.0
+09:40:27.991 CONFIG | Opponent bids: 2447
+09:40:27.992 CONFIG | WON AUCTION
+09:40:27.993 CONFIG | 
+09:40:27.993 CONFIG | Opponent bid lower bound estimate: -73.18169565408985
+09:40:32.544 CONFIG | Future diss: 0.0457888500805854
+09:40:32.544 CONFIG | Task: (Task 16, 3 kg, 85088 CHF, London -> Birmingham)
+09:40:32.545 CONFIG | Marginal cost: 0.0
+09:40:32.545 CONFIG | Relative marginal cost: 0.0
+09:40:32.545 CONFIG | Tentative bid: 0.0
+09:40:32.545 CONFIG | Bid: 173
+09:40:32.547 CONFIG | Our ID is 0
+09:40:32.547 CONFIG | Bids
+09:40:32.547 CONFIG | [855, 173]
+09:40:37.098 CONFIG | Finished to compute neighbours
+09:40:37.098 CONFIG | The plan was generated in 4551 milliseconds.
+09:40:37.098 CONFIG | The total cost of the plan is 8006.0
+09:40:37.099 CONFIG | Opponent bids: 855
+09:40:37.099 CONFIG | WON AUCTION
+09:40:37.099 CONFIG | 
+09:40:37.100 CONFIG | Opponent bid lower bound estimate: 128.69111700120087
+09:40:41.651 CONFIG | Future diss: 0.0457888500805854
+09:40:41.651 CONFIG | Task: (Task 17, 3 kg, 72236 CHF, Portsmouth -> Norwich)
+09:40:41.651 CONFIG | Marginal cost: 0.0
+09:40:41.652 CONFIG | Relative marginal cost: 0.0
+09:40:41.652 CONFIG | Tentative bid: 0.0
+09:40:41.652 CONFIG | Bid: 173
+09:40:41.657 CONFIG | Our ID is 0
+09:40:41.657 CONFIG | Bids
+09:40:41.658 CONFIG | [1690, 173]
+09:40:46.203 CONFIG | Finished to compute neighbours
+09:40:46.203 CONFIG | The plan was generated in 4551 milliseconds.
+09:40:46.203 CONFIG | The total cost of the plan is 8006.0
+09:40:46.203 CONFIG | Opponent bids: 1690
+09:40:46.204 CONFIG | WON AUCTION
+09:40:46.204 CONFIG | 
+09:40:46.204 CONFIG | Opponent bid lower bound estimate: 173.32753646535474
+09:40:50.756 CONFIG | Future diss: 0.0457888500805854
+09:40:50.756 CONFIG | Task: (Task 18, 3 kg, 41806 CHF, Plymouth -> Norwich)
+09:40:50.756 CONFIG | Marginal cost: 0.0
+09:40:50.756 CONFIG | Relative marginal cost: 0.0
+09:40:50.756 CONFIG | Tentative bid: 0.0
+09:40:50.756 CONFIG | Bid: 173
+09:40:50.757 CONFIG | Our ID is 0
+09:40:50.757 CONFIG | Bids
+09:40:50.757 CONFIG | [1690, 173]
+09:40:55.310 CONFIG | Finished to compute neighbours
+09:40:55.311 CONFIG | The plan was generated in 4553 milliseconds.
+09:40:55.311 CONFIG | The total cost of the plan is 6207.0
+09:40:55.312 CONFIG | Opponent bids: 1690
+09:40:55.312 CONFIG | WON AUCTION
+09:40:55.312 CONFIG | 
+09:40:55.312 CONFIG | Opponent bid lower bound estimate: 91.06962237448985
+09:40:59.864 CONFIG | Future diss: 0.0166802888756059
+09:40:59.864 CONFIG | Task: (Task 19, 3 kg, 62087 CHF, Cardiff -> Leeds)
+09:41:00.064 CONFIG | Marginal cost: 1150.0
+09:41:00.064 CONFIG | Relative marginal cost: 0.18047708725674827
+09:41:00.064 CONFIG | Tentative bid: 1481.8053988661457
+09:41:00.064 CONFIG | Bid: 1196
+09:41:00.064 CONFIG | Our ID is 0
+09:41:00.064 CONFIG | Bids
+09:41:00.064 CONFIG | [396, 1196]
+09:41:00.064 CONFIG | We have won task 19
+09:41:39.767 CONFIG | Finished to compute neighbours
+09:41:39.768 CONFIG | The plan was generated in 39901 milliseconds.
+09:41:39.769 CONFIG | The total cost of the plan is 6207.0
+09:41:39.775 CONFIG | Opponent bids: 396
+09:41:39.776 CONFIG | LOST AUCTION
+09:41:39.776 CONFIG | 
+09:42:19.679 CONFIG | AGENT ID = 1
+09:42:19.679 CONFIG | NUM TASKS WON AT AUCTION = 11
+09:42:19.679 CONFIG | COST of the optimal plan = 5222.0
+09:42:19.679 CONFIG | TOTAL PROFIT OF THE AGENT = 479.0
+09:42:19.679 CONFIG | 
+09:42:19.686 CONFIG | Wrote tournament/tournament/auction-auction-auction_main_38.xml
+09:42:19.724 INFO | LogistPlatform finished successfully!

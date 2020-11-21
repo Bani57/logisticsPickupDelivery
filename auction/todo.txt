@@ -1,3 +1,0 @@
-1) do the average and std thing for the adversary and adjust bids according to the results
-2) try to fix negative marginal cost (look todo)
-3) monte-carlo search
