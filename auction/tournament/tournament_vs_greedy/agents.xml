@@ -3,10 +3,10 @@
 <agents>
 	<!-- An auto-generated list of agents and their behavior classes -->
 	<!--  - jar directory : agents/ -->
-	<!--  - generated on  : Sun Nov 22 00:44:08 CET 2020 -->
-	<agent name="auction_decreasing_prices">
-		<set class-path="agents/auction_decreasing_prices.jar"/>
-		<set class-name="template.AuctionDummyDecreasingPrices"/>
+	<!--  - generated on  : Sun Nov 22 01:20:16 CET 2020 -->
+	<agent name="auction_main_38">
+		<set class-path="agents/auction_main_38.jar"/>
+		<set class-name="template.AuctionAgent"/>
 	</agent>
 	<agent name="auction_greedy">
 		<set class-path="agents/auction_greedy.jar"/>
