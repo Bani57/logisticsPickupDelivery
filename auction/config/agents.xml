@@ -7,10 +7,17 @@
 	<agent name="auction-main-38">
 		<set class-path="bin/"/>
 		<set class-name="template.AuctionAgent"/>
+		<set p="0.9"/>
+		<set min-relative-gain="0.2"/>
+		<set max-relative-gain="0.8"/>
+		<set discount-for-future="0.2"/>
 	</agent>
 	<agent name="auction-conservative">
 		<set class-path="bin/"/>
 		<set class-name="template.AuctionAgentConservative"/>
+		<set p="0.9"/>
+		<set min-relative-gain="0.2"/>
+		<set max-relative-gain="0.8"/>
 	</agent>
 	<agent name="auction-dummy-marginal-cost">
 		<set class-path="bin/"/>
@@ -27,10 +34,15 @@
 	<agent name="auction-dummy-opponent-matcher">
 		<set class-path="bin/"/>
 		<set class-name="template.AuctionDummyOpponentMatcher"/>
+		<set p="0.9"/>
+		<set discount-for-future="0.2"/>
 	</agent>
 	<agent name="auction-dummy-greedy">
 		<set class-path="bin/"/>
 		<set class-name="template.AuctionDummyGreedy"/>
+		<set p="0.9"/>
+		<set min-relative-gain="0.2"/>
+		<set max-relative-gain="0.8"/>
 	</agent>
 	
 </agents>

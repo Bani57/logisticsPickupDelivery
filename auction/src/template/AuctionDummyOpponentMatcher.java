@@ -27,9 +27,16 @@ import logist.topology.Topology.City;
 import template.comparators.VehicleCapacityComparator;
 
 /**
- * A very simple auction agent that assigns all tasks to its first vehicle and
- * handles them sequentially.
- * 
+ * Implementation of a very competitive auction agent. Differs from the main
+ * implementation in that it does not utilize any information from its own
+ * marginal cost and only seeks to win every task by estimating the lowest
+ * possible opponent bid value using all information and then bid that price.
+ * Computation of optimal plans during each bid price computation and the final
+ * solution is based on our implementation of the SLS algorithm for the
+ * centralized exercise.
+ *
+ * @author Andrej Janchevski
+ * @author Orazio Rillo
  */
 @SuppressWarnings("unused")
 public class AuctionDummyOpponentMatcher implements AuctionBehavior {
@@ -39,6 +46,8 @@ public class AuctionDummyOpponentMatcher implements AuctionBehavior {
 	private Agent agent;
 	private Random random;
 
+	private double p;
+	private double discountForFuture;
 	private Long minBid;
 	private double topologyDiameter;
 
@@ -79,16 +88,38 @@ public class AuctionDummyOpponentMatcher implements AuctionBehavior {
 		long seed = -9019554669489983951L * (agent.id() + 1);
 		this.random = new Random(seed);
 
+		// Read the parameters of the agent from agents.xml
+		// The parameter for the SLS algorithm
+		this.p = agent.readProperty("p", Double.class, 0.9);
+		if (this.p > 1.0 || this.p < 0.0) {
+			System.out.println("The parameter p should be between 0.0 and 1.0");
+			System.exit(0);
+		}
+		// How much weight to put on the expected relative cost of future tasks
+		this.discountForFuture = agent.readProperty("discount-for-future", Double.class, 0.2);
+		if (this.discountForFuture > 1.0 || this.discountForFuture < 0.0) {
+			System.out.println("The parameter discount-for-future should be between 0.0 and 1.0");
+			System.exit(0);
+		}
+
+		// Define the minimum possible bid the agent will make as the minimum cost for
+		// traveling between two cities
 		this.minBid = (long) Math.floor(minEdgeCost());
+		// Compute the diameter of the chosen topology for the auction, defined as the
+		// maximum shortest path length between two cities in the topology graph
 		this.topologyDiameter = this.topologyGraphDiameter();
+
+		// Initialize the agent's SLS solution
 		this.currentSolution = new VariablesSet(agent.vehicles(), new ArrayList<Task>());
+		// Initialize the estimated SLS solution for the opponent
 		// Assume the opponent has the same vehicles as the player just to be able to
 		// build a solution, however the choice of vehicles will not influence the
-		// object value for the opponent anyway
+		// object value for the opponent
 		this.opponentSolution = new VariablesSet(agent.vehicles(), new ArrayList<Task>());
 
-		this.player = new AuctionPlayer(agent.id(), topology, distribution);
+		// Initialize the agent and its opponent as AuctionPlayer objects
 		// We assume that only two agents will compete in the auction
+		this.player = new AuctionPlayer(agent.id(), topology, distribution);
 		int opponentId = (this.agent.id() + 1) % 2;
 		this.opponent = new AuctionPlayer(opponentId, topology, distribution);
 	}
@@ -96,40 +127,47 @@ public class AuctionDummyOpponentMatcher implements AuctionBehavior {
 	@Override
 	public void auctionResult(Task previous, int winner, Long[] bids) {
 
+		// For both participants in the auction update their statistics after knowing
+		// the result of the auction
 		this.player.updatePlayerStatus(previous, winner == agent.id(), bids[agent.id()]);
 		this.opponent.updatePlayerStatus(previous, winner != agent.id(), bids[this.opponent.getId()]);
 
-		if (winner == agent.id()) 
+		// Depending on the auction result update the respective SLS solution
+		if (winner == agent.id())
 			this.currentSolution = this.updatedSolution;
 		else
 			this.opponentSolution = this.updatedSolutionOpponent;
-		
+
 	}
 
 	@Override
 	public Long askPrice(Task task) {
-		
+
 		// If it was not possible to transport the task because its weight was over the
-		// maximum capacity, we have to surrender the task to the opponent		
+		// maximum capacity, we have to surrender the task to the opponent
 		int maxCapacity = Collections.max(agent.vehicles(), new VehicleCapacityComparator()).capacity();
 		if (task.weight > maxCapacity)
 			return null;
 
+		// Start the bid timer
 		long time_start = System.currentTimeMillis();
+
+		// Estimate a lower bound value for the opponent bid price for this task
+		// Utilizes the statistics of the opponent's bids as well as the expected future
+		// value
+		double opponentBidLowerBound = this.opponent.estimateTaskPriceLowerBound(task, this.topologyDiameter,
+				this.discountForFuture);
+
+		// Perform the SLS iterations to hypothetically update the current solution
+		// Runs at most for half of the bid time available
 		this.updatedSolution = this.getUpdatedSolution(this.currentSolution, task, time_start, true);
 
-		double opponentBidLowerBound = this.opponent.estimateTaskPriceLowerBound(task, this.topologyDiameter);
-
-		// TODO: check better why sometime marginalCost is negative
-		// (hyp: either our optimization algorithm doesn't always find the optimum or we
-		// have an error in the computation of the objective function)
-
+		// Restart the bid timer
 		time_start = System.currentTimeMillis();
-		
-		// Estimate the current total cost of the opponent's plan and compute the
-		// opponent's updated solution
-		// With those we can compute another estimate of the lower bound of the
-		// opponent's bid: a lower bound of the opponent's marginal cost
+
+		// Estimate the absolute marginal cost of adding the task to the
+		// opponent's plan, by using a crude lower bound on the objective value
+		// Runs at most for the other half of the bid time available
 		Double currentCostOpponent = this.opponent.hasWonTasks() ? this.opponentSolution.computeObjective(false) : 0;
 		this.updatedSolutionOpponent = this.getUpdatedSolution(this.opponentSolution, task, time_start, false);
 		Double updatedCostOpponent = this.updatedSolutionOpponent.computeObjective(false);
@@ -139,30 +177,43 @@ public class AuctionDummyOpponentMatcher implements AuctionBehavior {
 		// necessary
 		opponentBidLowerBound = Math.min(opponentBidLowerBound, marginalCostOpponent);
 
+		// The final bid cannot be below the minimum tolerated and to finalize the bid
+		// price, it is adjusted to satisfy this constraint
 		Long actualBid = Math.max((long) opponentBidLowerBound, minBid);
 
 		return actualBid;
 	}
 
+	/**
+	 * Helper method to run the SLS algorithm in order to obtain a new hypothetical
+	 * optimal solution for an agent, assuming it has won a task at the auction
+	 * 
+	 * @param solution         VariablesSet representing the previous optimal
+	 *                         solution to use as a starting point
+	 * @param auctionedTask    Task presented at the auction
+	 * @param time_start       System time in milliseconds when the bid was started,
+	 *                         needed for the stopping condition
+	 * @param vehicleDependent Whether to optimize the classic vehicle dependent
+	 *                         objective function (see
+	 *                         VariablesSet.computeObjective)
+	 * 
+	 * @return Updated optimal solution
+	 */
 	public VariablesSet getUpdatedSolution(VariablesSet solution, Task auctionedTask, long time_start,
 			boolean vehicleDependent) {
 
-		// Read p, it has to be between 0 and 1
-		final double p = agent.readProperty("p", Double.class, 0.9);
-		if (p > 1.0 || p < 0.0) {
-			System.out.println("The parameter p should be between 0.0 and 1.0");
-			System.exit(0);
-		}
-
+		// Set the initial solution as the given, modified by assigning the new task to
+		// a random vehicle
 		VariablesSet tmpSolution = (VariablesSet) solution.clone();
 		tmpSolution.assignTaskRandomly(auctionedTask, this.random);
+
 		double tmpCost;
 		VariablesSet optimalSolution = tmpSolution;
 		double optimalCost = tmpSolution.computeObjective(vehicleDependent);
 		long time_current;
 
 		// Iterate the SLS until the termination condition is met
-		while(true) {
+		while (true) {
 
 			time_current = System.currentTimeMillis();
 
@@ -188,83 +239,35 @@ public class AuctionDummyOpponentMatcher implements AuctionBehavior {
 			}
 		}
 
-//		long time_end = System.currentTimeMillis();
-//
-//		// Count the number of tasks assigned to each vehicle by the optimal solution
-//		double[] tasksPerVehicle = new double[agent.vehicles().size()];
-//		for (Task t : auctionTasks)
-//			tasksPerVehicle[optimalSolution.getVehicle(optimalSolution.getTaskIdx(t.id)).id()]++;
-//
-//		// Compute the empirical standard deviation of the number of tasks per vehicle
-//		StandardDeviation sd = new StandardDeviation();
-//		double taskAssignmentSd = sd.evaluate(tasksPerVehicle);
-//
-//		// Build the string to output
-//		StringBuilder output = new StringBuilder();
-//		output.append("\nPARAMETERS\n").append("p = ").append(p).append("\n").append("# of tasks = ")
-//				.append(auctionTasks.size()).append("\n").append("# of vehicles = ").append(agent.vehicles().size()).append("\n")
-//				.append("# of iterations = ").append(numIterations).append("\n").append("\n")
-//				.append("COST of the optimal plan = ").append(optimalCost).append("\tCOST PER TASK = ")
-//				.append(optimalCost / ((double) auctionTasks.size())).append("\n").append("NUM TASKS PER VEHICLE = ")
-//				.append(Arrays.toString(tasksPerVehicle)).append("\tSD = ").append(taskAssignmentSd).append("\n")
-//				.append("\n").append("EXECUTION TIME (sec) = ").append((time_end - time_start) / 1000.0).append("\n");
-//
-//		System.out.println(output);
-
-		// Update the optimal solution and return it
+		// Return the new optimal solution
 		return optimalSolution;
 	}
 
 	@Override
 	public List<Plan> plan(List<Vehicle> vehicles, TaskSet tasks) {
 
-		ArrayList<Task> tasksList = new ArrayList<Task>(tasks);
-
 		// It's possible that the agent didn't win any tasks at the auction
 		// In that case use the empty solution to return a list of empty plans
-		if (tasksList.size() == 0)
+		if (tasks.size() == 0)
 			return this.currentSolution.inferPlans();
 
-		// Read p, it has to be between 0 and 1
-		final double p = agent.readProperty("p", Double.class, 1.0);
-		if (p > 1.0 || p < 0.0) {
-			System.out.println("The parameter p should be between 0.0 and 1.0");
-			System.exit(0);
-		}
-
-		// Read initial solution id, valid values go from 1 to 3.
-		// @see template.VariablesSet#init() to know more about the 3 different initial
-		// solutions.
-		int initialSolutionId = agent.readProperty("initial-solution-id", Integer.class, 1);
-		if (initialSolutionId != 1 && initialSolutionId != 2 && initialSolutionId != 3) {
-			System.out.println("The initial solution id should be either 1, 2 or 3");
-			System.exit(0);
-		}
-
+		// Start the plan timer
 		long time_start = System.currentTimeMillis();
 
-//		// Find an initial solution
-//		VariablesSet initialSolution = new VariablesSet(vehicles, tasksList);
-//		boolean success = initialSolution.init(this.topology, initialSolutionId);
-//
-//		// If the problem has no solution (e.g. there is a task whose weight is higher
-//		// than each vehicle's capacity),
-//		// than exit
-//		if (!success) {
-//			System.out.println("The problem has no solution");
-//			System.exit(0);
-//		}
-
+		// Set the initial solution for the algorithm as the most recently updated
+		// solution during the auction
+		// First update the references to the tasks in the VariablesSet object w.r.t.
+		// the given updated set of tasks
+		ArrayList<Task> tasksList = new ArrayList<Task>(tasks);
 		this.currentSolution.setTasks(tasksList);
-
-		VariablesSet tmpSolution = (VariablesSet) this.currentSolution.clone(); //initialSolution;
+		VariablesSet tmpSolution = (VariablesSet) this.currentSolution.clone();
 		double tmpCost;
 		VariablesSet optimalSolution = (VariablesSet) this.currentSolution.clone();
 		double optimalCost = this.currentSolution.computeObjective(true);
 		long time_current;
 
 		// Iterate the SLS until the termination condition is met
-		while(true) {
+		while (true) {
 
 			time_current = System.currentTimeMillis();
 
@@ -290,25 +293,7 @@ public class AuctionDummyOpponentMatcher implements AuctionBehavior {
 			}
 		}
 
-		long time_end = System.currentTimeMillis();
-
-		// Count the number of tasks assigned to each vehicle by the optimal solution
-		double[] tasksPerVehicle = new double[vehicles.size()];
-		for (Task t : tasks)
-			tasksPerVehicle[optimalSolution.getVehicle(optimalSolution.getTaskIdx(t.id)).id()]++;
-
-		// Compute the empirical standard deviation of the number of tasks per vehicle
-		StandardDeviation sd = new StandardDeviation();
-		double taskAssignmentSd = sd.evaluate(tasksPerVehicle);
-
-		// Build the string to output
-		StringBuilder output = new StringBuilder();
-		output.append("AGENT ID = ").append(this.agent.id()).append("\n").append("NUM TASKS WON AT AUCTION = ")
-				.append(tasks.size()).append("\n").append("COST of the optimal plan = ").append(optimalCost)
-				.append("\n").append("TOTAL PROFIT OF THE AGENT = ")
-				.append(this.player.getCurrentTotalReward() - optimalCost).append("\n");
-		System.out.println(output);
-
+		// Return the optimal plans
 		return optimalSolution.inferPlans();
 	}
 
@@ -430,6 +415,15 @@ public class AuctionDummyOpponentMatcher implements AuctionBehavior {
 		return bestCandidateNeighbor;
 	}
 
+	/**
+	 * Helper method to compute the minimum edge cost in the selected topology, to
+	 * be used as the minimum possible bid price. For efficiency uses BFS with cycle
+	 * detection to traverse the graph and process every edge only once
+	 * 
+	 * @return Minimum edge cost of the topology, defined as the average cost per KM
+	 *         of the agent's vehicles times the shortest distance between two
+	 *         neighboring cities
+	 */
 	private double minEdgeCost() {
 		HashSet<City> visited = new HashSet<>();
 		LinkedList<City> toVisit = new LinkedList<>();
@@ -457,6 +451,13 @@ public class AuctionDummyOpponentMatcher implements AuctionBehavior {
 		return minDist * avgCostPerKm;
 	}
 
+	/**
+	 * Helper method to compute the graph diameter of the selected topology, to be
+	 * used as a normalization constant for dissimilarities
+	 * 
+	 * @return Diameter of the topology, defined as the longest length of a shortest
+	 *         path between two cities in the topology
+	 */
 	private double topologyGraphDiameter() {
 		int numCities = this.topology.size();
 		double maxShortestPathLength = 0;
@@ -472,11 +473,16 @@ public class AuctionDummyOpponentMatcher implements AuctionBehavior {
 		return maxShortestPathLength;
 	}
 
+	/**
+	 * Helper method to compute the mean cost per KM for the agent's vehicles
+	 * 
+	 * @return Average cost per KM, as a decimal value
+	 */
 	private double avgCostPerKm() {
-		int weightSum = 0;
+		int sum = 0;
 		for (Vehicle v : agent.vehicles()) {
-			weightSum += v.costPerKm();
+			sum += v.costPerKm();
 		}
-		return (double) weightSum / agent.vehicles().size();
+		return (double) sum / agent.vehicles().size();
 	}
 }
