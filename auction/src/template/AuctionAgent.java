@@ -222,12 +222,10 @@ public class AuctionAgent implements AuctionBehavior {
 			double maxIncrease;
 			if (tentativeBid < marginalCost && marginalCost < opponentBidLowerBound) {
 				maxIncrease = opponentBidLowerBound - marginalCost;
-				randomBid = this.sampleExponentialIntervalIncreasing(marginalCost,
-						marginalCost + maxIncrease);
+				randomBid = this.sampleExponentialIntervalIncreasing(marginalCost, marginalCost + maxIncrease);
 			} else {
 				maxIncrease = opponentBidLowerBound - tentativeBid;
-				randomBid = this.sampleExponentialIntervalIncreasing(tentativeBid,
-						tentativeBid + maxIncrease);
+				randomBid = this.sampleExponentialIntervalIncreasing(tentativeBid, tentativeBid + maxIncrease);
 			}
 		} else {
 			if (marginalCost >= opponentBidLowerBound) {
@@ -236,8 +234,7 @@ public class AuctionAgent implements AuctionBehavior {
 				// This means that this task is estimated to be more costly for the agent than
 				// the opponent
 
-				double maxReduction = totalProfitPlayer - marginalCost - totalProfitOpponent
-						+ marginalCostOpponent;
+				double maxReduction = totalProfitPlayer - marginalCost - totalProfitOpponent + marginalCostOpponent;
 				if (maxReduction > 0) {
 					// If it is possible to still have the higher profit after bidding below the
 					// marginalCost, reduce the price to a random value below the opponent's lower

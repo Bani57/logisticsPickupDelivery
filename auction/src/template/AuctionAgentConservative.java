@@ -205,15 +205,13 @@ public class AuctionAgentConservative implements AuctionBehavior {
 			// This means that the utility of the task was undervalued, and we should
 			// increase the price to a random value close to the opponent's lower bound
 
-			double switzerlandMaxIncrease;
+			double maxIncrease;
 			if (tentativeBid < marginalCost && marginalCost < opponentBidLowerBound) {
-				switzerlandMaxIncrease = opponentBidLowerBound - marginalCost;
-				randomBid = this.sampleExponentialIntervalIncreasing(marginalCost,
-						marginalCost + switzerlandMaxIncrease);
+				maxIncrease = opponentBidLowerBound - marginalCost;
+				randomBid = this.sampleExponentialIntervalIncreasing(marginalCost, marginalCost + maxIncrease);
 			} else {
-				switzerlandMaxIncrease = opponentBidLowerBound - tentativeBid;
-				randomBid = this.sampleExponentialIntervalIncreasing(tentativeBid,
-						tentativeBid + switzerlandMaxIncrease);
+				maxIncrease = opponentBidLowerBound - tentativeBid;
+				randomBid = this.sampleExponentialIntervalIncreasing(tentativeBid, tentativeBid + maxIncrease);
 			}
 		} else {
 			if (marginalCost >= opponentBidLowerBound) {
@@ -222,13 +220,12 @@ public class AuctionAgentConservative implements AuctionBehavior {
 				// This means that this task is estimated to be more costly for the agent than
 				// the opponent
 
-				double chinaMaxReduction = totalProfitPlayer - marginalCost - totalProfitOpponent
-						+ marginalCostOpponent;
-				if (chinaMaxReduction > 0) {
+				double maxReduction = totalProfitPlayer - marginalCost - totalProfitOpponent + marginalCostOpponent;
+				if (maxReduction > 0) {
 					// If it is possible to still have the higher profit after bidding below the
 					// marginalCost, reduce the price to a random value below the opponent's lower
 					// bound, but close to it
-					randomBid = this.sampleExponentialIntervalIncreasing(opponentBidLowerBound - chinaMaxReduction,
+					randomBid = this.sampleExponentialIntervalIncreasing(opponentBidLowerBound - maxReduction,
 							opponentBidLowerBound);
 				} else {
 					// Otherwise, this task is estimated to be just too costly for the player
@@ -245,10 +242,10 @@ public class AuctionAgentConservative implements AuctionBehavior {
 				// Offer a carefully picked discount to beat the competition, while still having
 				// profit, by selecting a random value in (marginalCost, opponentBidLowerBound)
 
-				double usaMinDiscount = tentativeBid - opponentBidLowerBound;
-				double usaMaxDiscount = tentativeBid - marginalCost;
-				randomBid = this.sampleExponentialIntervalIncreasing(tentativeBid - usaMaxDiscount,
-						tentativeBid - usaMinDiscount);
+				double minDiscount = tentativeBid - opponentBidLowerBound;
+				double maxDiscount = tentativeBid - marginalCost;
+				randomBid = this.sampleExponentialIntervalIncreasing(tentativeBid - maxDiscount,
+						tentativeBid - minDiscount);
 			}
 		}
 
