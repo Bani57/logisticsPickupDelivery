@@ -354,6 +354,15 @@ public class VariablesSet {
 		return true;
 	}
 
+	/**
+	 * Method that assigns a given task to a vehicle selected uniformly at random.
+	 * Pickup and delivery actions for the task are added to the end of the
+	 * vehicle's list of actions. The attributes of the current VariablesSet need to
+	 * be correctly modified in order to achieve this.
+	 * 
+	 * @param task Task to assign
+	 * @param rng  Random number generator used by the agent
+	 */
 	public void assignTaskRandomly(Task task, Random rng) {
 
 		// Select a random vehicle to assign the task to
@@ -375,7 +384,7 @@ public class VariablesSet {
 		this.deliveryTime.add(vNextTime + 1);
 
 		if (vNextTime == 0)
-			// If the vehicle does not carry any other task, update nextAction
+			// If the vehicle does not carry any other task yet, update nextAction
 			this.setNextAction(v.id(), new ActionRep(task, ActionName.PICKUP));
 		else {
 			// Otherwise, update nextActionAfterDelivery of the current last task to deliver
@@ -385,7 +394,8 @@ public class VariablesSet {
 		}
 
 		// Update nextActionAfterPickup with the delivery action of task and
-		// nextActionAfterDelivery with a null action
+		// nextActionAfterDelivery with a null action as the task will be the final
+		// delivery for the vehicle
 		this.nextActionAfterPickup.add(new ActionRep(task, ActionName.DELIVER));
 		this.nextActionAfterDelivery.add(null);
 	}
@@ -669,17 +679,25 @@ public class VariablesSet {
 
 	/**
 	 * Method that computes the objective function's value in the current set of
-	 * variables
+	 * variables. It is now possible to return only a very crude lower bound
+	 * estimate of the objective value, by only considering the terms in the cost
+	 * independent of the parameters of the vehicles possessed by the agent.
+	 * 
+	 * @param vehicleDependent Whether or not to use the classic vehicle dependent
+	 *                         version
 	 * 
 	 * @return double objective function's value
 	 */
 	public double computeObjective(boolean vehicleDependent) {
 
 		double objectiveValue = 0;
-		double averageCostPerKm = 3;
+		double averageCostPerKm = 3; // Assume that every agent has vehicles with an average cost per KM value of 3
 
 		// Add to the cost all travel costs between vehicles' starting cities and pickup
 		// cities of first tasks
+		// To return a lower bound for the objective we can completely disregard this
+		// cost term i.e. we can assume the agent always has vehicles with home cities
+		// closest to the tasks
 		if (vehicleDependent) {
 			for (Vehicle v : vehicles) {
 				ActionRep vehicleFirstTask = this.getNextAction(v.id());
@@ -700,7 +718,8 @@ public class VariablesSet {
 					if (vehicleDependent)
 						cost *= this.getVehicle(taskIdx.get(t.id)).costPerKm();
 					else
-						cost *= averageCostPerKm;
+						cost *= averageCostPerKm; // Disregard the dependence on the exact cost per KM of the vehicle to
+													// obtain a lower bound
 					objectiveValue += cost;
 					break;
 				case DELIVER:
@@ -708,7 +727,8 @@ public class VariablesSet {
 					if (vehicleDependent)
 						cost *= this.getVehicle(taskIdx.get(t.id)).costPerKm();
 					else
-						cost *= averageCostPerKm;
+						cost *= averageCostPerKm; // Disregard the dependence on the exact cost per KM of the vehicle to
+													// obtain a lower bound
 					objectiveValue += cost;
 					break;
 				}
@@ -726,7 +746,8 @@ public class VariablesSet {
 					if (vehicleDependent)
 						cost *= this.getVehicle(taskIdx.get(t.id)).costPerKm();
 					else
-						cost *= averageCostPerKm;
+						cost *= averageCostPerKm; // Disregard the dependence on the exact cost per KM of the vehicle to
+													// obtain a lower bound
 					objectiveValue += cost;
 					break;
 				case DELIVER:
@@ -734,7 +755,8 @@ public class VariablesSet {
 					if (vehicleDependent)
 						cost *= this.getVehicle(taskIdx.get(t.id)).costPerKm();
 					else
-						cost *= averageCostPerKm;
+						cost *= averageCostPerKm; // Disregard the dependence on the exact cost per KM of the vehicle to
+													// obtain a lower bound
 					objectiveValue += cost;
 					break;
 				}
@@ -958,11 +980,21 @@ public class VariablesSet {
 		return this.tasks;
 	}
 
+	/**
+	 * Method that updates the references for every Task appearing in the solution
+	 * variables with new semantically equivalent entries. Needed in order to solve
+	 * the "Cannot use tasks from a different round!" error. Assumes the order of
+	 * the ids of the tasks has not been changed.
+	 * 
+	 * @param newTasks List of the new references to the tasks won at the auction
+	 */
 	public void setTasks(ArrayList<Task> newTasks) {
 		int numTasks = newTasks.size();
 		int numVehicles = this.vehicles.size();
 		int taskIdx;
-		
+
+		// First for every vehicle, update nextAction with the new reference for the
+		// first task of the vehicle
 		for (int j = 0; j < numVehicles; j++) {
 			ActionRep oldNextAction = this.getNextAction(j);
 			if (oldNextAction != null) {
@@ -970,22 +1002,27 @@ public class VariablesSet {
 				this.setNextAction(j, new ActionRep(newTasks.get(taskIdx), oldNextAction.getAction()));
 			}
 		}
-		
+
+		// Then for every task, update...
 		for (int i = 0; i < numTasks; i++) {
+
+			// Its reference in the tasks list
 			this.tasks.set(i, newTasks.get(i));
 
+			// Its reference in nextActionAfterPickup
 			ActionRep oldNextActionAfterPickup = this.getNextActionAfterPickup(i);
-			if (oldNextActionAfterPickup != null)
-			{
+			if (oldNextActionAfterPickup != null) {
 				taskIdx = this.getTaskIdx(oldNextActionAfterPickup.getTask().id);
-				this.setNextActionAfterPickup(i, new ActionRep(newTasks.get(taskIdx), oldNextActionAfterPickup.getAction()));
+				this.setNextActionAfterPickup(i,
+						new ActionRep(newTasks.get(taskIdx), oldNextActionAfterPickup.getAction()));
 			}
 
+			// Its reference in nextActionAfterDelivery
 			ActionRep oldNextActionAfterDelivery = this.getNextActionAfterDelivery(i);
-			if (oldNextActionAfterDelivery != null)
-			{
+			if (oldNextActionAfterDelivery != null) {
 				taskIdx = this.getTaskIdx(oldNextActionAfterDelivery.getTask().id);
-				this.setNextActionAfterDelivery(i, new ActionRep(newTasks.get(taskIdx), oldNextActionAfterDelivery.getAction()));
+				this.setNextActionAfterDelivery(i,
+						new ActionRep(newTasks.get(taskIdx), oldNextActionAfterDelivery.getAction()));
 			}
 		}
 

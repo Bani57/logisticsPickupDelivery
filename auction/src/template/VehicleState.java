@@ -13,10 +13,10 @@ import logist.task.Task;
  */
 public class VehicleState {
 
-	private int time; //virtual time of the vehicle; if time = i then i-1 actions have already been
-					  //assigned to the vehicle until now
-	private ArrayList<Task> carriedTasks; //currently carried tasks
-	private ActionRep previousAction; //last action assigned to the vehicle
+	private int time; // virtual time of the vehicle; if time = i then i-1 actions have already been
+						// assigned to the vehicle until now
+	private ArrayList<Task> carriedTasks; // currently carried tasks
+	private ActionRep previousAction; // last action assigned to the vehicle
 
 	public VehicleState(int time, ArrayList<Task> carriedTasks, ActionRep previousAction) {
 		super();

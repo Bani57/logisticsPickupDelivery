@@ -14,8 +14,8 @@ public class ActionRep {
 		PICKUP, DELIVER
 	};
 
-	private Task task; //task to pickup/deliver
-	private ActionName action; //can be PICKUP or DELIVER
+	private Task task; // task to pickup/deliver
+	private ActionName action; // can be PICKUP or DELIVER
 
 	public ActionRep(Task task, ActionName action) {
 		super();

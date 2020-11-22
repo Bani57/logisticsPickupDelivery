@@ -20,6 +20,11 @@ import logist.topology.Topology.City;
  * A very simple auction agent that assigns all tasks to its first vehicle and
  * handles them sequentially.
  * 
+ * A modification of the given dummy agent template: decreases its bid prices
+ * over time during the auction instead of increasing them as in the template.
+ * 
+ * @author Andrej Janchevski
+ * @author Orazio Rillo
  */
 @SuppressWarnings("unused")
 public class AuctionDummyDecreasingPrices implements AuctionBehavior {
