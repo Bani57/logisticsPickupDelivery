@@ -131,9 +131,6 @@ public class AuctionDummyGreedy implements AuctionBehavior {
 
 	public VariablesSet getUpdatedSolution(Task auctionedTask, long time_start) {
 
-		// Read the number of iterations
-		final int numIterations = agent.readProperty("num-iterations", Integer.class, 10000);
-
 		// Read p, it has to be between 0 and 1
 		final double p = agent.readProperty("p", Double.class, 0.9);
 		if (p > 1.0 || p < 0.0) {
@@ -149,7 +146,7 @@ public class AuctionDummyGreedy implements AuctionBehavior {
 		long time_current;
 
 		// Iterate the SLS until the termination condition is met
-		for (int count = 0; count < numIterations; count++) {
+		while(true) {
 
 			time_current = System.currentTimeMillis();
 
@@ -212,9 +209,6 @@ public class AuctionDummyGreedy implements AuctionBehavior {
 		if (tasksList.size() == 0)
 			return this.currentSolution.inferPlans();
 
-		// Read the number of iterations
-		final int numIterations = agent.readProperty("num-iterations", Integer.class, 10000);
-
 		// Read p, it has to be between 0 and 1
 		final double p = agent.readProperty("p", Double.class, 1.0);
 		if (p > 1.0 || p < 0.0) {
@@ -254,7 +248,7 @@ public class AuctionDummyGreedy implements AuctionBehavior {
 		long time_current;
 
 		// Iterate the SLS until the termination condition is met
-		for (int count = 0; count < numIterations; count++) {
+		while(true) {
 
 			time_current = System.currentTimeMillis();
 

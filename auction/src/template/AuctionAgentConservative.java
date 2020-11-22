@@ -231,9 +231,6 @@ public class AuctionAgentConservative implements AuctionBehavior {
 	public VariablesSet getUpdatedSolution(VariablesSet solution, Task auctionedTask, long time_start,
 			boolean vehicleDependent) {
 
-		// Read the number of iterations
-		final int numIterations = agent.readProperty("num-iterations", Integer.class, 5000);
-
 		// Read p, it has to be between 0 and 1
 		final double p = agent.readProperty("p", Double.class, 0.9);
 		if (p > 1.0 || p < 0.0) {
@@ -249,7 +246,7 @@ public class AuctionAgentConservative implements AuctionBehavior {
 		long time_current;
 
 		// Iterate the SLS until the termination condition is met
-		for (int count = 0; count < numIterations; count++) {
+		while(true) {
 
 			time_current = System.currentTimeMillis();
 
@@ -366,7 +363,7 @@ public class AuctionAgentConservative implements AuctionBehavior {
 		long time_current;
 		
 		// Iterate the SLS until the termination condition is met
-		for (int count = 0; count < numIterations; count++) {
+		while(true){
 
 			time_current = System.currentTimeMillis();
 

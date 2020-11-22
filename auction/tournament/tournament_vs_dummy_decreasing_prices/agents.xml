@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="ISO-8859-1"?>
+
+<agents>
+	<!-- An auto-generated list of agents and their behavior classes -->
+	<!--  - jar directory : agents/ -->
+	<!--  - generated on  : Sun Nov 22 00:44:17 CET 2020 -->
+	<agent name="auction_decreasing_prices">
+		<set class-path="agents/auction_decreasing_prices.jar"/>
+		<set class-name="template.AuctionDummyDecreasingPrices"/>
+	</agent>
+	<agent name="auction_main_38">
+		<set class-path="agents/auction_main_38.jar"/>
+		<set class-name="template.AuctionAgent"/>
+	</agent>
+</agents>
