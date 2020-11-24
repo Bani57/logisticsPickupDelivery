@@ -200,7 +200,7 @@ public class AuctionAgent implements AuctionBehavior {
 		// auction and computed using a risk-seeking utility formula otherwise
 		Double relativeGain = this.player.hasWonTasks()
 				? Math.pow(1 + maxRelativeGain - minRelativeGain, relativeMarginalCost) + minRelativeGain
-				: Math.sqrt(expectedFutureDissimilarity);
+				: Math.pow(expectedFutureDissimilarity, 1/3);
 		double tentativeBid = relativeGain * marginalCost;
 
 		// Compute the current total profit for both auction participants
