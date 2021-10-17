@@ -130,7 +130,8 @@ Every subfolder has nearly the same structure with some slight differences. Each
 - config, where you can find the configuration files of the agents, of the task and of the topologies;
 - src, where you can find the code that implements the behaviour of the agents described in the configuration files;
 - doc, where you can find both a description of the exercise, which has the same name of the exercise, and a report, a summary of the of the formulas and the logic behind the solution we implemented.
-Additionally, the auction contains 2 more subfolders:
+
+Additionally, the auction directory contains 2 more subfolders:
 - agents, that contains the agents compiled
 - tournament, that contains some tournament configurations
 because this last agent were supposed to compete in a tournament with the bidder agents written by the course attendants.
