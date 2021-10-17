@@ -134,4 +134,4 @@ Every subfolder has nearly the same structure with some slight differences. Each
 Additionally, the auction directory contains 2 more subfolders:
 - agents, that contains the agents compiled
 - tournament, that contains some tournament configurations
-because this last agent were supposed to compete in a tournament with the bidder agents written by the course attendants.
+(the agent we submitted for this exercise was supposed to compete in a tournament with the bidder agents written by the other course attendants).
