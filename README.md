@@ -132,7 +132,7 @@ Every subfolder has nearly the same structure with some slight differences. Each
 - doc, where you can find both a description of the exercise, which has the same name of the exercise, and a report, a summary of the of the formulas and the logic behind the solution we implemented.
 
 Additionally, the auction directory contains 2 more subfolders:
-- agents, that contains the agents compiled
-- tournament, that contains some tournament configurations
+- agents, that contains the agents compiled;
+- tournament, that contains some tournament configurations.
 
 Indeed, the agent we submitted for this exercise was supposed to compete in a tournament with the bidder agents written by the other course attendants.
